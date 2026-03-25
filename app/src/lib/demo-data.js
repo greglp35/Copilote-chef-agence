@@ -1,4 +1,5 @@
-// Jeu de démonstration statique — affiché si dma_dossiers est vide ou absent
+// lib/demo-data.js — Jeu de démonstration statique
+// Affiché uniquement si dma_dossiers est vide ou absent
 // 4 dossiers couvrant les cas principaux de getNextAction
 
 export const DEMO_DOSSIERS = [
@@ -19,10 +20,8 @@ export const DEMO_DOSSIERS = [
     score_completude: 65,
     conducteur_ok: false,
     contact_jour_j: 'Sophie Dupont — 06 12 34 56 78',
-    _meta: {
-      date_creation: '2026-02-15',
-      derniere_modification: '2026-03-10',
-    },
+    note: 'Salle Bellevue, 120 personnes',
+    _meta: { date_creation: '2026-02-15', derniere_modification: '2026-03-10' },
   },
   {
     id_dossier: 'DJ-2026-002',
@@ -41,10 +40,8 @@ export const DEMO_DOSSIERS = [
     score_completude: 0,
     conducteur_ok: false,
     contact_jour_j: '',
-    _meta: {
-      date_creation: '2026-03-10',
-      derniere_modification: '2026-03-10',
-    },
+    note: '',
+    _meta: { date_creation: '2026-03-10', derniere_modification: '2026-03-10' },
   },
   {
     id_dossier: 'DJ-2026-003',
@@ -63,10 +60,8 @@ export const DEMO_DOSSIERS = [
     score_completude: 100,
     conducteur_ok: true,
     contact_jour_j: 'Claire Bernard — 06 98 76 54 32',
-    _meta: {
-      date_creation: '2026-01-10',
-      derniere_modification: '2026-02-16',
-    },
+    note: '',
+    _meta: { date_creation: '2026-01-10', derniere_modification: '2026-02-16' },
   },
   {
     id_dossier: 'DJ-2026-004',
@@ -85,9 +80,7 @@ export const DEMO_DOSSIERS = [
     score_completude: 0,
     conducteur_ok: false,
     contact_jour_j: '',
-    _meta: {
-      date_creation: '2026-03-20',
-      derniere_modification: '2026-03-20',
-    },
+    note: 'Devis à finaliser — attente brief client',
+    _meta: { date_creation: '2026-03-20', derniere_modification: '2026-03-20' },
   },
 ]

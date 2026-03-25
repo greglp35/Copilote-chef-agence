@@ -1,107 +1,62 @@
-// Clé localStorage figée — règle 38 §3 point 7
-// Ne jamais utiliser une variante de cette clé
+// hooks/useDossiers.js — État React + délégation vers lib/storage
 import { useState, useCallback } from 'react'
-import { DEMO_DOSSIERS } from '../data/demoData'
-import { todayISOString } from '../utils/dateUtils'
-
-const LS_KEY = 'dma_dossiers'
-
-function readFromStorage() {
-  try {
-    const raw = localStorage.getItem(LS_KEY)
-    if (!raw) return { data: null, isDemo: true }
-    const parsed = JSON.parse(raw)
-    if (!Array.isArray(parsed) || parsed.length === 0) return { data: null, isDemo: true }
-    return { data: parsed, isDemo: false }
-  } catch (e) {
-    console.error('[DMA] Erreur lecture dma_dossiers:', e)
-    return { data: null, isDemo: true }
-  }
-}
+import {
+  readDossiers,
+  writeDossiers,
+  upsertDossier,
+  patchDossier,
+  generateIdDossier,
+  generateRefDevis,
+} from '../lib/storage'
+import { DEMO_DOSSIERS } from '../lib/demo-data'
 
 export function useDossiers() {
-  const initial = readFromStorage()
-  const [dossiers, setDossiers] = useState(initial.data ?? DEMO_DOSSIERS)
-  const [isDemoMode, setIsDemoMode] = useState(initial.isDemo)
+  const stored = readDossiers()
+  const [dossiers, setDossiers] = useState(stored ?? DEMO_DOSSIERS)
+  const [isDemoMode, setIsDemoMode] = useState(!stored)
 
-  // Sauvegarde de l'ensemble des dossiers
+  /** Écrase tout le tableau */
   const saveDossiers = useCallback((updated) => {
-    localStorage.setItem(LS_KEY, JSON.stringify(updated))
+    writeDossiers(updated)
     setDossiers(updated)
     setIsDemoMode(false)
   }, [])
 
-  // Mise à jour d'un seul dossier (merge partiel)
+  /** Met à jour les champs d'un dossier (patch partiel, met à jour _meta) */
   const updateDossier = useCallback((id, patch) => {
     setDossiers((prev) => {
-      const updated = prev.map((d) => {
-        if (d.id_dossier !== id) return d
-        return {
-          ...d,
-          ...patch,
-          _meta: {
-            ...d._meta,
-            derniere_modification: todayISOString(),
-          },
-        }
-      })
-      localStorage.setItem(LS_KEY, JSON.stringify(updated))
+      const updated = patchDossier(prev, id, patch)
+      writeDossiers(updated)
       return updated
     })
     setIsDemoMode(false)
   }, [])
 
-  // Ajout d'un nouveau dossier
+  /** Ajoute un nouveau dossier (via upsert) */
   const addDossier = useCallback((dossier) => {
     setDossiers((prev) => {
-      const updated = [...prev, dossier]
-      localStorage.setItem(LS_KEY, JSON.stringify(updated))
+      const updated = upsertDossier(prev, dossier)
+      writeDossiers(updated)
       return updated
     })
     setIsDemoMode(false)
   }, [])
 
-  // Rechargement depuis localStorage
+  /** Relit depuis localStorage */
   const refresh = useCallback(() => {
-    const result = readFromStorage()
-    setDossiers(result.data ?? DEMO_DOSSIERS)
-    setIsDemoMode(result.isDemo)
-  }, [])
-
-  // Génère le prochain id_dossier — USAGE EXCLUSIF DU CONFIGURATEUR
-  const generateIdDossier = useCallback((currentDossiers) => {
-    const year = new Date().getFullYear()
-    const prefix = `DJ-${year}-`
-    const max = currentDossiers
-      .filter((d) => d.id_dossier?.startsWith(prefix))
-      .reduce((m, d) => {
-        const n = parseInt(d.id_dossier.replace(prefix, ''), 10)
-        return isNaN(n) ? m : Math.max(m, n)
-      }, 0)
-    return `${prefix}${String(max + 1).padStart(3, '0')}`
-  }, [])
-
-  // Génère le prochain ref_devis — USAGE EXCLUSIF DU CONFIGURATEUR
-  const generateRefDevis = useCallback((currentDossiers) => {
-    const year = new Date().getFullYear()
-    const prefix = `DEV-${year}-`
-    const max = currentDossiers
-      .filter((d) => d.ref_devis?.startsWith(prefix))
-      .reduce((m, d) => {
-        const n = parseInt(d.ref_devis.replace(prefix, ''), 10)
-        return isNaN(n) ? m : Math.max(m, n)
-      }, 0)
-    return `${prefix}${String(max + 1).padStart(3, '0')}`
+    const data = readDossiers()
+    setDossiers(data ?? DEMO_DOSSIERS)
+    setIsDemoMode(!data)
   }, [])
 
   return {
     dossiers,
+    isDemoMode,
     saveDossiers,
     updateDossier,
     addDossier,
     refresh,
-    isDemoMode,
-    generateIdDossier,
-    generateRefDevis,
+    generateIdDossier: (d) => generateIdDossier(d),
+    generateRefDevis:  (d) => generateRefDevis(d),
   }
 }

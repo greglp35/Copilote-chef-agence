@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useDossiers } from './hooks/useDossiers'
 import Layout from './components/Layout'
-import Assistant from './modules/Assistant'
-import Configurateur from './modules/Configurateur'
-import Suivi from './modules/Suivi'
-import Preparateur from './modules/Preparateur'
-import Dashboard from './modules/Dashboard'
-import FicheClient from './modules/FicheClient'
-import Checklist from './modules/Checklist'
-import Conducteur from './modules/Conducteur'
+import Assistant    from './modules/assistant-central/index.jsx'
+import Configurateur from './modules/configurateur/index.jsx'
+import Suivi        from './modules/suivi/index.jsx'
+import Preparateur  from './modules/preparateur/index.jsx'
+import Dashboard    from './modules/dashboard/index.jsx'
+import FicheClient  from './modules/fiche-client/index.jsx'
+import Checklist    from './modules/checklist/index.jsx'
+import Conducteur   from './modules/conducteur/index.jsx'
 
 export default function App() {
   const [currentModule, setCurrentModule] = useState('assistant')
@@ -16,63 +16,42 @@ export default function App() {
 
   const {
     dossiers,
+    isDemoMode,
     saveDossiers,
     updateDossier,
     addDossier,
     refresh,
-    isDemoMode,
     generateIdDossier,
     generateRefDevis,
   } = useDossiers()
 
-  // Navigation entre modules — peut transporter un dossierId
   function handleNavigate(module, dossierId) {
     setCurrentModule(module)
     if (dossierId !== undefined) setSelectedDossierId(dossierId)
   }
 
-  // Props communs à tous les modules
-  const sharedProps = {
-    dossiers,
-    onNavigate: handleNavigate,
-    selectedId: selectedDossierId,
-  }
+  const shared = { dossiers, onNavigate: handleNavigate, selectedId: selectedDossierId }
 
   function renderModule() {
     switch (currentModule) {
       case 'assistant':
-        return <Assistant {...sharedProps} />
-
+        return <Assistant {...shared} />
       case 'configurateur':
-        return (
-          <Configurateur
-            {...sharedProps}
-            addDossier={addDossier}
-            generateIdDossier={generateIdDossier}
-            generateRefDevis={generateRefDevis}
-          />
-        )
-
+        return <Configurateur {...shared} addDossier={addDossier} generateIdDossier={generateIdDossier} generateRefDevis={generateRefDevis} />
       case 'suivi':
-        return <Suivi {...sharedProps} updateDossier={updateDossier} />
-
+        return <Suivi {...shared} updateDossier={updateDossier} />
       case 'preparateur':
-        return <Preparateur {...sharedProps} updateDossier={updateDossier} />
-
+        return <Preparateur {...shared} updateDossier={updateDossier} />
       case 'dashboard':
-        return <Dashboard {...sharedProps} />
-
-      case 'fiche_client':
-        return <FicheClient {...sharedProps} />
-
+        return <Dashboard {...shared} />
+      case 'fiche-client':
+        return <FicheClient {...shared} />
       case 'checklist':
-        return <Checklist {...sharedProps} />
-
+        return <Checklist {...shared} />
       case 'conducteur':
-        return <Conducteur {...sharedProps} />
-
+        return <Conducteur {...shared} />
       default:
-        return <Assistant {...sharedProps} />
+        return <Assistant {...shared} />
     }
   }
 

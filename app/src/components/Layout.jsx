@@ -1,12 +1,12 @@
-const MODULES = [
-  { id: 'assistant',     label: 'Assistant' },
-  { id: 'configurateur', label: 'Configurateur' },
-  { id: 'suivi',         label: 'Suivi commercial' },
-  { id: 'preparateur',   label: 'Préparateur' },
-  { id: 'dashboard',     label: 'Dashboard KPI' },
-  { id: 'fiche_client',  label: 'Fiche client' },
-  { id: 'checklist',     label: 'Checklist Jour J' },
-  { id: 'conducteur',    label: 'Conducteur' },
+const NAV = [
+  { id: 'assistant',      label: 'Assistant' },
+  { id: 'configurateur',  label: 'Configurateur' },
+  { id: 'suivi',          label: 'Suivi commercial' },
+  { id: 'preparateur',    label: 'Préparateur' },
+  { id: 'dashboard',      label: 'Dashboard KPI' },
+  { id: 'fiche-client',   label: 'Fiche client' },
+  { id: 'checklist',      label: 'Checklist Jour J' },
+  { id: 'conducteur',     label: 'Conducteur' },
 ]
 
 export default function Layout({ current, onNavigate, isDemoMode, children }) {
@@ -18,23 +18,23 @@ export default function Layout({ current, onNavigate, isDemoMode, children }) {
           <span>Copilote v1.1</span>
         </div>
         <nav className="sidebar-nav">
-          {MODULES.map((m) => (
+          {NAV.map((m) => (
             <button
               key={m.id}
-              className={`nav-item${current === m.id ? ' active' : ''}`}
+              className={`nav-btn${current === m.id ? ' active' : ''}`}
               onClick={() => onNavigate(m.id)}
             >
-              <span className="nav-item-label">{m.label}</span>
+              <span className="nav-btn-label">{m.label}</span>
             </button>
           ))}
         </nav>
-        <div className="sidebar-version">MVP v1.1</div>
+        <div className="sidebar-footer">MVP v1.1</div>
       </aside>
 
       <main className="main">
         {isDemoMode && (
-          <div className="bandeau-demo">
-            ⚠ Mode démo — aucune donnée réelle — créez un dossier dans le Configurateur pour démarrer
+          <div className="demo-banner">
+            Mode démo — aucune donnée réelle — créez un dossier dans le Configurateur pour démarrer
           </div>
         )}
         {children}
