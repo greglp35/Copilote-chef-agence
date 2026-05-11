@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stock mini/maxi — Assistant agence</title>
+  <meta name="description" content="Application locale d'aide au pilotage des stocks mini/maxi avec validation humaine obligatoire.">
+  <style>
+    :root {
+      --jaune: #f5c400;
+      --jaune-clair: #fff6c7;
+      --noir: #1a1a1a;
+      --gris: #f4f5f7;
+      --gris-2: #e3e5e8;
+      --blanc: #ffffff;
+      --rouge: #9f1d1d;
+      --orange: #a65f00;
+      --vert: #1f6b3a;
+      --bleu: #244f8f;
+      --ombre: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--gris);
+      color: var(--noir);
+      line-height: 1.45;
+    }
+
+    header {
+      background: var(--noir);
+      color: var(--blanc);
+      border-bottom: 7px solid var(--jaune);
+    }
+
+    .wrap {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.4fr 0.6fr;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    h1, h2, h3 { margin: 0 0 .55rem; }
+    h1 { font-size: clamp(1.6rem, 4vw, 2.7rem); }
+    p { margin: 0 0 .75rem; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      background: var(--jaune);
+      color: var(--noir);
+      font-weight: 800;
+      padding: .4rem .7rem;
+      border-radius: 999px;
+      font-size: .9rem;
+    }
+
+    main {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 1rem;
+      display: grid;
+      gap: 1rem;
+    }
+
+    section, .card {
+      background: var(--blanc);
+      border: 1px solid var(--gris-2);
+      border-radius: 18px;
+      padding: 1rem;
+      box-shadow: var(--ombre);
+    }
+
+    .grid-kpi {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .85rem;
+    }
+
+    .kpi {
+      border-left: 7px solid var(--jaune);
+      background: #fffdf0;
+      border-radius: 14px;
+      padding: .85rem;
+    }
+
+    .kpi strong {
+      display: block;
+      font-size: 1.6rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: .75rem;
+      align-items: end;
+    }
+
+    label {
+      display: block;
+      font-weight: 800;
+      margin-bottom: .35rem;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      font: inherit;
+      border-radius: 12px;
+    }
+
+    input, select, textarea {
+      border: 1px solid #cdd1d5;
+      padding: .75rem;
+      background: var(--blanc);
+    }
+
+    button {
+      min-height: 44px;
+      border: 0;
+      padding: .8rem 1rem;
+      background: var(--jaune);
+      color: var(--noir);
+      font-weight: 900;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button.secondary { background: var(--noir); color: var(--blanc); }
+    button.light { background: var(--gris-2); color: var(--noir); }
+
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--jaune);
+      outline-offset: 3px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .75rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--gris-2);
+      border-radius: 14px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+      background: var(--blanc);
+    }
+
+    th, td {
+      padding: .7rem;
+      border-bottom: 1px solid var(--gris-2);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: var(--noir);
+      color: var(--blanc);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tr:hover { background: #fff9dc; }
+
+    .status {
+      display: inline-flex;
+      padding: .25rem .5rem;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: .82rem;
+      white-space: nowrap;
+    }
+
+    .ok { background: #dff3e5; color: var(--vert); }
+    .cmd { background: #fff0cf; color: var(--orange); }
+    .mini { background: #ffe0e0; color: var(--rouge); }
+    .sur { background: #e4edff; color: var(--bleu); }
+    .bad { background: #ececec; color: #333333; }
+
+    .notice {
+      background: var(--jaune-clair);
+      border-left: 7px solid var(--jaune);
+      padding: .85rem;
+      border-radius: 12px;
+      font-weight: 700;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 2rem;
+      color: #555;
+    }
+
+    footer {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 1rem;
+      color: #555;
+    }
+
+    @media (max-width: 860px) {
+      .hero, .grid-kpi, .controls, .actions {
+        grid-template-columns: 1fr;
+      }
+
+      main, .wrap, footer { padding: .85rem; }
+      section, .card { border-radius: 14px; }
+    }
+
+    @media print {
+      body { background: #ffffff; }
+      header, .controls, .actions, footer { display: none; }
+      main { width: 100%; padding: 0; }
+      section { box-shadow: none; border: 0; }
+      table { min-width: 0; font-size: 10px; }
+      th { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <div>
+        <span class="badge">V1 locale — validation humaine obligatoire</span>
+        <h1>Stock mini/maxi</h1>
+        <p>Assistant de pilotage pour détecter les articles sous mini, à commander, incohérents ou en surstock.</p>
+      </div>
+      <div class="notice" role="note">Aucune commande automatique. L'outil aide à décider, il ne décide pas seul.</div>
+    </div>
+  </header>
+
+  <main>
+    <section aria-labelledby="kpi-title">
+      <h2 id="kpi-title">Synthèse</h2>
+      <div class="grid-kpi" id="kpi-grid"></div>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Pilotage</h2>
+      <div class="controls">
+        <p>
+          <label for="search-input">Recherche</label>
+          <input id="search-input" type="search" placeholder="Article, famille, emplacement">
+        </p>
+        <p>
+          <label for="status-filter">Statut</label>
+          <select id="status-filter">
+            <option value="all">Tous</option>
+            <option value="SOUS_MINI">Sous mini</option>
+            <option value="A_COMMANDER">À commander</option>
+            <option value="OK">OK</option>
+            <option value="SURSTOCK">Surstock</option>
+            <option value="INCOMPATIBLE">Incompatible</option>
+          </select>
+        </p>
+        <p>
+          <label for="family-filter">Famille</label>
+          <select id="family-filter"><option value="all">Toutes</option></select>
+        </p>
+        <p>
+          <label for="sort-select">Tri</label>
+          <select id="sort-select">
+            <option value="priority">Priorité</option>
+            <option value="designation">Désignation</option>
+            <option value="family">Famille</option>
+            <option value="need">Qté recommandée</option>
+          </select>
+        </p>
+        <p>
+          <label for="import-file">Import JSON</label>
+          <input id="import-file" type="file" accept="application/json">
+        </p>
+      </div>
+      <div class="actions" aria-label="Actions principales">
+        <button type="button" id="load-demo">Charger exemple</button>
+        <button type="button" id="save-local" class="secondary">Sauvegarder</button>
+        <button type="button" id="export-json" class="light">Exporter analyse</button>
+        <button type="button" id="print-page" class="light">Imprimer</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="table-title">
+      <h2 id="table-title">Articles analysés</h2>
+      <p id="status-message" class="notice" role="status">Données d'exemple prêtes. Contrôle humain requis avant toute action.</p>
+      <div class="table-wrap" id="table-zone"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Module local autonome. Données fictives ou anonymisées uniquement. Aucun accès direct à un système externe.</p>
+  </footer>
+
+  <script>
+    const storageKey = 'stock-mini-maxi-v1';
+
+    const demoItems = [
+      { code_article: 'ART-001', designation: 'Laine de verre 100 mm', famille: 'Isolation', stock_physique: 24, stock_reserve: 4, commandes_en_cours: 0, vente_30j: 28, vente_90j: 75, delai_fournisseur_jours: 7, mini: 25, maxi: 60, multiple_achat: 6, emplacement: 'A1', classe: 'A' },
+      { code_article: 'ART-002', designation: 'Plaque plâtre BA13', famille: 'Plaque', stock_physique: 140, stock_reserve: 30, commandes_en_cours: 50, vente_30j: 90, vente_90j: 260, delai_fournisseur_jours: 5, mini: 80, maxi: 180, multiple_achat: 10, emplacement: 'B2', classe: 'A' },
+      { code_article: 'ART-003', designation: 'Chevron traité 63x75', famille: 'Bois', stock_physique: 12, stock_reserve: 8, commandes_en_cours: 0, vente_30j: 36, vente_90j: 70, delai_fournisseur_jours: 10, mini: 20, maxi: 45, multiple_achat: 5, emplacement: 'C1', classe: 'B' },
+      { code_article: 'ART-004', designation: 'Sac mortier colle gris', famille: 'Mortier', stock_physique: 92, stock_reserve: 5, commandes_en_cours: 0, vente_30j: 24, vente_90j: 90, delai_fournisseur_jours: 6, mini: 30, maxi: 70, multiple_achat: 8, emplacement: 'D4', classe: 'B' },
+      { code_article: 'ART-005', designation: 'Panneau OSB 18 mm', famille: 'Panneaux', stock_physique: 18, stock_reserve: 2, commandes_en_cours: 12, vente_30j: 16, vente_90j: 42, delai_fournisseur_jours: 8, mini: 35, maxi: 25, multiple_achat: 3, emplacement: 'E2', classe: 'C' }
+    ];
+
+    let items = [];
+
+    const kpiGrid = document.getElementById('kpi-grid');
+    const tableZone = document.getElementById('table-zone');
+    const searchInput = document.getElementById('search-input');
+    const statusFilter = document.getElementById('status-filter');
+    const familyFilter = document.getElementById('family-filter');
+    const sortSelect = document.getElementById('sort-select');
+    const statusMessage = document.getElementById('status-message');
+    const importFile = document.getElementById('import-file');
+
+    function numberValue(value) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function roundToMultiple(value, multiple) {
+      const safeMultiple = Math.max(1, numberValue(multiple));
+      return Math.ceil(Math.max(0, value) / safeMultiple) * safeMultiple;
+    }
+
+    function analyzeItem(item) {
+      const stockPhysique = numberValue(item.stock_physique);
+      const stockReserve = numberValue(item.stock_reserve);
+      const commandes = numberValue(item.commandes_en_cours);
+      const mini = numberValue(item.mini);
+      const maxi = numberValue(item.maxi);
+      const vente30 = numberValue(item.vente_30j);
+      const vente90 = numberValue(item.vente_90j);
+      const multiple = Math.max(1, numberValue(item.multiple_achat));
+      const disponible = stockPhysique - stockReserve;
+      const projete = disponible + commandes;
+      const moyenneJour = Math.max(vente30 / 30, vente90 / 90, 0);
+      const couverture = moyenneJour > 0 ? Math.round(projete / moyenneJour) : null;
+      let statut = 'OK';
+      let priorite = 4;
+      let recommandation = 0;
+
+      if (mini > maxi || multiple <= 0) {
+        statut = 'INCOMPATIBLE';
+        priorite = 1;
+      } else if (projete < mini) {
+        const besoin = mini - projete;
+        recommandation = roundToMultiple(besoin, multiple);
+        statut = disponible < mini ? 'SOUS_MINI' : 'A_COMMANDER';
+        priorite = statut === 'SOUS_MINI' ? 1 : 2;
+      } else if (projete > maxi) {
+        statut = 'SURSTOCK';
+        priorite = 3;
+      }
+
+      return { ...item, disponible, projete, moyenneJour, couverture, statut, priorite, recommandation };
+    }
+
+    function getAnalyzedItems() {
+      return items.map(analyzeItem);
+    }
+
+    function filteredItems() {
+      const query = searchInput.value.trim().toLowerCase();
+      const status = statusFilter.value;
+      const family = familyFilter.value;
+      const sort = sortSelect.value;
+      let list = getAnalyzedItems().filter(item => {
+        const searchable = `${item.code_article} ${item.designation} ${item.famille} ${item.emplacement}`.toLowerCase();
+        return (!query || searchable.includes(query)) && (status === 'all' || item.statut === status) && (family === 'all' || item.famille === family);
+      });
+
+      list.sort((a, b) => {
+        if (sort === 'designation') return String(a.designation).localeCompare(String(b.designation));
+        if (sort === 'family') return String(a.famille).localeCompare(String(b.famille));
+        if (sort === 'need') return b.recommandation - a.recommandation;
+        return a.priorite - b.priorite || String(a.designation).localeCompare(String(b.designation));
+      });
+
+      return list;
+    }
+
+    function statusClass(statut) {
+      return {
+        OK: 'ok',
+        A_COMMANDER: 'cmd',
+        SOUS_MINI: 'mini',
+        SURSTOCK: 'sur',
+        INCOMPATIBLE: 'bad'
+      }[statut] || 'bad';
+    }
+
+    function statusLabel(statut) {
+      return {
+        OK: 'OK',
+        A_COMMANDER: 'À commander',
+        SOUS_MINI: 'Sous mini',
+        SURSTOCK: 'Surstock',
+        INCOMPATIBLE: 'Incompatible'
+      }[statut] || statut;
+    }
+
+    function renderKpis() {
+      const analyzed = getAnalyzedItems();
+      const count = analyzed.length;
+      const sousMini = analyzed.filter(item => item.statut === 'SOUS_MINI').length;
+      const aCommander = analyzed.filter(item => item.statut === 'A_COMMANDER').length;
+      const incoherent = analyzed.filter(item => item.statut === 'INCOMPATIBLE').length;
+      const totalReco = analyzed.reduce((sum, item) => sum + item.recommandation, 0);
+      const kpis = [
+        ['Articles', count],
+        ['Sous mini', sousMini],
+        ['À commander', aCommander],
+        ['Incohérents', incoherent],
+        ['Qté recommandée totale', totalReco]
+      ];
+
+      kpiGrid.innerHTML = kpis.map(([label, value]) => `<div class="kpi"><span>${label}</span><strong>${value}</strong></div>`).join('');
+    }
+
+    function renderFamilies() {
+      const current = familyFilter.value;
+      const families = [...new Set(items.map(item => item.famille).filter(Boolean))].sort();
+      familyFilter.innerHTML = '<option value="all">Toutes</option>' + families.map(family => `<option value="${escapeHtml(family)}">${escapeHtml(family)}</option>`).join('');
+      familyFilter.value = families.includes(current) ? current : 'all';
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    }
+
+    function renderTable() {
+      const list = filteredItems();
+      renderKpis();
+      renderFamilies();
+
+      if (!list.length) {
+        tableZone.innerHTML = '<div class="empty">Aucun article ne correspond aux filtres.</div>';
+        return;
+      }
+
+      const rows = list.map(item => `
+        <tr>
+          <td><strong>${escapeHtml(item.code_article)}</strong><br>${escapeHtml(item.designation)}</td>
+          <td>${escapeHtml(item.famille)}<br><small>${escapeHtml(item.emplacement || '-')} — classe ${escapeHtml(item.classe || '-')}</small></td>
+          <td>${item.stock_physique}</td>
+          <td>${item.stock_reserve}</td>
+          <td>${item.disponible}</td>
+          <td>${item.commandes_en_cours}</td>
+          <td>${item.projete}</td>
+          <td>mini ${item.mini}<br>maxi ${item.maxi}</td>
+          <td>${item.multiple_achat}</td>
+          <td>${item.couverture === null ? '-' : `${item.couverture} j`}</td>
+          <td><span class="status ${statusClass(item.statut)}">${statusLabel(item.statut)}</span></td>
+          <td><strong>${item.recommandation}</strong></td>
+        </tr>
+      `).join('');
+
+      tableZone.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Article</th>
+              <th>Famille</th>
+              <th>Stock</th>
+              <th>Réservé</th>
+              <th>Dispo</th>
+              <th>En cours</th>
+              <th>Projeté</th>
+              <th>Mini / maxi</th>
+              <th>Multiple</th>
+              <th>Couverture</th>
+              <th>Statut</th>
+              <th>Reco</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    function setStatus(message) {
+      statusMessage.textContent = message;
+    }
+
+    function saveLocal() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(items));
+        setStatus('Jeu de données sauvegardé localement.');
+      } catch (error) {
+        setStatus('Sauvegarde locale impossible sur cet appareil.');
+      }
+    }
+
+    function loadLocal() {
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return false;
+        items = parsed;
+        setStatus('Dernier jeu de données restauré depuis la sauvegarde locale.');
+        return true;
+      } catch (error) {
+        setStatus('Lecture de sauvegarde locale impossible.');
+        return false;
+      }
+    }
+
+    function loadDemo() {
+      items = JSON.parse(JSON.stringify(demoItems));
+      setStatus('Données d’exemple chargées.');
+      renderTable();
+    }
+
+    function exportAnalysis() {
+      try {
+        const payload = {
+          exported_at: new Date().toISOString(),
+          warning: 'Analyse locale. Validation humaine obligatoire avant action.',
+          items: getAnalyzedItems()
+        };
+        const file = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(file);
+        link.download = 'stock-mini-maxi-analyse.json';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        setStatus('Export JSON généré.');
+      } catch (error) {
+        setStatus('Export impossible sur cet appareil.');
+      }
+    }
+
+    function handleImport(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        try {
+          const parsed = JSON.parse(String(reader.result));
+          const imported = Array.isArray(parsed) ? parsed : parsed.items;
+          if (!Array.isArray(imported)) throw new Error('Format attendu : tableau ou objet avec propriété items.');
+          items = imported;
+          setStatus('Import JSON chargé. Vérifie les résultats avant toute action.');
+          renderTable();
+        } catch (error) {
+          setStatus('Import impossible : format JSON non reconnu.');
+        }
+      });
+      reader.readAsText(file);
+    }
+
+    document.getElementById('load-demo').addEventListener('click', loadDemo);
+    document.getElementById('save-local').addEventListener('click', saveLocal);
+    document.getElementById('export-json').addEventListener('click', exportAnalysis);
+    document.getElementById('print-page').addEventListener('click', () => window.print());
+    importFile.addEventListener('change', handleImport);
+    searchInput.addEventListener('input', renderTable);
+    statusFilter.addEventListener('change', renderTable);
+    familyFilter.addEventListener('change', renderTable);
+    sortSelect.addEventListener('change', renderTable);
+
+    if (!loadLocal()) {
+      items = JSON.parse(JSON.stringify(demoItems));
+    }
+    renderTable();
+  </script>
+</body>
+</html>
