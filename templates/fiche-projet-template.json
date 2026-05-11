@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0",
+  "project_id": "nom-du-projet",
+  "project_name": "Nom du projet",
+  "status": "draft",
+  "created_at": "AAAA-MM-JJ",
+  "updated_at": "AAAA-MM-JJ",
+  "owner": "Nom du responsable",
+  "validator": "Nom du validateur",
+  "problem_to_solve": "Décrire le problème terrain à résoudre.",
+  "target_users": [
+    "chef_agence"
+  ],
+  "operational_goal": "L'outil doit permettre de ..., afin de ...",
+  "source_files": {
+    "main_html": "src/nom-du-projet.html",
+    "project_markdown": "projets/nom-du-projet.md",
+    "project_json": "projets/nom-du-projet.json"
+  },
+  "data_sources": [
+    {
+      "name": "donnee_exemple",
+      "source_type": "manual",
+      "sensitive": false,
+      "comment": "Donnée fictive ou anonymisée."
+    }
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true
+  },
+  "expected_features": [
+    {
+      "priority": "high",
+      "name": "Fonctionnalité principale",
+      "description": "Décrire la fonctionnalité.",
+      "status": "todo"
+    }
+  ],
+  "out_of_scope": [
+    "Ne pas écrire directement dans l'ERP.",
+    "Ne pas remplacer la validation humaine."
+  ],
+  "success_criteria": {
+    "understandable_under_10_seconds": true,
+    "mobile_compatible": true,
+    "local_save_if_needed": true,
+    "export_or_print_if_needed": true,
+    "github_actions_recipe_passed": true
+  },
+  "risks": [
+    {
+      "risk": "Risque à préciser",
+      "level": "medium",
+      "mitigation": "Parade à préciser"
+    }
+  ],
+  "human_validation": {
+    "decision": "pending",
+    "validated_by": "",
+    "validated_at": "",
+    "comment": ""
+  },
+  "next_actions": [
+    "Compléter la fiche projet.",
+    "Créer ou contrôler le fichier HTML.",
+    "Lancer la recette GitHub Actions."
+  ]
+}
