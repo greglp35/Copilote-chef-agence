@@ -1,0 +1,36 @@
+# Environnements et secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependances et builds
+node_modules/
+dist/
+build/
+.cache/
+.tmp/
+tmp/
+
+# Fichiers systeme
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Bases locales et sauvegardes sensibles
+*.sqlite
+*.db
+*.bak
+*.backup
+
+# Archives temporaires
+*.zip
+*.7z
+*.rar
