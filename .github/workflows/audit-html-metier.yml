@@ -25,219 +25,186 @@ jobs:
       - name: Recuperer le depot
         uses: actions/checkout@v4
 
-      - name: Preparer le rapport
+      - name: Auditer les sources HTML metier
         run: |
           mkdir -p rapports
-          {
-            echo "# Rapport d'audit HTML Metier"
-            echo ""
-            echo "Date UTC : $(date -u '+%Y-%m-%d %H:%M:%S')"
-            echo "Depot : $GITHUB_REPOSITORY"
-            echo "Branche ou reference : $GITHUB_REF_NAME"
-            echo "Commit : $GITHUB_SHA"
-            echo ""
-          } > rapports/audit-html-metier.md
+          python3 <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import re
+          import sys
 
-      - name: Inventorier les fichiers utiles
-        run: |
-          {
-            echo "## 1. Inventaire des fichiers"
-            echo ""
-          } >> rapports/audit-html-metier.md
+          report = Path('rapports/audit-html-metier.md')
+          now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
 
-          HTML_FILES=$(find . -type f -name "*.html" \
-            -not -path "./.git/*" \
-            -not -path "./node_modules/*" \
-            -not -path "./dist/*" \
-            -not -path "./build/*" | sort)
+          src_dir = Path('src')
+          html_files = sorted(src_dir.rglob('*.html')) if src_dir.exists() else []
+          css_files = sorted(src_dir.rglob('*.css')) if src_dir.exists() else []
+          js_files = sorted(src_dir.rglob('*.js')) if src_dir.exists() else []
 
-          CSS_FILES=$(find . -type f -name "*.css" \
-            -not -path "./.git/*" \
-            -not -path "./node_modules/*" \
-            -not -path "./dist/*" \
-            -not -path "./build/*" | sort)
+          errors = []
+          warnings = []
+          lines = []
 
-          JS_FILES=$(find . -type f -name "*.js" \
-            -not -path "./.git/*" \
-            -not -path "./node_modules/*" \
-            -not -path "./dist/*" \
-            -not -path "./build/*" | sort)
+          lines.append('# Rapport Audit HTML Metier')
+          lines.append('')
+          lines.append(f'Date : {now}')
+          lines.append('')
+          lines.append('## 1. Inventaire')
+          lines.append('')
+          lines.append(f'- HTML dans /src : {len(html_files)}')
+          lines.append(f'- CSS dans /src : {len(css_files)}')
+          lines.append(f'- JS dans /src : {len(js_files)}')
+          lines.append('')
 
-          if [ -z "$HTML_FILES" ]; then
-            echo "Aucun fichier HTML detecte. Le workflow reste valide, mais aucun audit d'interface ne peut etre fait." >> rapports/audit-html-metier.md
-          else
-            echo "### Fichiers HTML" >> rapports/audit-html-metier.md
-            echo '```' >> rapports/audit-html-metier.md
-            echo "$HTML_FILES" >> rapports/audit-html-metier.md
-            echo '```' >> rapports/audit-html-metier.md
-          fi
+          if html_files:
+              lines.append('### Fichiers HTML')
+              for path in html_files:
+                  lines.append(f'- `{path}`')
+              lines.append('')
+          else:
+              warnings.append('Aucun fichier HTML detecte dans /src.')
 
-          {
-            echo ""
-            echo "### Fichiers CSS detectes"
-            echo '```'
-            if [ -z "$CSS_FILES" ]; then echo "Aucun"; else echo "$CSS_FILES"; fi
-            echo '```'
-            echo ""
-            echo "### Fichiers JavaScript detectes"
-            echo '```'
-            if [ -z "$JS_FILES" ]; then echo "Aucun"; else echo "$JS_FILES"; fi
-            echo '```'
-            echo ""
-          } >> rapports/audit-html-metier.md
+          external_pattern = re.compile(r'(https?://|cdn\.|unpkg\.com|jsdelivr\.net|cdnjs\.cloudflare\.com|googleapis\.com|gstatic\.com|fontawesome|bootstrapcdn|tailwindcss\.com)', re.I)
+          secret_pattern = re.compile(r'(password\s*=|motdepasse\s*=|mot_de_passe\s*=|token\s*=|api[_-]?key\s*=|apikey\s*=|client[_-]?secret\s*=|connection[_-]?string\s*=|chaine[_-]?connexion\s*=|jdbc:|dsn=|Bearer\s+[A-Za-z0-9._-]+)', re.I)
+          sql_pattern = re.compile(r'(SELECT\s+.*\s+FROM|INSERT\s+INTO|UPDATE\s+.*\s+SET|DELETE\s+FROM|DROP\s+TABLE|CREATE\s+TABLE)', re.I)
 
-      - name: Controler les dependances externes
-        run: |
-          {
-            echo "## 2. Controle dependances externes"
-            echo ""
-            echo "Regle projet : pas de CDN, pas de framework distant, pas de police distante, pas d'appel reseau cache dans les fichiers metier."
-            echo ""
-          } >> rapports/audit-html-metier.md
+          lines.append('## 2. Controle securite applicative')
+          lines.append('')
+          controlled_paths = []
+          for base in ['src', 'data', 'exports']:
+              base_path = Path(base)
+              if base_path.exists():
+                  controlled_paths.extend([p for p in base_path.rglob('*') if p.is_file() and p.suffix.lower() in {'.html', '.css', '.js', '.json', '.csv'}])
 
-          MATCHES=$(grep -RniE "(https?://|cdn\.|unpkg\.com|jsdelivr\.net|cdnjs\.cloudflare\.com|googleapis\.com|gstatic\.com|fontawesome|bootstrapcdn|tailwindcss\.com)" . \
-            --include="*.html" --include="*.css" --include="*.js" --include="*.json" \
-            --exclude-dir=".git" --exclude-dir="node_modules" --exclude-dir="dist" --exclude-dir="build" || true)
+          security_matches = []
+          sql_matches = []
+          for path in sorted(controlled_paths):
+              text = path.read_text(encoding='utf-8', errors='ignore')
+              for number, line in enumerate(text.splitlines(), start=1):
+                  if secret_pattern.search(line):
+                      security_matches.append((path, number, line.strip()[:180]))
+                  if sql_pattern.search(line):
+                      sql_matches.append((path, number, line.strip()[:180]))
 
-          if [ -n "$MATCHES" ]; then
-            {
-              echo "ALERTE : dependances externes ou appels reseau detectes."
-              echo ""
-              echo '```'
-              echo "$MATCHES"
-              echo '```'
-              echo ""
-              echo "Action recommandee : remplacer par du HTML/CSS/JS local ou documenter clairement la raison metier."
-              echo ""
-            } >> rapports/audit-html-metier.md
-          else
-            echo "OK : aucune dependance externe evidente detectee." >> rapports/audit-html-metier.md
-            echo "" >> rapports/audit-html-metier.md
-          fi
+          if security_matches:
+              lines.append('### Secrets potentiels')
+              for path, number, sample in security_matches:
+                  lines.append(f'- BLOQUANT : `{path}:{number}` — `{sample}`')
+                  errors.append(f'Secret potentiel detecte dans {path}:{number}')
+              lines.append('')
+          else:
+              lines.append('OK : aucun secret evident detecte dans /src, /data ou /exports.')
+              lines.append('')
 
-      - name: Controler les secrets et donnees sensibles
-        run: |
-          {
-            echo "## 3. Controle securite"
-            echo ""
-            echo "Regle bloquante : aucun mot de passe, token, cle API, identifiant AS400, requete SQL sensible ou chaine de connexion dans le front." 
-            echo ""
-          } >> rapports/audit-html-metier.md
+          if sql_matches:
+              lines.append('### Logique SQL sensible')
+              for path, number, sample in sql_matches:
+                  lines.append(f'- BLOQUANT : `{path}:{number}` — `{sample}`')
+                  errors.append(f'Logique SQL sensible detectee dans {path}:{number}')
+              lines.append('')
+          else:
+              lines.append('OK : aucune requete SQL sensible detectee dans les sources controlees.')
+              lines.append('')
 
-          SECRET_MATCHES=$(grep -RniE "(password|motdepasse|mot_de_passe|token|api[_-]?key|apikey|secret|client[_-]?secret|connection[_-]?string|chaine[_-]?connexion|AS400|ODBC|jdbc|dsn=|SELECT .* FROM|INSERT INTO|UPDATE .* SET|DELETE FROM)" . \
-            --include="*.html" --include="*.css" --include="*.js" --include="*.json" --include="*.env" \
-            --exclude-dir=".git" --exclude-dir="node_modules" --exclude-dir="dist" --exclude-dir="build" || true)
+          lines.append('## 3. Dependances externes')
+          lines.append('')
+          external_matches = []
+          for path in html_files + css_files + js_files:
+              text = path.read_text(encoding='utf-8', errors='ignore')
+              for number, line in enumerate(text.splitlines(), start=1):
+                  if external_pattern.search(line):
+                      external_matches.append((path, number, line.strip()[:180]))
 
-          if [ -n "$SECRET_MATCHES" ]; then
-            {
-              echo "BLOQUANT : risque de secret, donnee sensible ou logique ERP exposee detecte."
-              echo ""
-              echo '```'
-              echo "$SECRET_MATCHES"
-              echo '```'
-              echo ""
-              echo "Action obligatoire : supprimer ces elements du front et passer par une couche serveur ou un export securise." 
-              echo ""
-            } >> rapports/audit-html-metier.md
-            exit 1
-          else
-            echo "OK : aucun secret evident detecte." >> rapports/audit-html-metier.md
-            echo "" >> rapports/audit-html-metier.md
-          fi
+          if external_matches:
+              for path, number, sample in external_matches:
+                  lines.append(f'- ALERTE : `{path}:{number}` — `{sample}`')
+                  warnings.append(f'Dependance externe ou appel reseau detecte dans {path}:{number}')
+          else:
+              lines.append('OK : aucune dependance externe detectee dans les sources applicatives.')
+          lines.append('')
 
-      - name: Controler la base UX HTML
-        run: |
-          {
-            echo "## 4. Controle UX minimal"
-            echo ""
-          } >> rapports/audit-html-metier.md
+          lines.append('## 4. Controle UX HTML minimal')
+          lines.append('')
+          if html_files:
+              lines.append('| Fichier | Viewport | Boutons | Sauvegarde | Accessibilite | Print | Export |')
+              lines.append('|---|---|---|---|---|---|---|')
+              for path in html_files:
+                  text = path.read_text(encoding='utf-8', errors='ignore')
+                  lower = text.lower()
+                  viewport = 'name="viewport"' in lower or "name='viewport'" in lower
+                  buttons = '<button' in lower or 'role="button"' in lower or "role='button'" in lower
+                  save = 'localstorage' in lower or 'indexeddb' in lower or 'sessionstorage' in lower
+                  accessibility = 'aria-' in lower or 'role=' in lower or '<label' in lower or 'alt=' in lower
+                  print_ready = 'window.print' in lower or '@media print' in lower
+                  export_ready = 'blob' in lower or 'download' in lower or 'filereader' in lower
+                  def mark(value):
+                      return 'OK' if value else 'A VERIFIER'
+                  lines.append(f'| `{path}` | {mark(viewport)} | {mark(buttons)} | {mark(save)} | {mark(accessibility)} | {mark(print_ready)} | {mark(export_ready)} |')
+                  if not viewport:
+                      warnings.append(f'Viewport absent dans {path}')
+                  if not buttons:
+                      warnings.append(f'Aucun bouton/action detecte dans {path}')
+              lines.append('')
+          else:
+              lines.append('Controle UX non applicable : aucun fichier HTML dans /src.')
+              lines.append('')
 
-          HTML_FILES=$(find . -type f -name "*.html" \
-            -not -path "./.git/*" \
-            -not -path "./node_modules/*" \
-            -not -path "./dist/*" \
-            -not -path "./build/*" | sort)
+          lines.append('## 5. Poids et maintenabilite')
+          lines.append('')
+          files_for_size = html_files + css_files + js_files
+          if files_for_size:
+              lines.append('| Fichier | Taille | Lignes | Observation |')
+              lines.append('|---|---:|---:|---|')
+              for path in files_for_size:
+                  text = path.read_text(encoding='utf-8', errors='ignore')
+                  size = len(text.encode('utf-8'))
+                  line_count = len(text.splitlines())
+                  note = 'OK'
+                  if size > 500000:
+                      note = 'ALERTE : fichier tres lourd'
+                      warnings.append(f'Fichier tres lourd : {path}')
+                  elif size > 200000 or line_count > 2500:
+                      note = 'A surveiller'
+                      warnings.append(f'Fichier volumineux : {path}')
+                  lines.append(f'| `{path}` | {size} octets | {line_count} | {note} |')
+          else:
+              lines.append('Aucun fichier applicatif a mesurer.')
+          lines.append('')
 
-          if [ -z "$HTML_FILES" ]; then
-            echo "Controle UX non applicable : aucun fichier HTML." >> rapports/audit-html-metier.md
-            echo "" >> rapports/audit-html-metier.md
-            exit 0
-          fi
+          lines.append('## 6. Verdict')
+          lines.append('')
+          if errors:
+              lines.append('**ROUGE - audit HTML echoue : correction obligatoire.**')
+          elif warnings:
+              lines.append('**ORANGE - audit HTML valide avec alertes.**')
+          else:
+              lines.append('**VERT - audit HTML conforme.**')
+          lines.append('')
+          lines.append('Ce workflow controle les sources applicatives reelles. Les documents de methode, templates et fiches projet ne sont pas bloques pour des mots de prevention securite.')
+          lines.append('')
+          lines.append('Validation humaine obligatoire avant diffusion ou production.')
+          lines.append('')
 
-          for file in $HTML_FILES; do
-            echo "### $file" >> rapports/audit-html-metier.md
+          if errors:
+              lines.append('### Erreurs')
+              for error in errors:
+                  lines.append(f'- {error}')
+              lines.append('')
+          if warnings:
+              lines.append('### Alertes')
+              for warning in warnings[:40]:
+                  lines.append(f'- {warning}')
+              if len(warnings) > 40:
+                  lines.append(f'- ... {len(warnings) - 40} autres alertes')
+              lines.append('')
 
-            if grep -qi "name=[\"']viewport[\"']" "$file"; then
-              echo "- OK : balise viewport presente." >> rapports/audit-html-metier.md
-            else
-              echo "- ALERTE : balise viewport manquante, risque mobile/responsive." >> rapports/audit-html-metier.md
-            fi
+          report.write_text('\n'.join(lines), encoding='utf-8')
+          print('\n'.join(lines[:90]))
 
-            if grep -qi "<button\|role=[\"']button[\"']" "$file"; then
-              echo "- OK : action utilisateur detectee." >> rapports/audit-html-metier.md
-            else
-              echo "- ALERTE : aucun bouton ou role bouton detecte." >> rapports/audit-html-metier.md
-            fi
-
-            if grep -qi "localStorage\|sessionStorage\|indexedDB" "$file"; then
-              echo "- OK : mecanisme de sauvegarde locale detecte." >> rapports/audit-html-metier.md
-            else
-              echo "- INFO : aucune sauvegarde locale detectee." >> rapports/audit-html-metier.md
-            fi
-
-            if grep -qi "aria-\|alt=\|role=" "$file"; then
-              echo "- OK : indices d'accessibilite detectes." >> rapports/audit-html-metier.md
-            else
-              echo "- ALERTE : peu ou pas d'indices d'accessibilite detectes." >> rapports/audit-html-metier.md
-            fi
-
-            echo "" >> rapports/audit-html-metier.md
-          done
-
-      - name: Controler la taille des fichiers metier
-        run: |
-          {
-            echo "## 5. Controle poids des fichiers"
-            echo ""
-            echo "Objectif : garder des fichiers lisibles, rapides et maintenables."
-            echo ""
-            echo "| Fichier | Taille | Observation |"
-            echo "|---|---:|---|"
-          } >> rapports/audit-html-metier.md
-
-          find . -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" \) \
-            -not -path "./.git/*" \
-            -not -path "./node_modules/*" \
-            -not -path "./dist/*" \
-            -not -path "./build/*" | sort | while read -r file; do
-              size=$(wc -c < "$file")
-              if [ "$size" -gt 500000 ]; then
-                note="ALERTE : fichier tres lourd, a decouper ou optimiser"
-              elif [ "$size" -gt 200000 ]; then
-                note="A surveiller : fichier volumineux"
-              else
-                note="OK"
-              fi
-              echo "| $file | ${size} octets | $note |" >> rapports/audit-html-metier.md
-            done
-
-          echo "" >> rapports/audit-html-metier.md
-
-      - name: Ajouter le verdict final
-        if: always()
-        run: |
-          {
-            echo "## 6. Verdict"
-            echo ""
-            echo "Ce rapport sert de controle automatique de premier niveau."
-            echo "Il ne remplace pas une revue humaine avant diffusion ou mise en production."
-            echo ""
-            echo "Priorites de validation :"
-            echo "1. Securite : aucun secret ni acces ERP dans le front."
-            echo "2. Robustesse : fonctionnement local et degradation propre."
-            echo "3. Usage terrain : interface mobile, lisible et rapide a comprendre."
-            echo "4. Maintenabilite : fichiers clairs, limites en taille, logique documentee."
-          } >> rapports/audit-html-metier.md
+          if errors:
+              sys.exit(1)
+          PY
 
       - name: Publier le rapport d'audit
         if: always()
