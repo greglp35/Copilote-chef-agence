@@ -220,8 +220,8 @@ jobs:
           for file in $HTML_FILES; do
             echo "### $file" >> rapports/recette-application-html.md
 
-            IMG_COUNT=$(grep -oi "<img" "$file" | wc -l | tr -d ' ')
-            ALT_COUNT=$(grep -oi "<img[^>]*alt=" "$file" | wc -l | tr -d ' ')
+            IMG_COUNT=$( (grep -oi "<img" "$file" || true) | wc -l | tr -d ' ' )
+            ALT_COUNT=$( (grep -oi "<img[^>]*alt=" "$file" || true) | wc -l | tr -d ' ' )
 
             if [ "$IMG_COUNT" -eq 0 ]; then
               echo "- OK : aucune image a controler." >> rapports/recette-application-html.md
