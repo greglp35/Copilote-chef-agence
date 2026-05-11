@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "dataset": "stock-mini-maxi",
+  "description": "Schema de donnees de test pour le module stock mini/maxi.",
+  "fields": [
+    { "name": "code_article", "type": "string", "required": true, "example": "ART-001" },
+    { "name": "designation", "type": "string", "required": true, "example": "Laine de verre 100 mm" },
+    { "name": "famille", "type": "string", "required": true, "example": "Isolation" },
+    { "name": "stock_physique", "type": "number", "required": true, "example": 24 },
+    { "name": "stock_reserve", "type": "number", "required": true, "example": 4 },
+    { "name": "commandes_en_cours", "type": "number", "required": true, "example": 10 },
+    { "name": "vente_30j", "type": "number", "required": true, "example": 18 },
+    { "name": "vente_90j", "type": "number", "required": true, "example": 54 },
+    { "name": "delai_fournisseur_jours", "type": "number", "required": true, "example": 7 },
+    { "name": "mini", "type": "number", "required": true, "example": 12 },
+    { "name": "maxi", "type": "number", "required": true, "example": 36 },
+    { "name": "multiple_achat", "type": "number", "required": true, "example": 6 },
+    { "name": "emplacement", "type": "string", "required": false, "example": "A1" },
+    { "name": "classe", "type": "string", "required": false, "example": "A" }
+  ],
+  "computed_fields": [
+    "stock_disponible = stock_physique - stock_reserve",
+    "stock_projete = stock_physique - stock_reserve + commandes_en_cours",
+    "vente_moyenne_jour = max(vente_30j / 30, vente_90j / 90)",
+    "besoin_theorique = mini - stock_projete",
+    "quantite_recommandee = besoin_theorique arrondi au multiple_achat superieur",
+    "statut = OK / SOUS_MINI / A_COMMANDER / SURSTOCK / INCOMPATIBLE"
+  ],
+  "security_note": "Donnees fictives ou anonymisees uniquement. Aucun identifiant sensible. Aucun acces direct a une source externe."
+}
