@@ -1,0 +1,413 @@
+name: Recette Application HTML
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'templates/**'
+      - '.github/workflows/recette-application-html.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'templates/**'
+      - '.github/workflows/recette-application-html.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  recette-application-html:
+    name: Recette terrain des applications HTML
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le depot
+        uses: actions/checkout@v4
+
+      - name: Preparer le rapport
+        run: |
+          mkdir -p rapports
+          {
+            echo "# Rapport Recette Application HTML"
+            echo ""
+            echo "Date UTC : $(date -u '+%Y-%m-%d %H:%M:%S')"
+            echo "Depot : $GITHUB_REPOSITORY"
+            echo "Branche ou reference : $GITHUB_REF_NAME"
+            echo "Commit : $GITHUB_SHA"
+            echo ""
+            echo "Objectif : controler qu'une application HTML metier est exploitable sur le terrain avant diffusion." 
+            echo ""
+          } > rapports/recette-application-html.md
+
+      - name: Inventorier les applications HTML dans src
+        run: |
+          HTML_FILES=$(find src -type f -name "*.html" | sort || true)
+
+          {
+            echo "## 1. Inventaire"
+            echo ""
+          } >> rapports/recette-application-html.md
+
+          if [ -z "$HTML_FILES" ]; then
+            {
+              echo "Aucun fichier HTML detecte dans /src."
+              echo ""
+              echo "Statut : non applicable pour l'instant."
+              echo ""
+              echo "Action attendue : placer les applications HTML metier dans /src avant recette." 
+              echo ""
+            } >> rapports/recette-application-html.md
+            exit 0
+          fi
+
+          echo "Fichiers HTML detectes :" >> rapports/recette-application-html.md
+          echo "" >> rapports/recette-application-html.md
+          echo '```' >> rapports/recette-application-html.md
+          echo "$HTML_FILES" >> rapports/recette-application-html.md
+          echo '```' >> rapports/recette-application-html.md
+          echo "" >> rapports/recette-application-html.md
+
+      - name: Controler la structure HTML minimale
+        run: |
+          HTML_FILES=$(find src -type f -name "*.html" | sort || true)
+          [ -z "$HTML_FILES" ] && exit 0
+
+          {
+            echo "## 2. Structure HTML minimale"
+            echo ""
+          } >> rapports/recette-application-html.md
+
+          BLOCKING=0
+
+          for file in $HTML_FILES; do
+            echo "### $file" >> rapports/recette-application-html.md
+
+            if grep -qi "<!doctype html" "$file"; then
+              echo "- OK : doctype HTML present." >> rapports/recette-application-html.md
+            else
+              echo "- BLOQUANT : doctype HTML manquant." >> rapports/recette-application-html.md
+              BLOCKING=1
+            fi
+
+            if grep -qi "<html" "$file" && grep -qi "</html>" "$file"; then
+              echo "- OK : balise html presente." >> rapports/recette-application-html.md
+            else
+              echo "- BLOQUANT : balise html incomplete ou manquante." >> rapports/recette-application-html.md
+              BLOCKING=1
+            fi
+
+            if grep -qi "<head" "$file" && grep -qi "</head>" "$file"; then
+              echo "- OK : head present." >> rapports/recette-application-html.md
+            else
+              echo "- BLOQUANT : head manquant ou incomplet." >> rapports/recette-application-html.md
+              BLOCKING=1
+            fi
+
+            if grep -qi "<body" "$file" && grep -qi "</body>" "$file"; then
+              echo "- OK : body present." >> rapports/recette-application-html.md
+            else
+              echo "- BLOQUANT : body manquant ou incomplet." >> rapports/recette-application-html.md
+              BLOCKING=1
+            fi
+
+            if grep -qi "<title>" "$file"; then
+              echo "- OK : title present." >> rapports/recette-application-html.md
+            else
+              echo "- ALERTE : title manquant." >> rapports/recette-application-html.md
+            fi
+
+            echo "" >> rapports/recette-application-html.md
+          done
+
+          if [ "$BLOCKING" -eq 1 ]; then
+            echo "BLOQUANT : structure HTML minimale non respectee." >> rapports/recette-application-html.md
+            exit 1
+          fi
+
+      - name: Controler le mobile et le responsive
+        run: |
+          HTML_FILES=$(find src -type f -name "*.html" | sort || true)
+          [ -z "$HTML_FILES" ] && exit 0
+
+          {
+            echo "## 3. Mobile et responsive"
+            echo ""
+          } >> rapports/recette-application-html.md
+
+          for file in $HTML_FILES; do
+            echo "### $file" >> rapports/recette-application-html.md
+
+            if grep -qi "name=[\"']viewport[\"']" "$file"; then
+              echo "- OK : viewport detecte." >> rapports/recette-application-html.md
+            else
+              echo "- ALERTE : viewport absent, risque d'affichage mauvais sur mobile." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "@media\|grid-template\|flex\|minmax\|clamp(" "$file"; then
+              echo "- OK : indices CSS responsive detectes." >> rapports/recette-application-html.md
+            else
+              echo "- INFO : peu d'indices responsive detectes." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "min-height: 44px\|height: 44px\|padding: .*1rem\|padding: .*12px\|touch-action" "$file"; then
+              echo "- OK : indices de boutons tactiles detectes." >> rapports/recette-application-html.md
+            else
+              echo "- INFO : verifier manuellement la taille des zones tactiles." >> rapports/recette-application-html.md
+            fi
+
+            echo "" >> rapports/recette-application-html.md
+          done
+
+      - name: Controler les actions utilisateur essentielles
+        run: |
+          HTML_FILES=$(find src -type f -name "*.html" | sort || true)
+          [ -z "$HTML_FILES" ] && exit 0
+
+          {
+            echo "## 4. Actions utilisateur"
+            echo ""
+          } >> rapports/recette-application-html.md
+
+          for file in $HTML_FILES; do
+            echo "### $file" >> rapports/recette-application-html.md
+
+            if grep -qi "<button\|role=[\"']button[\"']" "$file"; then
+              echo "- OK : boutons ou actions detectes." >> rapports/recette-application-html.md
+            else
+              echo "- ALERTE : aucun bouton detecte. Verifier si l'application est vraiment actionnable." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "import\|export\|download\|FileReader\|Blob" "$file"; then
+              echo "- OK : indices import/export detectes." >> rapports/recette-application-html.md
+            else
+              echo "- INFO : aucun import/export detecte." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "print\|window.print\|@media print" "$file"; then
+              echo "- OK : impression ou mode print detecte." >> rapports/recette-application-html.md
+            else
+              echo "- INFO : impression non detectee." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "localStorage\|sessionStorage\|indexedDB" "$file"; then
+              echo "- OK : sauvegarde locale detectee." >> rapports/recette-application-html.md
+            else
+              echo "- ALERTE : aucune sauvegarde locale detectee. Risque de perte de donnees." >> rapports/recette-application-html.md
+            fi
+
+            echo "" >> rapports/recette-application-html.md
+          done
+
+      - name: Controler accessibilite minimale
+        run: |
+          HTML_FILES=$(find src -type f -name "*.html" | sort || true)
+          [ -z "$HTML_FILES" ] && exit 0
+
+          {
+            echo "## 5. Accessibilite minimale"
+            echo ""
+          } >> rapports/recette-application-html.md
+
+          for file in $HTML_FILES; do
+            echo "### $file" >> rapports/recette-application-html.md
+
+            IMG_COUNT=$(grep -oi "<img" "$file" | wc -l | tr -d ' ')
+            ALT_COUNT=$(grep -oi "<img[^>]*alt=" "$file" | wc -l | tr -d ' ')
+
+            if [ "$IMG_COUNT" -eq 0 ]; then
+              echo "- OK : aucune image a controler." >> rapports/recette-application-html.md
+            elif [ "$IMG_COUNT" -eq "$ALT_COUNT" ]; then
+              echo "- OK : toutes les images semblent avoir un attribut alt." >> rapports/recette-application-html.md
+            else
+              echo "- ALERTE : certaines images semblent sans attribut alt ($ALT_COUNT/$IMG_COUNT)." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "aria-\|role=" "$file"; then
+              echo "- OK : indices ARIA/roles detectes." >> rapports/recette-application-html.md
+            else
+              echo "- INFO : aucun indice ARIA/role detecte." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "<label\|aria-label\|placeholder=" "$file"; then
+              echo "- OK : indices de libelles de formulaire detectes." >> rapports/recette-application-html.md
+            else
+              echo "- INFO : aucun libelle de formulaire detecte ou formulaire absent." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "focus-visible\|:focus" "$file"; then
+              echo "- OK : style focus detecte." >> rapports/recette-application-html.md
+            else
+              echo "- INFO : style focus clavier non detecte." >> rapports/recette-application-html.md
+            fi
+
+            echo "" >> rapports/recette-application-html.md
+          done
+
+      - name: Controler securite front HTML
+        run: |
+          HTML_FILES=$(find src -type f -name "*.html" | sort || true)
+          [ -z "$HTML_FILES" ] && exit 0
+
+          {
+            echo "## 6. Securite front"
+            echo ""
+          } >> rapports/recette-application-html.md
+
+          BLOCKING=0
+
+          for file in $HTML_FILES; do
+            echo "### $file" >> rapports/recette-application-html.md
+
+            MATCHES=$(grep -niE "(password|motdepasse|mot_de_passe|token|api[_-]?key|apikey|client[_-]?secret|connection[_-]?string|chaine[_-]?connexion|AS400|ODBC|jdbc|dsn=|Bearer [A-Za-z0-9._-]+|SELECT .* FROM|INSERT INTO|UPDATE .* SET|DELETE FROM)" "$file" || true)
+
+            if [ -n "$MATCHES" ]; then
+              echo "- BLOQUANT : secret, ERP, ODBC ou SQL sensible potentiellement expose." >> rapports/recette-application-html.md
+              echo '```' >> rapports/recette-application-html.md
+              echo "$MATCHES" >> rapports/recette-application-html.md
+              echo '```' >> rapports/recette-application-html.md
+              BLOCKING=1
+            else
+              echo "- OK : aucun secret evident detecte dans ce fichier." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qiE "(https?://|cdn\.|unpkg\.com|jsdelivr\.net|googleapis\.com|gstatic\.com|cdnjs\.cloudflare\.com)" "$file"; then
+              echo "- ALERTE : dependance externe ou appel reseau detecte. A justifier ou supprimer." >> rapports/recette-application-html.md
+            else
+              echo "- OK : aucune dependance externe evidente." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "innerHTML\|outerHTML\|document.write" "$file"; then
+              echo "- ALERTE : usage de innerHTML/outerHTML/document.write detecte. Verifier le risque d'injection." >> rapports/recette-application-html.md
+            else
+              echo "- OK : pas d'usage evident de innerHTML/outerHTML/document.write." >> rapports/recette-application-html.md
+            fi
+
+            echo "" >> rapports/recette-application-html.md
+          done
+
+          if [ "$BLOCKING" -eq 1 ]; then
+            echo "BLOQUANT : risque securite detecte dans au moins un fichier HTML." >> rapports/recette-application-html.md
+            exit 1
+          fi
+
+      - name: Controler robustesse JavaScript apparente
+        run: |
+          HTML_FILES=$(find src -type f -name "*.html" | sort || true)
+          [ -z "$HTML_FILES" ] && exit 0
+
+          {
+            echo "## 7. Robustesse JavaScript apparente"
+            echo ""
+          } >> rapports/recette-application-html.md
+
+          for file in $HTML_FILES; do
+            echo "### $file" >> rapports/recette-application-html.md
+
+            if grep -qi "try[[:space:]]*{" "$file"; then
+              echo "- OK : gestion try/catch detectee." >> rapports/recette-application-html.md
+            else
+              echo "- INFO : aucune gestion try/catch detectee." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "addEventListener" "$file"; then
+              echo "- OK : addEventListener detecte." >> rapports/recette-application-html.md
+            else
+              echo "- INFO : addEventListener non detecte." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "console.log" "$file"; then
+              echo "- ALERTE : console.log detecte. Nettoyer avant diffusion si inutile." >> rapports/recette-application-html.md
+            else
+              echo "- OK : pas de console.log detecte." >> rapports/recette-application-html.md
+            fi
+
+            if grep -qi "TODO\|FIXME\|BUG" "$file"; then
+              echo "- ALERTE : TODO/FIXME/BUG detecte." >> rapports/recette-application-html.md
+            else
+              echo "- OK : pas de TODO/FIXME/BUG detecte." >> rapports/recette-application-html.md
+            fi
+
+            echo "" >> rapports/recette-application-html.md
+          done
+
+      - name: Controler poids et maintenabilite
+        run: |
+          HTML_FILES=$(find src -type f -name "*.html" | sort || true)
+          [ -z "$HTML_FILES" ] && exit 0
+
+          {
+            echo "## 8. Poids et maintenabilite"
+            echo ""
+            echo "| Fichier | Taille | Lignes | Observation |"
+            echo "|---|---:|---:|---|"
+          } >> rapports/recette-application-html.md
+
+          for file in $HTML_FILES; do
+            size=$(wc -c < "$file")
+            lines=$(wc -l < "$file")
+
+            if [ "$size" -gt 500000 ]; then
+              note="ALERTE : fichier tres lourd, decoupage recommande"
+            elif [ "$size" -gt 200000 ]; then
+              note="A surveiller : fichier volumineux"
+            elif [ "$lines" -gt 2500 ]; then
+              note="A surveiller : beaucoup de lignes"
+            else
+              note="OK"
+            fi
+
+            echo "| $file | ${size} octets | $lines | $note |" >> rapports/recette-application-html.md
+          done
+
+          echo "" >> rapports/recette-application-html.md
+
+      - name: Generer checklist de validation humaine
+        if: always()
+        run: |
+          {
+            echo "## 9. Checklist humaine avant diffusion"
+            echo ""
+            echo "A valider manuellement sur mobile et ordinateur :"
+            echo ""
+            echo "- L'application s'ouvre sans erreur visible."
+            echo "- L'objectif est compris en moins de 10 secondes."
+            echo "- Les boutons principaux sont visibles et utilisables au doigt."
+            echo "- Les donnees importantes ne disparaissent pas apres rafraichissement si une sauvegarde est attendue."
+            echo "- Les etats vides sont clairs."
+            echo "- Les messages d'erreur sont comprehensibles."
+            echo "- L'import/export fonctionne avec un fichier de test non sensible."
+            echo "- L'impression est lisible si elle est prevue."
+            echo "- Aucun secret ni identifiant n'est visible dans le code."
+            echo "- La diffusion est validee humainement."
+            echo ""
+          } >> rapports/recette-application-html.md
+
+      - name: Verdict final
+        if: always()
+        run: |
+          {
+            echo "## 10. Verdict"
+            echo ""
+            echo "Cette recette automatique fournit un controle de premier niveau." 
+            echo "Elle ne remplace pas un test reel sur mobile, tablette et ordinateur." 
+            echo ""
+            echo "Decision recommandee :"
+            echo "- SUCCES : recette technique minimale acceptable, validation humaine requise."
+            echo "- ECHEC : corriger les points bloquants avant diffusion."
+          } >> rapports/recette-application-html.md
+
+      - name: Publier le rapport de recette
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-recette-application-html
+          path: rapports/recette-application-html.md
