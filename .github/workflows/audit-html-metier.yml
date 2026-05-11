@@ -1,0 +1,247 @@
+name: Audit HTML Metier
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  audit-html-metier:
+    name: Audit securite et qualite HTML metier
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le depot
+        uses: actions/checkout@v4
+
+      - name: Preparer le rapport
+        run: |
+          mkdir -p rapports
+          {
+            echo "# Rapport d'audit HTML Metier"
+            echo ""
+            echo "Date UTC : $(date -u '+%Y-%m-%d %H:%M:%S')"
+            echo "Depot : $GITHUB_REPOSITORY"
+            echo "Branche ou reference : $GITHUB_REF_NAME"
+            echo "Commit : $GITHUB_SHA"
+            echo ""
+          } > rapports/audit-html-metier.md
+
+      - name: Inventorier les fichiers utiles
+        run: |
+          {
+            echo "## 1. Inventaire des fichiers"
+            echo ""
+          } >> rapports/audit-html-metier.md
+
+          HTML_FILES=$(find . -type f -name "*.html" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -not -path "./dist/*" \
+            -not -path "./build/*" | sort)
+
+          CSS_FILES=$(find . -type f -name "*.css" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -not -path "./dist/*" \
+            -not -path "./build/*" | sort)
+
+          JS_FILES=$(find . -type f -name "*.js" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -not -path "./dist/*" \
+            -not -path "./build/*" | sort)
+
+          if [ -z "$HTML_FILES" ]; then
+            echo "Aucun fichier HTML detecte. Le workflow reste valide, mais aucun audit d'interface ne peut etre fait." >> rapports/audit-html-metier.md
+          else
+            echo "### Fichiers HTML" >> rapports/audit-html-metier.md
+            echo '```' >> rapports/audit-html-metier.md
+            echo "$HTML_FILES" >> rapports/audit-html-metier.md
+            echo '```' >> rapports/audit-html-metier.md
+          fi
+
+          {
+            echo ""
+            echo "### Fichiers CSS detectes"
+            echo '```'
+            if [ -z "$CSS_FILES" ]; then echo "Aucun"; else echo "$CSS_FILES"; fi
+            echo '```'
+            echo ""
+            echo "### Fichiers JavaScript detectes"
+            echo '```'
+            if [ -z "$JS_FILES" ]; then echo "Aucun"; else echo "$JS_FILES"; fi
+            echo '```'
+            echo ""
+          } >> rapports/audit-html-metier.md
+
+      - name: Controler les dependances externes
+        run: |
+          {
+            echo "## 2. Controle dependances externes"
+            echo ""
+            echo "Regle projet : pas de CDN, pas de framework distant, pas de police distante, pas d'appel reseau cache dans les fichiers metier."
+            echo ""
+          } >> rapports/audit-html-metier.md
+
+          MATCHES=$(grep -RniE "(https?://|cdn\.|unpkg\.com|jsdelivr\.net|cdnjs\.cloudflare\.com|googleapis\.com|gstatic\.com|fontawesome|bootstrapcdn|tailwindcss\.com)" . \
+            --include="*.html" --include="*.css" --include="*.js" --include="*.json" \
+            --exclude-dir=".git" --exclude-dir="node_modules" --exclude-dir="dist" --exclude-dir="build" || true)
+
+          if [ -n "$MATCHES" ]; then
+            {
+              echo "ALERTE : dependances externes ou appels reseau detectes."
+              echo ""
+              echo '```'
+              echo "$MATCHES"
+              echo '```'
+              echo ""
+              echo "Action recommandee : remplacer par du HTML/CSS/JS local ou documenter clairement la raison metier."
+              echo ""
+            } >> rapports/audit-html-metier.md
+          else
+            echo "OK : aucune dependance externe evidente detectee." >> rapports/audit-html-metier.md
+            echo "" >> rapports/audit-html-metier.md
+          fi
+
+      - name: Controler les secrets et donnees sensibles
+        run: |
+          {
+            echo "## 3. Controle securite"
+            echo ""
+            echo "Regle bloquante : aucun mot de passe, token, cle API, identifiant AS400, requete SQL sensible ou chaine de connexion dans le front." 
+            echo ""
+          } >> rapports/audit-html-metier.md
+
+          SECRET_MATCHES=$(grep -RniE "(password|motdepasse|mot_de_passe|token|api[_-]?key|apikey|secret|client[_-]?secret|connection[_-]?string|chaine[_-]?connexion|AS400|ODBC|jdbc|dsn=|SELECT .* FROM|INSERT INTO|UPDATE .* SET|DELETE FROM)" . \
+            --include="*.html" --include="*.css" --include="*.js" --include="*.json" --include="*.env" \
+            --exclude-dir=".git" --exclude-dir="node_modules" --exclude-dir="dist" --exclude-dir="build" || true)
+
+          if [ -n "$SECRET_MATCHES" ]; then
+            {
+              echo "BLOQUANT : risque de secret, donnee sensible ou logique ERP exposee detecte."
+              echo ""
+              echo '```'
+              echo "$SECRET_MATCHES"
+              echo '```'
+              echo ""
+              echo "Action obligatoire : supprimer ces elements du front et passer par une couche serveur ou un export securise." 
+              echo ""
+            } >> rapports/audit-html-metier.md
+            exit 1
+          else
+            echo "OK : aucun secret evident detecte." >> rapports/audit-html-metier.md
+            echo "" >> rapports/audit-html-metier.md
+          fi
+
+      - name: Controler la base UX HTML
+        run: |
+          {
+            echo "## 4. Controle UX minimal"
+            echo ""
+          } >> rapports/audit-html-metier.md
+
+          HTML_FILES=$(find . -type f -name "*.html" \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -not -path "./dist/*" \
+            -not -path "./build/*" | sort)
+
+          if [ -z "$HTML_FILES" ]; then
+            echo "Controle UX non applicable : aucun fichier HTML." >> rapports/audit-html-metier.md
+            echo "" >> rapports/audit-html-metier.md
+            exit 0
+          fi
+
+          for file in $HTML_FILES; do
+            echo "### $file" >> rapports/audit-html-metier.md
+
+            if grep -qi "name=[\"']viewport[\"']" "$file"; then
+              echo "- OK : balise viewport presente." >> rapports/audit-html-metier.md
+            else
+              echo "- ALERTE : balise viewport manquante, risque mobile/responsive." >> rapports/audit-html-metier.md
+            fi
+
+            if grep -qi "<button\|role=[\"']button[\"']" "$file"; then
+              echo "- OK : action utilisateur detectee." >> rapports/audit-html-metier.md
+            else
+              echo "- ALERTE : aucun bouton ou role bouton detecte." >> rapports/audit-html-metier.md
+            fi
+
+            if grep -qi "localStorage\|sessionStorage\|indexedDB" "$file"; then
+              echo "- OK : mecanisme de sauvegarde locale detecte." >> rapports/audit-html-metier.md
+            else
+              echo "- INFO : aucune sauvegarde locale detectee." >> rapports/audit-html-metier.md
+            fi
+
+            if grep -qi "aria-\|alt=\|role=" "$file"; then
+              echo "- OK : indices d'accessibilite detectes." >> rapports/audit-html-metier.md
+            else
+              echo "- ALERTE : peu ou pas d'indices d'accessibilite detectes." >> rapports/audit-html-metier.md
+            fi
+
+            echo "" >> rapports/audit-html-metier.md
+          done
+
+      - name: Controler la taille des fichiers metier
+        run: |
+          {
+            echo "## 5. Controle poids des fichiers"
+            echo ""
+            echo "Objectif : garder des fichiers lisibles, rapides et maintenables."
+            echo ""
+            echo "| Fichier | Taille | Observation |"
+            echo "|---|---:|---|"
+          } >> rapports/audit-html-metier.md
+
+          find . -type f \( -name "*.html" -o -name "*.css" -o -name "*.js" \) \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -not -path "./dist/*" \
+            -not -path "./build/*" | sort | while read -r file; do
+              size=$(wc -c < "$file")
+              if [ "$size" -gt 500000 ]; then
+                note="ALERTE : fichier tres lourd, a decouper ou optimiser"
+              elif [ "$size" -gt 200000 ]; then
+                note="A surveiller : fichier volumineux"
+              else
+                note="OK"
+              fi
+              echo "| $file | ${size} octets | $note |" >> rapports/audit-html-metier.md
+            done
+
+          echo "" >> rapports/audit-html-metier.md
+
+      - name: Ajouter le verdict final
+        if: always()
+        run: |
+          {
+            echo "## 6. Verdict"
+            echo ""
+            echo "Ce rapport sert de controle automatique de premier niveau."
+            echo "Il ne remplace pas une revue humaine avant diffusion ou mise en production."
+            echo ""
+            echo "Priorites de validation :"
+            echo "1. Securite : aucun secret ni acces ERP dans le front."
+            echo "2. Robustesse : fonctionnement local et degradation propre."
+            echo "3. Usage terrain : interface mobile, lisible et rapide a comprendre."
+            echo "4. Maintenabilite : fichiers clairs, limites en taille, logique documentee."
+          } >> rapports/audit-html-metier.md
+
+      - name: Publier le rapport d'audit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-audit-html-metier
+          path: rapports/audit-html-metier.md
