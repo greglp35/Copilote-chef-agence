@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Recette test HTML metier</title>
+  <meta name="description" content="Page locale de test pour verifier la recette des applications HTML metier.">
+  <style>
+    :root {
+      --jaune: #f5c400;
+      --noir: #1a1a1a;
+      --gris: #f4f4f4;
+      --blanc: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--gris);
+      color: var(--noir);
+      line-height: 1.5;
+    }
+
+    header,
+    main,
+    footer {
+      width: min(960px, 100%);
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    header {
+      background: var(--noir);
+      color: var(--blanc);
+      border-bottom: 6px solid var(--jaune);
+    }
+
+    main {
+      display: grid;
+      gap: 1rem;
+    }
+
+    section {
+      background: var(--blanc);
+      border-radius: 16px;
+      padding: 1rem;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    input,
+    textarea,
+    button {
+      width: 100%;
+      font: inherit;
+      border-radius: 12px;
+    }
+
+    input,
+    textarea {
+      border: 1px solid #cccccc;
+      padding: 0.85rem;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      min-height: 44px;
+      border: 0;
+      padding: 0.85rem 1rem;
+      background: var(--jaune);
+      color: var(--noir);
+      font-weight: 800;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 3px solid var(--jaune);
+      outline-offset: 3px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .status {
+      border-left: 6px solid var(--jaune);
+      padding: 0.75rem;
+      background: #fff8d6;
+      border-radius: 10px;
+    }
+
+    @media (max-width: 640px) {
+      header,
+      main,
+      footer {
+        padding: 0.85rem;
+      }
+
+      h1 {
+        font-size: 1.6rem;
+      }
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      button,
+      .actions {
+        display: none;
+      }
+
+      section {
+        box-shadow: none;
+        border: 1px solid #dddddd;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Recette test HTML metier</h1>
+    <p>Page locale simple pour verifier le workflow de recette.</p>
+  </header>
+
+  <main>
+    <section aria-labelledby="objectif-title">
+      <h2 id="objectif-title">Objectif</h2>
+      <p>Cette page sert de fichier de test pour controler la structure, le responsive, les actions, la sauvegarde locale, l'accessibilite et l'impression.</p>
+    </section>
+
+    <section aria-labelledby="form-title">
+      <h2 id="form-title">Fiche de controle</h2>
+      <form id="control-form">
+        <p>
+          <label for="project-name">Nom du projet</label>
+          <input id="project-name" name="project-name" type="text" placeholder="Exemple : cockpit agence" autocomplete="off">
+        </p>
+
+        <p>
+          <label for="project-note">Note de controle</label>
+          <textarea id="project-note" name="project-note" placeholder="Saisir une note de recette terrain"></textarea>
+        </p>
+
+        <div class="actions">
+          <button type="button" id="save-button">Sauvegarder</button>
+          <button type="button" id="clear-button">Effacer</button>
+          <button type="button" id="print-button">Imprimer</button>
+          <button type="button" id="export-button">Exporter</button>
+        </div>
+      </form>
+    </section>
+
+    <section aria-labelledby="status-title">
+      <h2 id="status-title">Statut</h2>
+      <p id="status-message" class="status" role="status">Pret pour la recette.</p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Validation humaine obligatoire avant diffusion.</p>
+  </footer>
+
+  <script>
+    const storageName = 'recette-test-html-metier';
+    const projectName = document.getElementById('project-name');
+    const projectNote = document.getElementById('project-note');
+    const statusMessage = document.getElementById('status-message');
+    const saveButton = document.getElementById('save-button');
+    const clearButton = document.getElementById('clear-button');
+    const printButton = document.getElementById('print-button');
+    const exportButton = document.getElementById('export-button');
+
+    function setStatus(message) {
+      statusMessage.textContent = message;
+    }
+
+    function getData() {
+      return {
+        projectName: projectName.value.trim(),
+        projectNote: projectNote.value.trim(),
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    function saveData() {
+      try {
+        localStorage.setItem(storageName, JSON.stringify(getData()));
+        setStatus('Donnees sauvegardees localement.');
+      } catch (error) {
+        setStatus('Sauvegarde impossible sur cet appareil.');
+      }
+    }
+
+    function loadData() {
+      try {
+        const rawData = localStorage.getItem(storageName);
+        if (!rawData) {
+          return;
+        }
+
+        const data = JSON.parse(rawData);
+        projectName.value = data.projectName || '';
+        projectNote.value = data.projectNote || '';
+        setStatus('Donnees restaurees depuis la sauvegarde locale.');
+      } catch (error) {
+        setStatus('Lecture de la sauvegarde impossible.');
+      }
+    }
+
+    function clearData() {
+      try {
+        localStorage.removeItem(storageName);
+        projectName.value = '';
+        projectNote.value = '';
+        setStatus('Donnees effacees.');
+      } catch (error) {
+        setStatus('Effacement impossible sur cet appareil.');
+      }
+    }
+
+    function exportData() {
+      try {
+        const file = new Blob([JSON.stringify(getData(), null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(file);
+        link.download = 'recette-test-html-metier.json';
+        link.click();
+        URL.revokeObjectURL(link.href);
+        setStatus('Export prepare.');
+      } catch (error) {
+        setStatus('Export impossible sur cet appareil.');
+      }
+    }
+
+    saveButton.addEventListener('click', saveData);
+    clearButton.addEventListener('click', clearData);
+    printButton.addEventListener('click', () => window.print());
+    exportButton.addEventListener('click', exportData);
+
+    loadData();
+  </script>
+</body>
+</html>
