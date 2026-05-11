@@ -1,6 +1,32 @@
 # Copilote-chef-agence
 Assistant IA pour le pilotage d'une agence tout faire matériaux automatisation to do analyse et support 
 
+## Socle projet Copilote Chef d'Agence
+
+Ce dépôt sert de base de travail pour le projet **Copilote Chef d'Agence**.
+
+Objectif : construire progressivement une base robuste pour des applications HTML métier, des workflows de contrôle, des rapports d'audit, des modèles de données et des assistants IA utiles au pilotage d'une agence de négoce de matériaux.
+
+Principes prioritaires :
+
+- sécurité avant automatisation ;
+- validation humaine obligatoire avant diffusion ou mise en production ;
+- zéro dépendance externe par défaut pour les applications HTML métier ;
+- aucun secret, token, mot de passe, identifiant AS400, chaîne ODBC ou requête SQL sensible dans le HTML ;
+- séparation entre sources, données, exports, rapports et documentation ;
+- traçabilité des décisions et des corrections.
+
+## Structure projet cible
+
+```text
+/docs       Documentation, règles, dossiers de référence
+/src        Sources applicatives HTML/CSS/JS
+/templates  Modèles réutilisables
+/exports    Exports générés ou exemples non sensibles
+/rapports   Rapports d'audit et de contrôle
+/data       Schémas JSON/CSV et données de test non sensibles
+```
+
 ## HTML “Claude‑IA friendly”
 
 Règles à appliquer par défaut dans tout code HTML généré ou corrigé :
