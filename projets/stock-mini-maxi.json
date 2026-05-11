@@ -1,0 +1,97 @@
+{
+  "schema_version": "1.0",
+  "project_id": "stock-mini-maxi",
+  "project_name": "Stock mini/maxi — Assistant de pilotage agence",
+  "status": "validated",
+  "created_at": "2026-05-11",
+  "updated_at": "2026-05-11",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Le pilotage du stock doit croiser stock physique, réservations, commandes en cours, vitesse de vente, délai fournisseur, mini, maxi et multiples d'achat pour éviter rupture, surstock ou commande mal calibrée.",
+  "target_users": [
+    "chef_agence",
+    "responsable_exploitation",
+    "vendeur_comptoir",
+    "magasinier",
+    "commercial_agence"
+  ],
+  "operational_goal": "Analyser rapidement les articles suivis en mini/maxi afin d'identifier les ruptures potentielles, commandes recommandées, incohérences et surstocks avant validation humaine.",
+  "source_files": {
+    "main_html": "src/stock-mini-maxi.html",
+    "project_markdown": "projets/stock-mini-maxi.md",
+    "project_json": "projets/stock-mini-maxi.json"
+  },
+  "data_sources": [
+    {
+      "name": "stock_articles_test",
+      "source_type": "manual_or_clean_import",
+      "sensitive": false,
+      "comment": "Données fictives ou anonymisées uniquement."
+    }
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true
+  },
+  "expected_features": [
+    {
+      "priority": "high",
+      "name": "Tableau articles",
+      "description": "Afficher les articles suivis en mini/maxi.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Calcul stock disponible",
+      "description": "Calculer stock physique moins stock réservé.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Quantité recommandée",
+      "description": "Calculer une proposition arrondie au multiple d'achat.",
+      "status": "done"
+    }
+  ],
+  "out_of_scope": [
+    "Ne pas modifier directement une source métier.",
+    "Ne pas passer automatiquement de commande fournisseur.",
+    "Ne pas remplacer la validation humaine.",
+    "Ne pas utiliser de données sensibles non anonymisées."
+  ],
+  "success_criteria": {
+    "understandable_under_10_seconds": true,
+    "mobile_compatible": true,
+    "local_save_if_needed": true,
+    "export_or_print_if_needed": true,
+    "github_actions_recipe_passed": true
+  },
+  "risks": [
+    {
+      "risk": "Croire que la quantité recommandée est une commande automatique.",
+      "level": "medium",
+      "mitigation": "Afficher clairement que la validation humaine est obligatoire."
+    },
+    {
+      "risk": "Mini/maxi mal renseignés.",
+      "level": "high",
+      "mitigation": "Afficher un statut incohérent si mini supérieur au maxi."
+    }
+  ],
+  "human_validation": {
+    "decision": "validated",
+    "validated_by": "Greg",
+    "validated_at": "2026-05-11",
+    "comment": "V1 acceptée comme outil local d'aide à l'analyse, sans action automatique sur le stock."
+  },
+  "next_actions": [
+    "Tester l'application avec des données fictives.",
+    "Ajuster les seuils métiers selon les familles produits.",
+    "Ajouter plus tard un import CSV si nécessaire."
+  ]
+}
