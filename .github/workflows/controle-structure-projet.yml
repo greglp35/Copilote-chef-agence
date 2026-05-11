@@ -1,0 +1,312 @@
+name: Controle Structure Projet
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  controle-structure-projet:
+    name: Controle structure, securite et documentation projet
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le depot
+        uses: actions/checkout@v4
+
+      - name: Preparer le rapport
+        run: |
+          mkdir -p rapports
+          {
+            echo "# Rapport Controle Structure Projet"
+            echo ""
+            echo "Date UTC : $(date -u '+%Y-%m-%d %H:%M:%S')"
+            echo "Depot : $GITHUB_REPOSITORY"
+            echo "Branche ou reference : $GITHUB_REF_NAME"
+            echo "Commit : $GITHUB_SHA"
+            echo ""
+          } > rapports/controle-structure-projet.md
+
+      - name: Controler les dossiers obligatoires
+        run: |
+          REQUIRED_DIRS=("docs" "src" "templates" "exports" "rapports" "data")
+          MISSING=0
+
+          {
+            echo "## 1. Dossiers obligatoires"
+            echo ""
+            echo "| Dossier | Statut | Role attendu |"
+            echo "|---|---|---|"
+          } >> rapports/controle-structure-projet.md
+
+          for dir in "${REQUIRED_DIRS[@]}"; do
+            case "$dir" in
+              docs) role="Documentation, regles, dossiers de reference" ;;
+              src) role="Sources applicatives HTML/CSS/JS" ;;
+              templates) role="Modeles reutilisables" ;;
+              exports) role="Exports generes ou exemples d'exports" ;;
+              rapports) role="Rapports d'audit et controles" ;;
+              data) role="Schemas, exemples JSON/CSV, donnees de test non sensibles" ;;
+              *) role="Dossier projet" ;;
+            esac
+
+            if [ -d "$dir" ]; then
+              echo "| /$dir | OK | $role |" >> rapports/controle-structure-projet.md
+            else
+              echo "| /$dir | MANQUANT | $role |" >> rapports/controle-structure-projet.md
+              MISSING=1
+            fi
+          done
+
+          echo "" >> rapports/controle-structure-projet.md
+
+          if [ "$MISSING" -eq 1 ]; then
+            echo "BLOQUANT : un ou plusieurs dossiers obligatoires sont manquants." >> rapports/controle-structure-projet.md
+            echo "" >> rapports/controle-structure-projet.md
+            exit 1
+          fi
+
+      - name: Controler les documents de reference
+        run: |
+          REQUIRED_FILES=(
+            "README.md"
+            "docs/DOSSIER_REFERENCE.md"
+            "docs/REGLES_SECURITE.md"
+            "docs/STRUCTURE_PROJET.md"
+          )
+
+          MISSING=0
+
+          {
+            echo "## 2. Documents de reference obligatoires"
+            echo ""
+            echo "| Fichier | Statut |"
+            echo "|---|---|"
+          } >> rapports/controle-structure-projet.md
+
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ -f "$file" ]; then
+              echo "| $file | OK |" >> rapports/controle-structure-projet.md
+            else
+              echo "| $file | MANQUANT |" >> rapports/controle-structure-projet.md
+              MISSING=1
+            fi
+          done
+
+          echo "" >> rapports/controle-structure-projet.md
+
+          if [ "$MISSING" -eq 1 ]; then
+            echo "BLOQUANT : un ou plusieurs documents de reference sont manquants." >> rapports/controle-structure-projet.md
+            echo "" >> rapports/controle-structure-projet.md
+            exit 1
+          fi
+
+      - name: Controler les marqueurs metier dans README et docs
+        run: |
+          {
+            echo "## 3. Controle coherence metier"
+            echo ""
+          } >> rapports/controle-structure-projet.md
+
+          SEARCH_SCOPE="README.md docs"
+          REQUIRED_TERMS=(
+            "Copilote Chef"
+            "HTML"
+            "securite"
+            "validation humaine"
+            "zero dependance"
+          )
+
+          WARNING=0
+
+          for term in "${REQUIRED_TERMS[@]}"; do
+            if grep -Rqi "$term" $SEARCH_SCOPE; then
+              echo "- OK : marqueur detecte -> $term" >> rapports/controle-structure-projet.md
+            else
+              echo "- ALERTE : marqueur absent ou peu visible -> $term" >> rapports/controle-structure-projet.md
+              WARNING=1
+            fi
+          done
+
+          echo "" >> rapports/controle-structure-projet.md
+
+          if [ "$WARNING" -eq 1 ]; then
+            echo "Observation : la documentation existe, mais certains marqueurs metier devraient etre renforces." >> rapports/controle-structure-projet.md
+            echo "" >> rapports/controle-structure-projet.md
+          fi
+
+      - name: Controler les fichiers sensibles interdits
+        run: |
+          {
+            echo "## 4. Controle fichiers sensibles interdits"
+            echo ""
+            echo "Regle : aucun fichier d'environnement, cle privee, sauvegarde sensible ou export contenant des secrets ne doit etre versionne."
+            echo ""
+          } >> rapports/controle-structure-projet.md
+
+          SENSITIVE_FILES=$(find . -type f \
+            \( -name ".env" -o -name ".env.*" -o -name "*.pem" -o -name "*.key" -o -name "*.p12" -o -name "*.pfx" -o -name "*.sqlite" -o -name "*.db" -o -name "*.bak" \) \
+            -not -path "./.git/*" || true)
+
+          if [ -n "$SENSITIVE_FILES" ]; then
+            {
+              echo "BLOQUANT : fichiers sensibles detectes."
+              echo ""
+              echo '```'
+              echo "$SENSITIVE_FILES"
+              echo '```'
+              echo ""
+            } >> rapports/controle-structure-projet.md
+            exit 1
+          else
+            echo "OK : aucun fichier sensible interdit detecte." >> rapports/controle-structure-projet.md
+            echo "" >> rapports/controle-structure-projet.md
+          fi
+
+      - name: Controler les secrets dans les fichiers executables ou donnees
+        run: |
+          {
+            echo "## 5. Controle secrets dans les fichiers metier"
+            echo ""
+          } >> rapports/controle-structure-projet.md
+
+          SECRET_MATCHES=$(grep -RniE "(password|motdepasse|mot_de_passe|token|api[_-]?key|apikey|client[_-]?secret|connection[_-]?string|chaine[_-]?connexion|jdbc|dsn=|Bearer [A-Za-z0-9._-]+)" . \
+            --include="*.html" --include="*.css" --include="*.js" --include="*.json" --include="*.csv" \
+            --exclude-dir=".git" --exclude-dir="node_modules" --exclude-dir="dist" --exclude-dir="build" --exclude-dir=".github" || true)
+
+          if [ -n "$SECRET_MATCHES" ]; then
+            {
+              echo "BLOQUANT : secrets ou chaines sensibles detectes."
+              echo ""
+              echo '```'
+              echo "$SECRET_MATCHES"
+              echo '```'
+              echo ""
+              echo "Action obligatoire : supprimer les secrets du depot et utiliser une configuration securisee hors front." 
+              echo ""
+            } >> rapports/controle-structure-projet.md
+            exit 1
+          else
+            echo "OK : aucun secret evident detecte dans les fichiers metier." >> rapports/controle-structure-projet.md
+            echo "" >> rapports/controle-structure-projet.md
+          fi
+
+      - name: Controler la logique ERP interdite cote front
+        run: |
+          {
+            echo "## 6. Controle ERP / AS400 / ODBC"
+            echo ""
+            echo "Regle : le front HTML ne doit jamais contenir d'identifiants, de requetes ou d'acces direct ERP." 
+            echo ""
+          } >> rapports/controle-structure-projet.md
+
+          ERP_MATCHES=$(grep -RniE "(AS400|ODBC|IBM i Access|SELECT .* FROM|INSERT INTO|UPDATE .* SET|DELETE FROM|DROP TABLE|CREATE TABLE)" . \
+            --include="*.html" --include="*.js" --include="*.json" --include="*.csv" \
+            --exclude-dir=".git" --exclude-dir="node_modules" --exclude-dir="dist" --exclude-dir="build" --exclude-dir=".github" || true)
+
+          if [ -n "$ERP_MATCHES" ]; then
+            {
+              echo "BLOQUANT : logique ERP, AS400, ODBC ou SQL detectee dans des fichiers front/donnees." 
+              echo ""
+              echo '```'
+              echo "$ERP_MATCHES"
+              echo '```'
+              echo ""
+              echo "Action obligatoire : passer par un export securise CSV/JSON ou une couche serveur controlee." 
+              echo ""
+            } >> rapports/controle-structure-projet.md
+            exit 1
+          else
+            echo "OK : aucune logique ERP interdite detectee dans les fichiers controles." >> rapports/controle-structure-projet.md
+            echo "" >> rapports/controle-structure-projet.md
+          fi
+
+      - name: Controler les conventions de nommage
+        run: |
+          {
+            echo "## 7. Controle conventions de nommage"
+            echo ""
+          } >> rapports/controle-structure-projet.md
+
+          BAD_NAMES=$(find . -type f \
+            -not -path "./.git/*" \
+            -not -path "./node_modules/*" \
+            -not -path "./dist/*" \
+            -not -path "./build/*" \
+            | grep -E "[[:space:]]|[A-ZÀ-ÖØ-Þ]" || true)
+
+          if [ -n "$BAD_NAMES" ]; then
+            {
+              echo "ALERTE : certains chemins contiennent des espaces ou majuscules. Ce n'est pas bloquant, mais moins robuste." 
+              echo ""
+              echo '```'
+              echo "$BAD_NAMES"
+              echo '```'
+              echo ""
+              echo "Recommandation : utiliser kebab-case ou snake_case, sans accents, sans espaces." 
+              echo ""
+            } >> rapports/controle-structure-projet.md
+          else
+            echo "OK : conventions de nommage propres detectees." >> rapports/controle-structure-projet.md
+            echo "" >> rapports/controle-structure-projet.md
+          fi
+
+      - name: Controler la presence d'un gitignore utile
+        run: |
+          {
+            echo "## 8. Controle .gitignore"
+            echo ""
+          } >> rapports/controle-structure-projet.md
+
+          if [ ! -f ".gitignore" ]; then
+            echo "ALERTE : fichier .gitignore absent." >> rapports/controle-structure-projet.md
+            echo "" >> rapports/controle-structure-projet.md
+            exit 0
+          fi
+
+          REQUIRED_GITIGNORE=(".env" "node_modules" "dist" "build")
+          for item in "${REQUIRED_GITIGNORE[@]}"; do
+            if grep -q "$item" .gitignore; then
+              echo "- OK : $item ignore" >> rapports/controle-structure-projet.md
+            else
+              echo "- ALERTE : $item non trouve dans .gitignore" >> rapports/controle-structure-projet.md
+            fi
+          done
+          echo "" >> rapports/controle-structure-projet.md
+
+      - name: Generer le verdict final
+        if: always()
+        run: |
+          {
+            echo "## 9. Verdict"
+            echo ""
+            echo "Controle structure projet termine." 
+            echo ""
+            echo "Ce workflow verifie que le depot reste exploitable comme base propre pour des applications HTML metier :"
+            echo "- dossiers de reference presents ;"
+            echo "- documentation minimale presente ;"
+            echo "- absence de fichiers sensibles ;"
+            echo "- absence de secrets dans les fichiers metier ;"
+            echo "- absence de logique ERP interdite cote front ;"
+            echo "- coherence minimale avec les principes Copilote Chef d'Agence."
+            echo ""
+            echo "Validation humaine obligatoire avant diffusion ou production." 
+          } >> rapports/controle-structure-projet.md
+
+      - name: Publier le rapport structure projet
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-controle-structure-projet
+          path: rapports/controle-structure-projet.md
