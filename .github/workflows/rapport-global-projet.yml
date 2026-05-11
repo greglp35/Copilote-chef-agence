@@ -1,0 +1,424 @@
+name: Rapport Global Projet
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'templates/**'
+      - 'data/**'
+      - 'exports/**'
+      - '.github/workflows/**'
+      - 'README.md'
+      - '.gitignore'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  rapport-global-projet:
+    name: Generer le rapport global du projet
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le depot
+        uses: actions/checkout@v4
+
+      - name: Generer le rapport global
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          mkdir -p rapports
+          python3 <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import json
+          import os
+          import re
+          import urllib.request
+          import urllib.error
+
+          root = Path('.')
+          report_md = Path('rapports/rapport-global-projet.md')
+          report_json = Path('rapports/rapport-global-projet.json')
+
+          repo = os.environ.get('GITHUB_REPOSITORY', '')
+          ref_name = os.environ.get('GITHUB_REF_NAME', '')
+          sha = os.environ.get('GITHUB_SHA', '')
+          run_id = os.environ.get('GITHUB_RUN_ID', '')
+          token = os.environ.get('GITHUB_TOKEN', '')
+          now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+
+          required_dirs = ['docs', 'src', 'templates', 'exports', 'rapports', 'data']
+          required_files = [
+              'README.md',
+              'docs/DOSSIER_REFERENCE.md',
+              'docs/REGLES_SECURITE.md',
+              'docs/STRUCTURE_PROJET.md',
+              '.gitignore',
+          ]
+
+          ignored_parts = {'.git', 'node_modules', 'dist', 'build', '.cache', 'tmp', '.tmp'}
+          controlled_roots = ['src', 'templates', 'data', 'exports']
+
+          def is_ignored(path: Path) -> bool:
+              return any(part in ignored_parts for part in path.parts)
+
+          def rel(path: Path) -> str:
+              return str(path).replace('\\', '/')
+
+          def read_text(path: Path) -> str:
+              try:
+                  return path.read_text(encoding='utf-8', errors='ignore')
+              except Exception:
+                  return ''
+
+          def api_get(url: str):
+              if not token or not repo:
+                  return None
+              req = urllib.request.Request(
+                  url,
+                  headers={
+                      'Authorization': f'Bearer {token}',
+                      'Accept': 'application/vnd.github+json',
+                      'X-GitHub-Api-Version': '2022-11-28',
+                      'User-Agent': 'copilote-chef-agence-report',
+                  },
+              )
+              try:
+                  with urllib.request.urlopen(req, timeout=15) as response:
+                      return json.loads(response.read().decode('utf-8'))
+              except Exception as exc:
+                  return {'_error': str(exc)}
+
+          dirs_status = []
+          for directory in required_dirs:
+              exists = Path(directory).is_dir()
+              dirs_status.append({'path': f'/{directory}', 'exists': exists})
+
+          files_status = []
+          for file_path in required_files:
+              exists = Path(file_path).is_file()
+              files_status.append({'path': file_path, 'exists': exists})
+
+          workflow_files = sorted(Path('.github/workflows').glob('*.yml')) + sorted(Path('.github/workflows').glob('*.yaml'))
+          workflow_list = [{'path': rel(path), 'name': read_text(path).splitlines()[0].replace('name:', '').strip() if read_text(path).splitlines() else rel(path)} for path in workflow_files]
+
+          html_files = sorted(Path('src').rglob('*.html')) if Path('src').exists() else []
+          html_checks = []
+          for path in html_files:
+              content = read_text(path)
+              lower = content.lower()
+              checks = {
+                  'path': rel(path),
+                  'doctype': '<!doctype html' in lower,
+                  'html_tag': '<html' in lower and '</html>' in lower,
+                  'head': '<head' in lower and '</head>' in lower,
+                  'body': '<body' in lower and '</body>' in lower,
+                  'title': '<title>' in lower,
+                  'viewport': 'name="viewport"' in lower or "name='viewport'" in lower,
+                  'buttons': '<button' in lower or 'role="button"' in lower or "role='button'" in lower,
+                  'local_save': 'localstorage' in lower or 'indexeddb' in lower or 'sessionstorage' in lower,
+                  'print': 'window.print' in lower or '@media print' in lower,
+                  'export': 'blob' in lower or 'download' in lower or 'filereader' in lower,
+                  'accessibility': 'aria-' in lower or 'role=' in lower or '<label' in lower,
+                  'external_dependency': bool(re.search(r'(https?://|cdn\.|unpkg\.com|jsdelivr\.net|googleapis\.com|gstatic\.com|cdnjs\.cloudflare\.com)', content, re.I)),
+                  'risky_dom': bool(re.search(r'innerHTML|outerHTML|document\.write', content, re.I)),
+                  'lines': len(content.splitlines()),
+                  'bytes': len(content.encode('utf-8')),
+              }
+              html_checks.append(checks)
+
+          forbidden_file_patterns = [
+              r'^\.env$', r'^\.env\.', r'\.pem$', r'\.key$', r'\.p12$', r'\.pfx$',
+              r'\.sqlite$', r'\.db$', r'\.bak$', r'\.backup$'
+          ]
+          forbidden_files = []
+          for path in root.rglob('*'):
+              if not path.is_file() or is_ignored(path):
+                  continue
+              name = path.name
+              if any(re.search(pattern, name, re.I) for pattern in forbidden_file_patterns):
+                  forbidden_files.append(rel(path))
+
+          secret_pattern = re.compile(
+              r'(password|motdepasse|mot_de_passe|token|api[_-]?key|apikey|client[_-]?secret|connection[_-]?string|chaine[_-]?connexion|jdbc|dsn=|Bearer\s+[A-Za-z0-9._-]+|AS400|ODBC|SELECT\s+.*\s+FROM|INSERT\s+INTO|UPDATE\s+.*\s+SET|DELETE\s+FROM)',
+              re.I,
+          )
+          controlled_suffixes = {'.html', '.js', '.json', '.csv'}
+          sensitive_matches = []
+          for base in controlled_roots:
+              base_path = Path(base)
+              if not base_path.exists():
+                  continue
+              for path in base_path.rglob('*'):
+                  if not path.is_file() or is_ignored(path) or path.suffix.lower() not in controlled_suffixes:
+                      continue
+                  for index, line in enumerate(read_text(path).splitlines(), start=1):
+                      if secret_pattern.search(line):
+                          sensitive_matches.append({'path': rel(path), 'line': index, 'sample': line.strip()[:180]})
+
+          external_deps = []
+          for path in html_files:
+              content = read_text(path)
+              matches = re.findall(r'(https?://[^\s"\']+|cdn\.[^\s"\']+|unpkg\.com|jsdelivr\.net|googleapis\.com|gstatic\.com|cdnjs\.cloudflare\.com)', content, flags=re.I)
+              if matches:
+                  external_deps.append({'path': rel(path), 'matches': sorted(set(matches))})
+
+          gitignore_status = {}
+          gitignore = read_text(Path('.gitignore')) if Path('.gitignore').exists() else ''
+          for item in ['.env', 'node_modules', 'dist', 'build', '*.log', '*.sqlite', '*.db']:
+              gitignore_status[item] = item in gitignore
+
+          workflows_api = []
+          runs_api_available = False
+          workflows_data = api_get(f'https://api.github.com/repos/{repo}/actions/workflows?per_page=100') if repo else None
+          if isinstance(workflows_data, dict) and workflows_data.get('workflows'):
+              runs_api_available = True
+              for workflow in workflows_data.get('workflows', []):
+                  workflow_id = workflow.get('id')
+                  workflow_name = workflow.get('name')
+                  workflow_path = workflow.get('path')
+                  runs = api_get(f'https://api.github.com/repos/{repo}/actions/workflows/{workflow_id}/runs?branch=main&per_page=3')
+                  recent_runs = []
+                  if isinstance(runs, dict) and runs.get('workflow_runs'):
+                      for run in runs.get('workflow_runs', [])[:3]:
+                          recent_runs.append({
+                              'name': run.get('name'),
+                              'status': run.get('status'),
+                              'conclusion': run.get('conclusion'),
+                              'event': run.get('event'),
+                              'created_at': run.get('created_at'),
+                              'html_url': run.get('html_url'),
+                          })
+                  workflows_api.append({'name': workflow_name, 'path': workflow_path, 'recent_runs': recent_runs})
+
+          structure_ok = all(item['exists'] for item in dirs_status) and all(item['exists'] for item in files_status)
+          security_ok = not forbidden_files and not sensitive_matches
+          workflow_ok = len(workflow_list) >= 4
+          html_ok = bool(html_checks) and all(item['doctype'] and item['html_tag'] and item['head'] and item['body'] and item['viewport'] for item in html_checks)
+          zero_external_ok = not external_deps
+
+          score_items = [structure_ok, security_ok, workflow_ok, html_ok, zero_external_ok]
+          score = round(sum(1 for item in score_items if item) / len(score_items) * 100)
+
+          if not security_ok:
+              verdict = 'ROUGE - risque securite a traiter avant diffusion'
+          elif score >= 90:
+              verdict = 'VERT - socle projet propre et exploitable'
+          elif score >= 70:
+              verdict = 'ORANGE - socle utilisable avec corrections recommandees'
+          else:
+              verdict = 'ROUGE - socle incomplet ou instable'
+
+          next_actions = []
+          if not structure_ok:
+              next_actions.append('Completer les dossiers ou documents obligatoires manquants.')
+          if not security_ok:
+              next_actions.append('Supprimer les fichiers sensibles ou secrets detectes dans les sources controlees.')
+          if not workflow_ok:
+              next_actions.append('Maintenir au moins les 4 workflows socles : audit, structure, recette HTML, rapport global.')
+          if not html_checks:
+              next_actions.append('Ajouter au moins une application HTML metier dans /src.')
+          if external_deps:
+              next_actions.append('Supprimer ou justifier les dependances externes detectees dans les HTML.')
+          if not next_actions:
+              next_actions.extend([
+                  'Remplacer progressivement la page de test par une vraie application HTML metier.',
+                  'Ajouter un schema JSON de donnees dans /data pour standardiser les imports/exports.',
+                  'Creer une checklist de recette humaine specifique a chaque application metier.',
+              ])
+
+          data = {
+              'generated_at': now,
+              'repository': repo,
+              'branch': ref_name,
+              'commit': sha,
+              'run_id': run_id,
+              'score': score,
+              'verdict': verdict,
+              'structure_ok': structure_ok,
+              'security_ok': security_ok,
+              'workflow_ok': workflow_ok,
+              'html_ok': html_ok,
+              'zero_external_ok': zero_external_ok,
+              'required_dirs': dirs_status,
+              'required_files': files_status,
+              'workflow_files': workflow_list,
+              'workflow_runs': workflows_api,
+              'workflow_runs_api_available': runs_api_available,
+              'html_checks': html_checks,
+              'forbidden_files': forbidden_files,
+              'sensitive_matches': sensitive_matches,
+              'external_dependencies': external_deps,
+              'gitignore_status': gitignore_status,
+              'next_actions': next_actions,
+          }
+
+          def check(value: bool) -> str:
+              return 'OK' if value else 'A CORRIGER'
+
+          lines = []
+          lines.append('# Rapport global projet — Copilote Chef d\'Agence')
+          lines.append('')
+          lines.append(f'Date : {now}')
+          lines.append(f'Depot : `{repo}`')
+          lines.append(f'Branche : `{ref_name}`')
+          lines.append(f'Commit : `{sha[:12]}`')
+          lines.append('')
+          lines.append('## 1. Verdict global')
+          lines.append('')
+          lines.append(f'**Verdict : {verdict}**')
+          lines.append('')
+          lines.append(f'Score projet : **{score}/100**')
+          lines.append('')
+          lines.append('| Axe | Statut |')
+          lines.append('|---|---|')
+          lines.append(f'| Structure projet | {check(structure_ok)} |')
+          lines.append(f'| Securite fichiers et sources | {check(security_ok)} |')
+          lines.append(f'| Workflows socles | {check(workflow_ok)} |')
+          lines.append(f'| HTML dans /src | {check(html_ok)} |')
+          lines.append(f'| Zero dependance externe HTML | {check(zero_external_ok)} |')
+          lines.append('')
+
+          lines.append('## 2. Structure projet')
+          lines.append('')
+          lines.append('| Dossier | Statut |')
+          lines.append('|---|---|')
+          for item in dirs_status:
+              lines.append(f"| {item['path']} | {'OK' if item['exists'] else 'MANQUANT'} |")
+          lines.append('')
+          lines.append('| Document | Statut |')
+          lines.append('|---|---|')
+          for item in files_status:
+              lines.append(f"| {item['path']} | {'OK' if item['exists'] else 'MANQUANT'} |")
+          lines.append('')
+
+          lines.append('## 3. Workflows detectes')
+          lines.append('')
+          if workflow_list:
+              lines.append('| Workflow | Fichier |')
+              lines.append('|---|---|')
+              for item in workflow_list:
+                  lines.append(f"| {item['name']} | `{item['path']}` |")
+          else:
+              lines.append('Aucun workflow detecte.')
+          lines.append('')
+
+          lines.append('## 4. Derniers runs GitHub Actions')
+          lines.append('')
+          if workflows_api:
+              for workflow in workflows_api:
+                  lines.append(f"### {workflow['name']}")
+                  if workflow['recent_runs']:
+                      lines.append('| Statut | Conclusion | Evenement | Date | Lien |')
+                      lines.append('|---|---|---|---|---|')
+                      for run in workflow['recent_runs']:
+                          link = run.get('html_url') or ''
+                          lines.append(f"| {run.get('status') or '-'} | {run.get('conclusion') or '-'} | {run.get('event') or '-'} | {run.get('created_at') or '-'} | [ouvrir]({link}) |")
+                  else:
+                      lines.append('Aucun run recent detecte pour ce workflow.')
+                  lines.append('')
+          else:
+              lines.append('Information indisponible depuis l API GitHub Actions. Le rapport local reste exploitable.')
+              lines.append('')
+
+          lines.append('## 5. Applications HTML dans /src')
+          lines.append('')
+          if html_checks:
+              lines.append('| Fichier | Structure | Mobile | Actions | Sauvegarde | Print | Export | Accessibilite | Taille |')
+              lines.append('|---|---|---|---|---|---|---|---|---:|')
+              for item in html_checks:
+                  structure = item['doctype'] and item['html_tag'] and item['head'] and item['body']
+                  lines.append(
+                      f"| `{item['path']}` | {check(structure)} | {check(item['viewport'])} | {check(item['buttons'])} | {check(item['local_save'])} | {check(item['print'])} | {check(item['export'])} | {check(item['accessibility'])} | {item['bytes']} o |"
+                  )
+          else:
+              lines.append('Aucun fichier HTML detecte dans /src.')
+          lines.append('')
+
+          lines.append('## 6. Securite')
+          lines.append('')
+          lines.append(f'Fichiers sensibles interdits : **{len(forbidden_files)}**')
+          if forbidden_files:
+              lines.append('')
+              for item in forbidden_files:
+                  lines.append(f'- `{item}`')
+          lines.append('')
+          lines.append(f'Matches sensibles dans les sources controlees : **{len(sensitive_matches)}**')
+          if sensitive_matches:
+              lines.append('')
+              for item in sensitive_matches[:20]:
+                  lines.append(f"- `{item['path']}:{item['line']}` — `{item['sample']}`")
+              if len(sensitive_matches) > 20:
+                  lines.append(f'- ... {len(sensitive_matches) - 20} autres occurrences non affichees dans le Markdown.')
+          lines.append('')
+          lines.append(f'Dependances externes HTML : **{len(external_deps)}**')
+          if external_deps:
+              lines.append('')
+              for item in external_deps:
+                  lines.append(f"- `{item['path']}` : {', '.join(item['matches'])}")
+          lines.append('')
+
+          lines.append('## 7. .gitignore')
+          lines.append('')
+          lines.append('| Regle | Statut |')
+          lines.append('|---|---|')
+          for item, present in gitignore_status.items():
+              lines.append(f'| `{item}` | {check(present)} |')
+          lines.append('')
+
+          lines.append('## 8. Analyse senior')
+          lines.append('')
+          lines.append('Le socle est maintenant structure comme une base projet exploitable : documentation, sources, templates, donnees de test, rapports et workflows sont separes.')
+          lines.append('')
+          lines.append('Point de vigilance : ce rapport reste un controle statique. Il ne remplace pas une execution reelle sur mobile, un test utilisateur terrain, ni une revue de securite complete avant usage avec des donnees metier.')
+          lines.append('')
+
+          lines.append('## 9. Prochaines actions prioritaires')
+          lines.append('')
+          for index, action in enumerate(next_actions, start=1):
+              lines.append(f'{index}. {action}')
+          lines.append('')
+
+          lines.append('## 10. Regle de decision')
+          lines.append('')
+          lines.append('- Vert : le depot peut servir de base projet.')
+          lines.append('- Orange : le depot est exploitable mais doit etre corrige avant industrialisation.')
+          lines.append('- Rouge : ne pas diffuser ni brancher de donnees reelles avant correction.')
+          lines.append('')
+          lines.append('Validation humaine obligatoire avant diffusion ou production.')
+          lines.append('')
+
+          report_md.write_text('\n'.join(lines), encoding='utf-8')
+          report_json.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+          PY
+
+      - name: Afficher le verdict dans les logs
+        run: |
+          echo "Rapport global genere : rapports/rapport-global-projet.md"
+          echo ""
+          sed -n '1,45p' rapports/rapport-global-projet.md
+
+      - name: Publier le rapport global
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-global-projet
+          path: |
+            rapports/rapport-global-projet.md
+            rapports/rapport-global-projet.json
