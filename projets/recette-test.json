@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0",
+  "project_id": "recette-test",
+  "project_name": "Recette test HTML métier",
+  "status": "validated",
+  "created_at": "2026-05-11",
+  "updated_at": "2026-05-11",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Le dépôt a besoin d'un fichier HTML simple permettant de tester les workflows de recette avant d'intégrer de vraies applications métier.",
+  "target_users": [
+    "chef_agence",
+    "assistant_ia",
+    "validateur_projet"
+  ],
+  "operational_goal": "Vérifier automatiquement la recette HTML de base afin de valider que le dépôt contrôle correctement les applications métier avant diffusion.",
+  "source_files": {
+    "main_html": "src/recette-test.html",
+    "project_markdown": "projets/recette-test.md",
+    "project_json": "projets/recette-test.json"
+  },
+  "data_sources": [
+    {
+      "name": "nom_projet_test",
+      "source_type": "manual",
+      "sensitive": false,
+      "comment": "Donnée fictive saisie manuellement."
+    },
+    {
+      "name": "note_controle",
+      "source_type": "manual",
+      "sensitive": false,
+      "comment": "Donnée fictive saisie manuellement."
+    }
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true
+  },
+  "expected_features": [
+    {
+      "priority": "high",
+      "name": "Sauvegarde locale",
+      "description": "Vérifier localStorage.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Export JSON",
+      "description": "Vérifier création d'un export local.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Impression",
+      "description": "Vérifier le mode print.",
+      "status": "done"
+    }
+  ],
+  "out_of_scope": [
+    "Ne pas gérer de vraies données métier.",
+    "Ne pas se connecter à l'ERP.",
+    "Ne pas appeler une API externe."
+  ],
+  "success_criteria": {
+    "understandable_under_10_seconds": true,
+    "mobile_compatible": true,
+    "local_save_if_needed": true,
+    "export_or_print_if_needed": true,
+    "github_actions_recipe_passed": true
+  },
+  "risks": [
+    {
+      "risk": "Confondre page de test et vraie application.",
+      "level": "low",
+      "mitigation": "Nommer clairement le fichier recette-test."
+    },
+    {
+      "risk": "Croire que la recette automatique remplace le test humain.",
+      "level": "medium",
+      "mitigation": "Conserver le rappel de validation humaine."
+    }
+  ],
+  "human_validation": {
+    "decision": "validated",
+    "validated_by": "Greg",
+    "validated_at": "2026-05-11",
+    "comment": "Fichier de test accepté pour vérifier les workflows du socle projet."
+  },
+  "next_actions": [
+    "Utiliser ce fichier comme témoin de recette.",
+    "Ajouter les vraies applications métier dans /src.",
+    "Créer une fiche projet pour chaque application réelle."
+  ]
+}
