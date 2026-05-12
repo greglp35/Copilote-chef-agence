@@ -1,0 +1,11 @@
+code_zone_tfi;code_zone_affiche;nom_zone;type_zone;familles_autorisees;familles_interdites;niveau_risque;statut_zone;capacite_estimee;unite_capacite;observations
+CR0101;CR-01-01;Cour exterieure - Bois et panneaux;cour;Bois|Panneaux|Amenagement exterieur|Couverture;Produits sensibles|Petits articles comptoir;moyen;active;80;palettes;Zone adaptee aux produits longs et volumes importants
+CR0201;CR-02-01;Cour exterieure - Gros oeuvre et VRD;cour;Gros oeuvre|VRD;Isolation|Produits fragiles;moyen;active;120;palettes;Zone adaptee gros oeuvre et VRD
+DP0101;DP-01-01;Depot couvert - Isolation;depot_couvert;Isolation;Produits humides|Produits salissants;faible;active;60;palettes;Zone prioritaire pour produits sensibles a l humidite
+DP0201;DP-02-01;Depot couvert - Plaque de platre;depot_couvert;Plaque de platre;Produits exterieurs|VRD;moyen;active;90;palettes;Zone plaque de platre
+DP0301;DP-03-01;Depot couvert - Mortiers et colles;depot_couvert;Mortier;Bois|Isolation;moyen;active;70;palettes;Zone mortiers et colles
+LS0101;LS-01-01;Libre service - Quincaillerie et outillage;libre_service;Quincaillerie|Outillage;Produits lourds|Charges longues;faible;active;200;emplacements;Zone libre service
+PR0101;PR-01-01;Zone preparation commandes;preparation;Toutes familles;Stock longue duree;eleve;a_revoir;20;commandes;Zone temporaire a surveiller
+RC0101;RC-01-01;Reception marchandises;reception;Toutes familles;Stockage permanent;eleve;active;12;palettes;Zone temporaire uniquement
+QA0101;QA-01-01;Zone quarantaine litige;quarantaine;Litiges|Retours|Produits non conformes;Stock vendable;moyen;active;8;palettes;Zone litige non vendable
+SE0101;SE-01-01;Zone passage permanent;securite;;Toutes marchandises;bloquant;active;0;aucune;Zone non stockable
