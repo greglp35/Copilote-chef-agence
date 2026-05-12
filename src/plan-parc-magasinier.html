@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan Parc Magasinier — TFI</title>
+<style>
+:root{--y:#f5c400;--b:#1a1a1a;--g:#f4f5f7;--w:#fff;--bd:#d9dde3;--r:#a11d1d;--o:#9a5b00;--v:#1f6b3a;--blue:#244f8f}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--g);color:var(--b)}header{background:var(--b);color:#fff;border-bottom:7px solid var(--y)}.wrap,main{max-width:1280px;margin:auto;padding:14px}h1,h2,h3{margin:0 0 10px}.tag{display:inline-block;background:var(--y);color:var(--b);font-weight:900;border-radius:999px;padding:6px 10px;margin-bottom:8px}.note{background:#fff6c7;border-left:6px solid var(--y);padding:10px;border-radius:12px;font-weight:700}.layout{display:grid;grid-template-columns:1.3fr .7fr;gap:12px}.panel,section{background:var(--w);border:1px solid var(--bd);border-radius:16px;padding:12px;box-shadow:0 8px 24px #0001}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}label{font-weight:800;display:block;margin-bottom:4px}input,select,button,textarea{width:100%;font:inherit;border-radius:10px}input,select,textarea{border:1px solid var(--bd);padding:9px}button{border:0;background:var(--y);font-weight:900;min-height:42px;cursor:pointer}.dark{background:var(--b);color:#fff}.light{background:#e8ebef}.danger{background:#ffdede;color:var(--r)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kpi{background:#fffdf0;border-left:6px solid var(--y);border-radius:12px;padding:10px}.kpi strong{display:block;font-size:24px}.map{width:100%;height:580px;background:#fff;border:1px solid var(--bd);border-radius:14px;overflow:hidden}.zone{cursor:pointer;transition:.15s}.zone:hover{filter:brightness(.95);stroke-width:4}.zone.active{stroke:#000;stroke-width:5}.rack{fill:#333}.label{font-size:12px;font-weight:800;pointer-events:none}.small{font-size:12px;color:#555}.badge{display:inline-block;border-radius:999px;padding:3px 8px;font-weight:900;font-size:12px}.ok{background:#dff3e5;color:var(--v)}.warn{background:#fff0cf;color:var(--o)}.err{background:#ffe0e0;color:var(--r)}.info{background:#e4edff;color:var(--blue)}.cards{display:grid;gap:8px;max-height:360px;overflow:auto}.card{border:1px solid var(--bd);border-radius:12px;padding:10px;background:#fff}.card.active{border:3px solid var(--y)}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.table{overflow:auto;border:1px solid var(--bd);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}th{background:#1a1a1a;color:#fff}@media(max-width:980px){.layout,.toolbar,.grid,.actions{grid-template-columns:1fr}.map{height:420px}.wrap,main{padding:10px}}@media print{header,.toolbar,.actions,.no-print{display:none}body{background:#fff}.panel,section{box-shadow:none}.layout{display:block}.map{height:500px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><span class="tag">Plan Parc Magasinier — V1 TFI</span><h1>Interface magasinier : trouver, contrôler, signaler</h1><p>Plan visuel du parc relié aux zones TFI 6 caractères. Objectif : aider le magasinier à localiser les produits, comprendre les consignes et remonter les anomalies terrain.</p><div class="note">Règle TFI : <code>code_zone_tfi</code> = 6 caractères sans tiret. Exemple stocké : <code>CR0101</code>. Affichage possible : <code>CR-01-01</code>.</div></div></header>
+<main>
+<section>
+<h2>Recherche rapide</h2>
+<div class="toolbar">
+<p><label for="q">Article, famille, zone</label><input id="q" placeholder="ex : laine, bois, CR0101, DP0101"></p>
+<p><label for="typeFilter">Type zone</label><select id="typeFilter"><option value="all">Tous</option><option value="cour">Cour</option><option value="depot_couvert">Dépôt couvert</option><option value="libre_service">Libre service</option><option value="preparation">Préparation</option><option value="reception">Réception</option><option value="quarantaine">Quarantaine</option><option value="securite">Sécurité</option></select></p>
+<p><label for="statusFilter">Statut zone</label><select id="statusFilter"><option value="all">Tous</option><option value="active">Active</option><option value="a_revoir">À revoir</option><option value="bloquant">Bloquant</option></select></p>
+<p><label>&nbsp;</label><button id="reset">Réinitialiser</button></p>
+</div>
+<div class="grid" id="kpis"></div>
+</section>
+<div class="layout">
+<section class="panel">
+<h2>Plan parc / dépôt</h2>
+<svg id="map" class="map" viewBox="0 0 1000 640" role="img" aria-label="Plan du parc et du dépôt">
+<rect x="0" y="0" width="1000" height="640" fill="#ffffff"/>
+<g id="grid"></g>
+<g id="zonesLayer"></g>
+<g id="racksLayer"></g>
+</svg>
+<div class="actions no-print"><button id="exportAnomalies">Exporter anomalies</button><button id="exportPlan" class="light">Exporter plan JSON</button><button id="print" class="dark">Imprimer</button></div>
+</section>
+<aside class="panel">
+<h2>Fiche zone</h2>
+<div id="zoneDetails" class="note">Sélectionne une zone sur le plan.</div>
+<h3 style="margin-top:14px">Articles dans la zone</h3>
+<div id="articlesList" class="cards"></div>
+<h3 style="margin-top:14px">Déclarer une anomalie</h3>
+<p><label for="anomalyType">Type</label><select id="anomalyType"><option>Produit mal placé</option><option>Zone saturée</option><option>Accès encombré</option><option>Étiquette manquante</option><option>Risque sécurité</option><option>Stock introuvable</option></select></p>
+<p><label for="anomalyText">Commentaire</label><textarea id="anomalyText" rows="3" placeholder="Ex : palette placée en zone passage, article introuvable, zone à réorganiser..."></textarea></p>
+<button id="addAnomaly" class="danger">Ajouter anomalie</button>
+</aside>
+</div>
+<section>
+<h2>Anomalies terrain</h2>
+<div id="anomaliesTable" class="table"></div>
+</section>
+</main>
+<script>
+const zoneRe=/^[A-Z0-9]{6}$/;
+const zones=[
+{code_zone_tfi:'CR0101',aff:'CR-01-01',nom:'Cour extérieure - Bois et panneaux',type:'cour',statut:'active',risque:'moyen',x:40,y:60,w:330,h:210,c:'#ffe58a',familles:['Bois','Panneaux','Amenagement exterieur','Couverture'],consignes:['Charges longues à signaler','Circulation chariot','Empilage stable']},
+{code_zone_tfi:'CR0201',aff:'CR-02-01',nom:'Cour extérieure - Gros oeuvre et VRD',type:'cour',statut:'active',risque:'moyen',x:400,y:60,w:330,h:210,c:'#ffd36b',familles:['Gros oeuvre','VRD'],consignes:['Respect plan circulation','Contrôle visuel hebdo','Palette stable']},
+{code_zone_tfi:'DP0101',aff:'DP-01-01',nom:'Dépôt couvert - Isolation',type:'depot_couvert',statut:'active',risque:'faible',x:40,y:320,w:210,h:190,c:'#dff3e5',familles:['Isolation'],consignes:['Protéger humidité','Allées dégagées']},
+{code_zone_tfi:'DP0201',aff:'DP-02-01',nom:'Dépôt couvert - Plaque de plâtre',type:'depot_couvert',statut:'active',risque:'moyen',x:280,y:320,w:210,h:190,c:'#dce9ff',familles:['Plaque de platre'],consignes:['Attention basculement','Respect racks','Passage libre']},
+{code_zone_tfi:'DP0301',aff:'DP-03-01',nom:'Dépôt couvert - Mortiers et colles',type:'depot_couvert',statut:'active',risque:'moyen',x:520,y:320,w:210,h:190,c:'#eadfff',familles:['Mortier'],consignes:['Empilage stable','Accès chariot dégagé']},
+{code_zone_tfi:'LS0101',aff:'LS-01-01',nom:'Libre service - Quincaillerie / outillage',type:'libre_service',statut:'active',risque:'faible',x:770,y:320,w:170,h:190,c:'#e8edf2',familles:['Quincaillerie','Outillage'],consignes:['Produits accessibles','Étiquetage clair']},
+{code_zone_tfi:'PR0101',aff:'PR-01-01',nom:'Préparation commandes',type:'preparation',statut:'a_revoir',risque:'eleve',x:760,y:60,w:190,h:95,c:'#fff0cf',familles:['Toutes familles'],consignes:['Stockage court','Identifier chaque commande','Ne pas encombrer']},
+{code_zone_tfi:'RC0101',aff:'RC-01-01',nom:'Réception marchandises',type:'reception',statut:'active',risque:'eleve',x:760,y:175,w:190,h:95,c:'#ffe0e0',familles:['Toutes familles'],consignes:['Contrôle réception','Photos si litige','Zone temporaire']},
+{code_zone_tfi:'QA0101',aff:'QA-01-01',nom:'Quarantaine / litige',type:'quarantaine',statut:'active',risque:'moyen',x:40,y:540,w:210,h:70,c:'#ffdede',familles:['Litiges','Retours','Produits non conformes'],consignes:['Ne pas vendre','Étiquetage obligatoire','Photo preuve']},
+{code_zone_tfi:'SE0101',aff:'SE-01-01',nom:'Passage permanent non stockable',type:'securite',statut:'bloquant',risque:'bloquant',x:280,y:540,w:660,h:70,c:'#f3f3f3',familles:[],consignes:['Aucun stockage','Accès permanent','Contrôle quotidien']}
+];
+const articles=[
+{code:'ISO-001',designation:'Laine de verre rouleau 100 mm',famille:'Isolation',zone:'DP0101',statut:'SOUS_MINI',reco:6},
+{code:'PLA-001',designation:'Plaque de plâtre BA13',famille:'Plaque de platre',zone:'DP0201',statut:'OK',reco:0},
+{code:'BOI-001',designation:'Chevron traité 63x75',famille:'Bois',zone:'CR0101',statut:'SOUS_MINI',reco:20},
+{code:'MOR-001',designation:'Mortier colle gris sac 25 kg',famille:'Mortier',zone:'DP0301',statut:'SURSTOCK',reco:0},
+{code:'QUI-001',designation:'Vis bois torx boîte 500',famille:'Quincaillerie',zone:'LS0101',statut:'OK',reco:0},
+{code:'BLO-001',designation:'Bloc béton creux 20 cm',famille:'Gros oeuvre',zone:'CR0201',statut:'OK',reco:0},
+{code:'DRA-001',designation:'Drain agricole diamètre 100',famille:'VRD',zone:'CR0201',statut:'SOUS_MINI',reco:5}
+];
+let selected=null;let anomalies=JSON.parse(localStorage.getItem('plan-parc-anomalies-v1')||'[]');
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function badge(v){let c=v==='active'||v==='OK'?'ok':(v==='a_revoir'||v==='SOUS_MINI'||v==='SURSTOCK'?'warn':'err');return '<span class="badge '+c+'">'+esc(v)+'</span>'}
+function filteredZones(){let q=document.getElementById('q').value.toLowerCase(),t=document.getElementById('typeFilter').value,s=document.getElementById('statusFilter').value;return zones.filter(z=>(t==='all'||z.type===t)&&(s==='all'||z.statut===s)&&(!q||(`${z.code_zone_tfi} ${z.aff} ${z.nom} ${z.type} ${z.familles.join(' ')}`).toLowerCase().includes(q)||articles.some(a=>a.zone===z.code_zone_tfi&&(`${a.code} ${a.designation} ${a.famille}`).toLowerCase().includes(q))))}
+function draw(){let grid=document.getElementById('grid'),zl=document.getElementById('zonesLayer'),rl=document.getElementById('racksLayer');grid.innerHTML='';for(let x=0;x<=1000;x+=50)grid.innerHTML+=`<line x1="${x}" y1="0" x2="${x}" y2="640" stroke="#f0f0f0"/>`;for(let y=0;y<=640;y+=50)grid.innerHTML+=`<line x1="0" y1="${y}" x2="1000" y2="${y}" stroke="#f0f0f0"/>`;let f=filteredZones();zl.innerHTML=f.map(z=>`<g><rect class="zone ${selected===z.code_zone_tfi?'active':''}" data-zone="${z.code_zone_tfi}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="12" fill="${z.c}" stroke="#333" stroke-width="2"/><text class="label" x="${z.x+12}" y="${z.y+24}">${z.aff}</text><text class="label" x="${z.x+12}" y="${z.y+44}">${z.nom.substring(0,32)}</text></g>`).join('');rl.innerHTML=f.flatMap(z=>{let arr=[];let count=Math.max(1,Math.min(5,Math.floor(z.w/85)));for(let i=0;i<count;i++){arr.push(`<rect class="rack" x="${z.x+20+i*62}" y="${z.y+z.h-42}" width="46" height="20" rx="4" opacity=".75"/>`)}return arr}).join('');document.querySelectorAll('.zone').forEach(e=>e.onclick=()=>selectZone(e.dataset.zone));renderKpis();renderDetails();renderAnomalies()}
+function selectZone(code){selected=code;draw()}
+function renderKpis(){let f=filteredZones();let art=articles.filter(a=>f.some(z=>z.code_zone_tfi===a.zone));let k=[['Zones visibles',f.length],['Articles',art.length],['Sous mini',art.filter(a=>a.statut==='SOUS_MINI').length],['Anomalies',anomalies.length]];document.getElementById('kpis').innerHTML=k.map(x=>`<div class="kpi"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join('')}
+function renderDetails(){let z=zones.find(x=>x.code_zone_tfi===selected);let zd=document.getElementById('zoneDetails'),al=document.getElementById('articlesList');if(!z){zd.innerHTML='Sélectionne une zone sur le plan.';al.innerHTML='<div class="card">Aucune zone sélectionnée.</div>';return}let arts=articles.filter(a=>a.zone===z.code_zone_tfi);zd.innerHTML=`<h3>${esc(z.aff)} — ${esc(z.nom)}</h3><p><b>Code TFI :</b> <code>${esc(z.code_zone_tfi)}</code></p><p><b>Type :</b> ${esc(z.type)} · <b>Statut :</b> ${badge(z.statut)} · <b>Risque :</b> ${badge(z.risque)}</p><p><b>Familles :</b> ${esc(z.familles.join(', ')||'Aucune')}</p><p><b>Consignes :</b></p><ul>${z.consignes.map(c=>`<li>${esc(c)}</li>`).join('')}</ul>`;al.innerHTML=arts.length?arts.map(a=>`<div class="card"><b>${esc(a.code)}</b><br>${esc(a.designation)}<br><span class="small">${esc(a.famille)} · ${badge(a.statut)} · reco ${a.reco}</span></div>`).join(''):'<div class="card">Aucun article rattaché à cette zone.</div>'}
+function renderAnomalies(){let rows=anomalies.map((a,i)=>`<tr><td>${i+1}</td><td><code>${esc(a.zone||'-')}</code></td><td>${esc(a.type)}</td><td>${esc(a.comment)}</td><td>${esc(a.date)}</td></tr>`).join('');document.getElementById('anomaliesTable').innerHTML=`<table><thead><tr><th>#</th><th>Zone</th><th>Type</th><th>Commentaire</th><th>Date</th></tr></thead><tbody>${rows||'<tr><td colspan="5">Aucune anomalie.</td></tr>'}</tbody></table>`}
+function addAnomaly(){let z=selected||'';let type=document.getElementById('anomalyType').value;let comment=document.getElementById('anomalyText').value.trim();if(!z){alert('Sélectionne d abord une zone.');return}if(!comment){alert('Ajoute un commentaire court.');return}anomalies.push({zone:z,type,comment,date:new Date().toISOString()});localStorage.setItem('plan-parc-anomalies-v1',JSON.stringify(anomalies));document.getElementById('anomalyText').value='';draw()}
+function download(name,content,type){let b=new Blob([content],{type}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href)}
+function exportAnomalies(){let head='zone_tfi;type;commentaire;date\n';let body=anomalies.map(a=>[a.zone,a.type,a.comment,a.date].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\n');download('anomalies-plan-parc.csv','\ufeff'+head+body,'text/csv;charset=utf-8')}
+function exportPlan(){download('plan-parc-magasinier.json',JSON.stringify({exported_at:new Date().toISOString(),zones,articles,anomalies},null,2),'application/json')}
+document.getElementById('q').oninput=draw;document.getElementById('typeFilter').onchange=draw;document.getElementById('statusFilter').onchange=draw;document.getElementById('reset').onclick=()=>{q.value='';typeFilter.value='all';statusFilter.value='all';selected=null;draw()};document.getElementById('addAnomaly').onclick=addAnomaly;document.getElementById('exportAnomalies').onclick=exportAnomalies;document.getElementById('exportPlan').onclick=exportPlan;document.getElementById('print').onclick=()=>print();draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "project_id": "stock-mini-maxi-tfi",
+  "project_name": "Stock mini/maxi TFI — Export zones articles",
+  "status": "validated",
+  "created_at": "2026-05-12",
+  "updated_at": "2026-05-12",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Le module stock mini/maxi TFI doit permettre de controler les articles, les zones TFI sur 6 caracteres et les exports CSV sans creer de connexion directe risquee avec l'ERP.",
+  "target_users": ["chef_agence", "responsable_exploitation", "magasinier", "vendeur_comptoir"],
+  "operational_goal": "Analyser les articles, controler le code zone TFI, exporter un CSV exploitable et maintenir une validation humaine obligatoire avant toute saisie ou import dans TFI.",
+  "source_files": {
+    "main_html": "src/stock-mini-maxi-tfi.html",
+    "project_markdown": "projets/stock-mini-maxi-tfi.md",
+    "project_json": "projets/stock-mini-maxi-tfi.json"
+  },
+  "data_sources": [
+    {"name":"donnees_demo_tfi","source_type":"manual_or_clean_import","sensitive":false,"comment":"Donnees fictives ou anonymisees compatibles code_zone_tfi."}
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true
+  },
+  "expected_features": [
+    {"priority":"high","name":"Controle code zone TFI","description":"Verifier que les zones sont au format 6 caracteres.","status":"done"},
+    {"priority":"high","name":"Export CSV TFI","description":"Exporter code_article et code_zone_tfi sans tiret.","status":"done"},
+    {"priority":"high","name":"Analyse stock","description":"Afficher statut stock et quantite recommandee.","status":"done"}
+  ],
+  "out_of_scope": ["Ne pas modifier TFI automatiquement.", "Ne pas stocker d'identifiants.", "Ne pas executer de requete SQL.", "Ne pas remplacer la validation humaine."],
+  "success_criteria": {
+    "understandable_under_10_seconds": true,
+    "mobile_compatible": true,
+    "local_save_if_needed": true,
+    "export_or_print_if_needed": true,
+    "github_actions_recipe_passed": true
+  },
+  "risks": [
+    {"risk":"Utiliser le CSV sans validation terrain.","level":"medium","mitigation":"Afficher la validation humaine obligatoire et conserver les colonnes controle/details."}
+  ],
+  "human_validation": {
+    "decision": "validated",
+    "validated_by": "Greg",
+    "validated_at": "2026-05-12",
+    "comment": "Module accepte comme outil de controle et export, sans ecriture directe dans TFI."
+  },
+  "next_actions": ["Tester sur mobile.", "Importer un vrai export propre.", "Comparer le CSV avec la saisie TFI sur un echantillon."]
+}
