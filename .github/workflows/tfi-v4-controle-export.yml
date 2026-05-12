@@ -2,7 +2,7 @@ name: TFI V4 Controle Export
 
 on:
   push:
-    branches: [main, refonte-tfi-v4-propre]
+    branches: [main, refonte-tfi-v4-propre, cleanup-tfi-v4]
     paths:
       - 'data/tfi-zones-source.csv'
       - 'data/tfi-articles-source.csv'
