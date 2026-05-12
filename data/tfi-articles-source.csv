@@ -1,0 +1,8 @@
+code_article;designation;famille;code_zone_tfi;stock_physique;stock_reserve;commandes_en_cours;vente_30j;vente_90j;mini;maxi;multiple_achat;classe
+ISO-001;Laine de verre rouleau 100 mm;Isolation;DP0101;24;4;0;28;75;25;60;6;A
+PLA-001;Plaque de platre BA13;Plaque de platre;DP0201;140;30;50;90;260;80;180;10;A
+BOI-001;Chevron traite 63x75;Bois;CR0101;12;8;0;36;70;20;45;5;B
+MOR-001;Mortier colle gris sac 25 kg;Mortier;DP0301;92;5;0;24;90;30;70;8;B
+QUI-001;Vis bois torx boite 500;Quincaillerie;LS0101;44;3;12;18;54;30;80;6;A
+BLO-001;Bloc beton creux 20 cm;Gros oeuvre;CR0201;820;120;0;260;780;500;1200;40;A
+DRA-001;Drain agricole diametre 100;VRD;CR0201;7;2;0;12;22;10;25;5;C

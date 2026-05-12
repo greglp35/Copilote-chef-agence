@@ -1,0 +1,49 @@
+name: TFI V4 Controle Export
+
+on:
+  push:
+    branches: [main, refonte-tfi-v4-propre]
+    paths:
+      - 'data/tfi-zones-source.csv'
+      - 'data/tfi-articles-source.csv'
+      - 'scripts/build_tfi_exports_v4.py'
+      - '.github/workflows/tfi-v4-controle-export.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'data/tfi-zones-source.csv'
+      - 'data/tfi-articles-source.csv'
+      - 'scripts/build_tfi_exports_v4.py'
+      - '.github/workflows/tfi-v4-controle-export.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tfi-v4-controle-export:
+    name: Controler sources et generer exports TFI V4
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le depot
+        uses: actions/checkout@v4
+
+      - name: Construire exports TFI V4
+        run: python3 scripts/build_tfi_exports_v4.py
+
+      - name: Publier exports TFI V4
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfi-v4-exports
+          path: |
+            exports/tfi-v4/zones-tfi-controle.csv
+            exports/tfi-v4/articles-zones-tfi-export.csv
+            exports/tfi-v4/stock-zonage-analyse.csv
+            exports/tfi-v4/rapport-controle-tfi-v4.json
+            exports/tfi-v4/rapport-controle-tfi-v4.md
