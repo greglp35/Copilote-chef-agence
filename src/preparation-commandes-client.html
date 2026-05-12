@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Préparation Commandes Client — TFI</title>
+<style>
+:root{--y:#f5c400;--b:#1a1a1a;--g:#f4f5f7;--w:#fff;--bd:#d9dde3;--r:#a11d1d;--o:#9a5b00;--v:#1f6b3a;--blue:#244f8f}*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--g);color:var(--b)}header{background:var(--b);color:#fff;border-bottom:7px solid var(--y)}.wrap,main{max-width:1280px;margin:auto;padding:14px}h1,h2,h3{margin:0 0 10px}.tag{display:inline-block;background:var(--y);color:var(--b);font-weight:900;border-radius:999px;padding:6px 10px;margin-bottom:8px}.note{background:#fff6c7;border-left:6px solid var(--y);padding:10px;border-radius:12px;font-weight:700}.layout{display:grid;grid-template-columns:.85fr 1.15fr;gap:12px}.panel,section{background:var(--w);border:1px solid var(--bd);border-radius:16px;padding:12px;box-shadow:0 8px 24px #0001}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px}label{font-weight:800;display:block;margin-bottom:4px}input,select,button,textarea{width:100%;font:inherit;border-radius:10px}input,select,textarea{border:1px solid var(--bd);padding:9px}button{border:0;background:var(--y);font-weight:900;min-height:42px;cursor:pointer}.dark{background:var(--b);color:#fff}.light{background:#e8ebef}.danger{background:#ffdede;color:var(--r)}.green{background:#dff3e5;color:var(--v)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kpi{background:#fffdf0;border-left:6px solid var(--y);border-radius:12px;padding:10px}.kpi strong{display:block;font-size:24px}.cards{display:grid;gap:8px;max-height:560px;overflow:auto}.card{border:1px solid var(--bd);border-radius:12px;padding:10px;background:#fff;cursor:pointer}.card.active{border:3px solid var(--y)}.small{font-size:12px;color:#555}.badge{display:inline-block;border-radius:999px;padding:3px 8px;font-weight:900;font-size:12px}.ok{background:#dff3e5;color:var(--v)}.warn{background:#fff0cf;color:var(--o)}.err{background:#ffe0e0;color:var(--r)}.info{background:#e4edff;color:var(--blue)}.table{overflow:auto;border:1px solid var(--bd);border-radius:12px}table{width:100%;border-collapse:collapse;min-width:920px}th,td{padding:8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}th{background:#1a1a1a;color:#fff}.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.line-actions{display:flex;gap:6px;flex-wrap:wrap}.line-actions button{width:auto;min-height:34px;padding:6px 10px}.progress{height:10px;background:#eee;border-radius:999px;overflow:hidden}.progress span{display:block;height:100%;background:var(--y)}code{background:#f0f0f0;padding:2px 5px;border-radius:5px}@media(max-width:980px){.layout,.toolbar,.grid,.actions{grid-template-columns:1fr}.wrap,main{padding:10px}table{min-width:760px}}@media print{header,.toolbar,.actions,.line-actions,.no-print{display:none}body{background:#fff}.panel,section{box-shadow:none}.layout{display:block}table{font-size:10px;min-width:0}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><span class="tag">Prépa commande client — V1 TFI</span><h1>Préparer, localiser, valider</h1><p>Interface terrain pour suivre une préparation client, pointer les lignes, déposer la commande prête dans une zone localisée, puis demander validation.</p><div class="note">Garde-fou : aucun accès direct TFI. La localisation utilise <code>code_zone_tfi</code> sur 6 caractères et un emplacement de dépose lisible.</div></div></header>
+<main>
+<section>
+<h2>Tableau de bord</h2>
+<div class="toolbar">
+<p><label for="q">Recherche</label><input id="q" placeholder="client, commande, article, zone"></p>
+<p><label for="statusFilter">Statut</label><select id="statusFilter"><option value="all">Tous</option><option value="A_PREPARER">À préparer</option><option value="EN_COURS">En cours</option><option value="PRETE_VALIDATION">Prête validation</option><option value="VALIDEE">Validée</option><option value="BLOQUEE">Bloquée</option></select></p>
+<p><label for="zoneFilter">Dépose</label><select id="zoneFilter"><option value="all">Toutes</option></select></p>
+<p><label>&nbsp;</label><button id="reset">Réinitialiser</button></p>
+</div>
+<div id="kpis" class="grid"></div>
+</section>
+<div class="layout">
+<aside class="panel">
+<h2>Commandes</h2>
+<div id="ordersList" class="cards"></div>
+</aside>
+<section class="panel">
+<h2>Détail préparation</h2>
+<div id="orderDetails" class="note">Sélectionne une commande.</div>
+<div style="margin-top:12px" id="linesZone"></div>
+<div class="actions no-print">
+<button id="startPrep">Démarrer</button>
+<button id="readyPrep" class="green">Prête à valider</button>
+<button id="validatePrep" class="dark">Valider</button>
+<button id="blockPrep" class="danger">Bloquer</button>
+</div>
+<h3 style="margin-top:14px">Localisation de la commande prête</h3>
+<div class="toolbar" style="grid-template-columns:1fr 1fr 2fr 1fr">
+<p><label for="readyZone">Zone de dépose</label><select id="readyZone"><option value="PR0101">PR0101 — Préparation</option><option value="RC0101">RC0101 — Réception</option><option value="QA0101">QA0101 — Litige</option></select></p>
+<p><label for="readySlot">Emplacement</label><input id="readySlot" placeholder="ex : PREP-A, QUAI-1"></p>
+<p><label for="readyComment">Commentaire</label><input id="readyComment" placeholder="ex : 2 palettes + 1 botte bois"></p>
+<p><label>&nbsp;</label><button id="saveLocation" class="light">Enregistrer</button></p>
+</div>
+<h3 style="margin-top:14px">Anomalie / réserve</h3>
+<div class="toolbar" style="grid-template-columns:1fr 2fr 1fr">
+<p><label for="issueType">Type</label><select id="issueType"><option>Article manquant</option><option>Article abîmé</option><option>Quantité insuffisante</option><option>Zone introuvable</option><option>Commande incomplète</option><option>Autre</option></select></p>
+<p><label for="issueText">Commentaire</label><input id="issueText" placeholder="Décris le blocage ou la réserve"></p>
+<p><label>&nbsp;</label><button id="addIssue" class="danger">Ajouter</button></p>
+</div>
+<div class="actions no-print"><button id="exportPrep">Exporter prépas CSV</button><button id="exportJson" class="light">Exporter JSON</button><button id="print" class="light">Imprimer fiche</button><button id="loadDemo" class="dark">Recharger exemple</button></div>
+</section>
+</div>
+<section>
+<h2>Journal de validation</h2>
+<div id="logTable" class="table"></div>
+</section>
+</main>
+<script>
+const KEY='preparation-commandes-client-v1';
+const zones={PR0101:'Préparation commandes',RC0101:'Réception marchandises',QA0101:'Quarantaine litige',CR0101:'Cour bois panneaux',CR0201:'Cour gros oeuvre VRD',DP0101:'Dépôt isolation',DP0201:'Dépôt plaque de plâtre',DP0301:'Dépôt mortiers',LS0101:'Libre service'};
+const demo=[
+{id:'CMD-24001',client:'MAHE Construction',date:'2026-05-12',status:'A_PREPARER',ready_zone:'',ready_slot:'',ready_comment:'',issues:[],log:[],lines:[{code:'BOI-001',designation:'Chevron traité 63x75',family:'Bois',qty:12,zone:'CR0101',picked:0,status:'A_PRENDRE'},{code:'VIS-500',designation:'Vis bois torx boîte 500',family:'Quincaillerie',qty:2,zone:'LS0101',picked:0,status:'A_PRENDRE'}]},
+{id:'CMD-24002',client:'Le Gall Rénovation',date:'2026-05-12',status:'EN_COURS',ready_zone:'',ready_slot:'',ready_comment:'',issues:[],log:[],lines:[{code:'ISO-001',designation:'Laine de verre rouleau 100 mm',family:'Isolation',qty:8,zone:'DP0101',picked:4,status:'PARTIEL'},{code:'PLA-001',designation:'Plaque de plâtre BA13',family:'Plaque de platre',qty:20,zone:'DP0201',picked:0,status:'A_PRENDRE'}]},
+{id:'CMD-24003',client:'Atelier Ker Bati',date:'2026-05-11',status:'PRETE_VALIDATION',ready_zone:'PR0101',ready_slot:'PREP-A',ready_comment:'1 palette filmée + étiquette commande',issues:[],log:[{date:new Date().toISOString(),event:'Préparation prête à valider'}],lines:[{code:'MOR-001',designation:'Mortier colle gris sac 25 kg',family:'Mortier',qty:10,zone:'DP0301',picked:10,status:'PRIS'}]}
+];
+let orders=[];let selected='';
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function badge(v){let c=['VALIDEE','PRIS','OK'].includes(v)?'ok':(['PRETE_VALIDATION','EN_COURS','PARTIEL'].includes(v)?'warn':(['BLOQUEE','MANQUANT'].includes(v)?'err':'info'));return '<span class="badge '+c+'">'+esc(v)+'</span>'}
+function order(){return orders.find(o=>o.id===selected)}
+function progress(o){let total=o.lines.reduce((s,l)=>s+Number(l.qty||0),0),picked=o.lines.reduce((s,l)=>s+Number(l.picked||0),0);return total?Math.round(picked/total*100):0}
+function addLog(o,event){o.log.push({date:new Date().toISOString(),event})}
+function save(){localStorage.setItem(KEY,JSON.stringify(orders))}
+function load(){orders=JSON.parse(localStorage.getItem(KEY)||'null')||JSON.parse(JSON.stringify(demo));selected=orders[0]?.id||''}
+function filtered(){let q=document.getElementById('q').value.toLowerCase(),sf=document.getElementById('statusFilter').value,zf=document.getElementById('zoneFilter').value;return orders.filter(o=>(sf==='all'||o.status===sf)&&(zf==='all'||o.ready_zone===zf)&&(!q||(`${o.id} ${o.client} ${o.status} ${o.ready_zone} ${o.ready_slot} ${o.lines.map(l=>l.code+' '+l.designation+' '+l.zone).join(' ')}`).toLowerCase().includes(q)))}
+function render(){renderFilters();renderKpis();renderOrders();renderDetails();renderLog();save()}
+function renderFilters(){let z=[...new Set(orders.map(o=>o.ready_zone).filter(Boolean))].sort();let sel=zoneFilter.value;zoneFilter.innerHTML='<option value="all">Toutes</option>'+z.map(x=>`<option value="${x}">${x} — ${esc(zones[x]||'')}</option>`).join('');zoneFilter.value=z.includes(sel)?sel:'all'}
+function renderKpis(){let all=orders;let k=[['Commandes',all.length],['En cours',all.filter(o=>o.status==='EN_COURS').length],['Prêtes validation',all.filter(o=>o.status==='PRETE_VALIDATION').length],['Bloquées',all.filter(o=>o.status==='BLOQUEE').length]];kpis.innerHTML=k.map(x=>`<div class="kpi"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join('')}
+function renderOrders(){ordersList.innerHTML=filtered().map(o=>`<div class="card ${o.id===selected?'active':''}" onclick="selected='${o.id}';render()"><b>${esc(o.id)}</b> — ${esc(o.client)}<br>${badge(o.status)} <span class="small">${esc(o.date)}</span><div class="progress" style="margin-top:8px"><span style="width:${progress(o)}%"></span></div><span class="small">${progress(o)}% préparé · dépose ${esc(o.ready_zone||'-')} ${esc(o.ready_slot||'')}</span></div>`).join('')||'<div class="card">Aucune commande.</div>'}
+function renderDetails(){let o=order();if(!o){orderDetails.innerHTML='Sélectionne une commande.';linesZone.innerHTML='';return}readyZone.value=o.ready_zone||'PR0101';readySlot.value=o.ready_slot||'';readyComment.value=o.ready_comment||'';orderDetails.innerHTML=`<h3>${esc(o.id)} — ${esc(o.client)}</h3><p>${badge(o.status)} · ${esc(o.date)} · progression ${progress(o)}%</p><p><b>Dépose prête :</b> <code>${esc(o.ready_zone||'-')}</code> ${esc(o.ready_slot||'')} ${esc(o.ready_comment?('— '+esc(o.ready_comment)) : ''}</p>`;linesZone.innerHTML=`<div class="table"><table><thead><tr><th>Article</th><th>Zone</th><th>Qté</th><th>Pris</th><th>Statut</th><th>Actions</th></tr></thead><tbody>${o.lines.map((l,i)=>`<tr><td><b>${esc(l.code)}</b><br>${esc(l.designation)}<br><span class="small">${esc(l.family)}</span></td><td><code>${esc(l.zone)}</code><br><span class="small">${esc(zones[l.zone]||'Zone inconnue')}</span></td><td>${l.qty}</td><td>${l.picked}</td><td>${badge(l.status)}</td><td><div class="line-actions"><button onclick="pickLine(${i})">Pris</button><button class="light" onclick="partialLine(${i})">Partiel</button><button class="danger" onclick="missingLine(${i})">Manquant</button></div></td></tr>`).join('')}</tbody></table></div>`}
+function renderLog(){let rows=orders.flatMap(o=>o.log.map(l=>({cmd:o.id,client:o.client,...l}))).sort((a,b)=>String(b.date).localeCompare(String(a.date)));logTable.innerHTML=`<table><thead><tr><th>Date</th><th>Commande</th><th>Client</th><th>Événement</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(r.cmd)}</td><td>${esc(r.client)}</td><td>${esc(r.event)}</td></tr>`).join('')||'<tr><td colspan="4">Aucun événement.</td></tr>'}</tbody></table>`}
+function pickLine(i){let o=order(),l=o.lines[i];l.picked=l.qty;l.status='PRIS';if(o.status==='A_PREPARER')o.status='EN_COURS';addLog(o,`Ligne prise : ${l.code}`);render()}
+function partialLine(i){let o=order(),l=o.lines[i];let v=prompt('Quantité prise ?',l.picked||0);if(v===null)return;l.picked=Math.max(0,Math.min(Number(l.qty),Number(v)||0));l.status=l.picked>=l.qty?'PRIS':(l.picked>0?'PARTIEL':'A_PRENDRE');if(o.status==='A_PREPARER')o.status='EN_COURS';addLog(o,`Ligne partielle : ${l.code} (${l.picked}/${l.qty})`);render()}
+function missingLine(i){let o=order(),l=o.lines[i];l.status='MANQUANT';o.status='BLOQUEE';addLog(o,`Article manquant : ${l.code}`);render()}
+function startPrep(){let o=order();if(!o)return;if(o.status==='A_PREPARER'){o.status='EN_COURS';addLog(o,'Préparation démarrée');render()}}
+function saveLocation(){let o=order();if(!o)return;o.ready_zone=readyZone.value;o.ready_slot=readySlot.value.trim().toUpperCase();o.ready_comment=readyComment.value.trim();addLog(o,`Localisation enregistrée : ${o.ready_zone} ${o.ready_slot}`);render()}
+function readyPrep(){let o=order();if(!o)return;let incomplete=o.lines.some(l=>l.status!=='PRIS');if(incomplete){alert('Impossible : toutes les lignes ne sont pas marquées PRIS.');return}if(!o.ready_zone||!o.ready_slot){alert('Renseigne la zone et l emplacement de dépose avant validation.');return}o.status='PRETE_VALIDATION';addLog(o,'Préparation prête à valider');render()}
+function validatePrep(){let o=order();if(!o)return;if(o.status!=='PRETE_VALIDATION'){alert('La commande doit être en statut PRETE_VALIDATION.');return}o.status='VALIDEE';addLog(o,'Préparation validée');render()}
+function blockPrep(){let o=order();if(!o)return;let why=prompt('Motif du blocage ?','');if(why===null)return;o.status='BLOQUEE';addLog(o,'Préparation bloquée : '+why);render()}
+function addIssue(){let o=order();if(!o)return;let t=issueType.value,txt=issueText.value.trim();if(!txt){alert('Ajoute un commentaire.');return}o.issues.push({date:new Date().toISOString(),type:t,comment:txt});o.status='BLOQUEE';addLog(o,`Réserve ajoutée : ${t} — ${txt}`);issueText.value='';render()}
+function exportPrep(){let rows=[['commande','client','statut','zone_depose','emplacement_depose','article','designation','zone_article','qte','pris','statut_ligne','commentaire']];orders.forEach(o=>o.lines.forEach(l=>rows.push([o.id,o.client,o.status,o.ready_zone,o.ready_slot,l.code,l.designation,l.zone,l.qty,l.picked,l.status,o.ready_comment])));let csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\n');download('preparations-commandes-client.csv','\ufeff'+csv,'text/csv;charset=utf-8')}
+function exportJson(){download('preparations-commandes-client.json',JSON.stringify({exported_at:new Date().toISOString(),orders},null,2),'application/json')}
+function download(name,content,type){let b=new Blob([content],{type}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();URL.revokeObjectURL(a.href)}
+startPrep.onclick=startPrep;saveLocation.onclick=saveLocation;readyPrep.onclick=readyPrep;validatePrep.onclick=validatePrep;blockPrep.onclick=blockPrep;addIssue.onclick=addIssue;exportPrep.onclick=exportPrep;exportJson.onclick=exportJson;print.onclick=()=>window.print();loadDemo.onclick=()=>{orders=JSON.parse(JSON.stringify(demo));selected=orders[0].id;render()};reset.onclick=()=>{q.value='';statusFilter.value='all';zoneFilter.value='all';render()};['q','statusFilter','zoneFilter'].forEach(id=>document.getElementById(id).addEventListener('input',render));load();render();
+</script>
+</body>
+</html>
