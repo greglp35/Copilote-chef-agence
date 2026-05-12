@@ -1,11 +1,17 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "dataset": "stock-mini-maxi",
-  "description": "Schema de donnees de test pour le module stock mini/maxi.",
+  "description": "Schema de donnees de test pour le module stock mini/maxi avec lien vers le zonage ERP.",
+  "erp_zone_format": {
+    "field": "code_zone_erp",
+    "description": "3 blocs de 2 chiffres ou 2 lettres. Exemple affiché : CR-01-01. Exemple normalisé : CR0101.",
+    "regex_display_or_normalized": "^([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})$"
+  },
   "fields": [
     { "name": "code_article", "type": "string", "required": true, "example": "ART-001" },
     { "name": "designation", "type": "string", "required": true, "example": "Laine de verre 100 mm" },
     { "name": "famille", "type": "string", "required": true, "example": "Isolation" },
+    { "name": "code_zone_erp", "type": "string", "required": true, "example": "DP-01-01" },
     { "name": "stock_physique", "type": "number", "required": true, "example": 24 },
     { "name": "stock_reserve", "type": "number", "required": true, "example": 4 },
     { "name": "commandes_en_cours", "type": "number", "required": true, "example": 10 },
@@ -24,7 +30,8 @@
     "vente_moyenne_jour = max(vente_30j / 30, vente_90j / 90)",
     "besoin_theorique = mini - stock_projete",
     "quantite_recommandee = besoin_theorique arrondi au multiple_achat superieur",
-    "statut = OK / SOUS_MINI / A_COMMANDER / SURSTOCK / INCOMPATIBLE"
+    "statut_stock = OK / SOUS_MINI / A_COMMANDER / SURSTOCK / INCOMPATIBLE",
+    "statut_zonage = OK / ZONE_INCONNUE / FAMILLE_NON_AUTORISEE / ZONE_RISQUE_BLOQUANT / ZONE_A_REVOIR"
   ],
-  "security_note": "Donnees fictives ou anonymisees uniquement. Aucun identifiant sensible. Aucun acces direct a une source externe."
+  "security_note": "Donnees fictives ou anonymisees uniquement. Aucun secret. Aucun acces direct a une source externe."
 }
