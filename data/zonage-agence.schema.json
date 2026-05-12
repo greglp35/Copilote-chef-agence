@@ -1,11 +1,22 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "dataset": "zonage-agence",
-  "description": "Schema de reference pour le zonage agence, depot, cour, zones de stockage, circulation et preparation.",
-  "principle": "Le zonage est un referentiel transversal. Il ne doit pas etre enferme uniquement dans le stock.",
+  "description": "Schema de reference pour le zonage agence compatible avec le format ERP en 3 blocs de 2 chiffres ou 2 lettres.",
+  "principle": "Le code ERP est la cle de reference. Les libelles restent lisibles pour l'humain, mais les croisements stock, preparation et securite doivent utiliser code_zone_erp.",
+  "erp_zone_format": {
+    "canonical_field": "code_zone_erp",
+    "description": "3 blocs de 2 caracteres. Chaque bloc contient soit 2 chiffres, soit 2 lettres. Les tirets sont acceptes pour la lisibilite mais le code normalise supprime les tirets.",
+    "display_format": "AA-01-BB",
+    "normalized_format": "AA01BB",
+    "accepted_examples": ["AA-01-BB", "01-02-03", "AB-CD-01", "AA01BB", "010203", "ABCD01"],
+    "invalid_examples": ["COUR-A", "DEPOT-D", "A-01-BB", "AAA-01-BB", "A1-02-CD"],
+    "normalization_rule": "Supprimer espaces et tirets, passer en majuscules, verifier 6 caracteres organises en 3 blocs de 2 chiffres ou 2 lettres.",
+    "regex_display_or_normalized": "^([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})$"
+  },
   "fields": [
-    { "name": "zone_id", "type": "string", "required": true, "example": "COUR-A" },
-    { "name": "nom_zone", "type": "string", "required": true, "example": "Cour exterieure - Zone A" },
+    { "name": "code_zone_erp", "type": "string", "required": true, "example": "AA-01-BB" },
+    { "name": "code_zone_normalise", "type": "string", "required": true, "example": "AA01BB" },
+    { "name": "nom_zone", "type": "string", "required": true, "example": "Cour exterieure - Bois et panneaux" },
     { "name": "type_zone", "type": "string", "required": true, "allowed_values": ["cour", "depot_couvert", "libre_service", "preparation", "reception", "expedition", "quarantaine", "securite", "administratif"], "example": "cour" },
     { "name": "familles_autorisees", "type": "array_string", "required": false, "example": ["Bois", "Couverture"] },
     { "name": "familles_interdites", "type": "array_string", "required": false, "example": ["Produits sensibles"] },
@@ -14,8 +25,8 @@
     { "name": "capacite_estimee", "type": "number", "required": false, "example": 120 },
     { "name": "unite_capacite", "type": "string", "required": false, "example": "palettes" },
     { "name": "statut_zone", "type": "string", "required": true, "allowed_values": ["active", "a_revoir", "saturee", "bloquee", "archivee"], "example": "active" },
-    { "name": "sens_circulation", "type": "string", "required": false, "example": "sens unique conseillé" },
-    { "name": "observations", "type": "string", "required": false, "example": "Zone à contrôler chaque semaine." }
+    { "name": "sens_circulation", "type": "string", "required": false, "example": "sens unique conseille" },
+    { "name": "observations", "type": "string", "required": false, "example": "Zone a controler chaque semaine." }
   ],
   "linked_modules": [
     "stock-mini-maxi",
