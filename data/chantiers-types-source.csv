@@ -1,0 +1,28 @@
+chantier_type;surface_reference;code_article;designation;famille;quantite_pour_surface;unite;obligatoire;produit_remplacement;priorite;role_chantier;commentaire
+cloison_ba13;50m2;PLA-001;Plaque BA13 standard;Plaque de platre;50;m2;oui;;haute;produit_principal;Base de calcul chantier standard cloison
+cloison_ba13;50m2;RAIL-001;Rail 48;Ossature cloison;20;unite;oui;;haute;structure;A ajuster selon longueur réelle des rails
+cloison_ba13;50m2;MON-001;Montant 48;Ossature cloison;40;unite;oui;;haute;structure;A ajuster selon entraxe et hauteur
+cloison_ba13;50m2;VIS-500;Vis placo boite 500;Quincaillerie;2;boite;oui;VIS-1000;moyenne;fixation;Equivalent possible si conditionnement superieur
+cloison_ba13;50m2;BANDE-001;Bande a joint;Traitement joints;3;rouleau;oui;BANDE-ALT;haute;accessoire_bloquant;Produit bloquant si absent
+cloison_ba13;50m2;END-001;Enduit a joint;Traitement joints;3;sac;oui;END-ALT;haute;accessoire_bloquant;Produit bloquant si absent
+cloison_ba13;50m2;ISO-001;Laine de verre cloison;Isolation;50;m2;non;ISO-ALT;moyenne;option;Selon besoin acoustique ou thermique
+terrasse_bois;20m2;AME-001;Lame terrasse pin traite;Amenagement exterieur;20;m2;oui;;haute;produit_principal;Surface référence terrasse standard
+terrasse_bois;20m2;LAMBOURDE-001;Lambourde traitee;Bois exterieur;30;ml;oui;;haute;structure;A recalculer selon entraxe
+terrasse_bois;20m2;PLOT-001;Plot terrasse reglable;Accessoire terrasse;80;unite;oui;PLOT-ALT;haute;accessoire_bloquant;Bloquant si pose sur plots
+terrasse_bois;20m2;VIS-TERR-001;Vis terrasse inox;Quincaillerie;2;boite;oui;VIS-TERR-ALT;haute;fixation;Fixation indispensable
+terrasse_bois;20m2;BANDE-PROT-001;Bande protection lambourde;Accessoire terrasse;3;rouleau;non;BANDE-PROT-ALT;moyenne;protection;Non bloquant mais recommandé
+terrasse_bois;20m2;SAT-001;Saturateur terrasse;Traitement bois;1;bidon;non;SAT-ALT;basse;finition;Upsell utile selon projet
+isolation_laine;100m2;ISO-001;Laine de verre rouleau 100 mm;Isolation;100;m2;oui;ISO-ALT;haute;produit_principal;Référence à ajuster selon R attendu
+isolation_laine;100m2;SUSP-001;Suspente isolation;Accessoire isolation;250;unite;oui;SUSP-ALT;haute;structure;Selon entraxe et système
+isolation_laine;100m2;FOUR-001;Fourrure;Ossature isolation;180;ml;oui;FOUR-ALT;haute;structure;Selon calepinage
+isolation_laine;100m2;MEMB-001;Membrane etancheite air;Etancheite;100;m2;oui;MEMB-ALT;haute;accessoire_bloquant;Bloquant si système complet étanchéité prévu
+isolation_laine;100m2;ADH-001;Adhesif membrane;Etancheite;4;rouleau;oui;ADH-ALT;haute;accessoire_bloquant;Manquant fréquent à surveiller
+vrd_courant;25ml;DRA-001;Drain agricole diametre 100;VRD;25;ml;oui;DRA-ALT;haute;produit_principal;Base chantier drainage courant
+vrd_courant;25ml;GEO-001;Geotextile;VRD;50;m2;oui;GEO-ALT;haute;accessoire_bloquant;Indispensable selon usage
+vrd_courant;25ml;GRAV-001;Gravier drainage;VRD;2;m3;oui;;haute;consommable;A gérer selon unité de vente agence
+petite_maconnerie;20m2;BLO-001;Bloc beton creux 20 cm;Gros oeuvre;200;unite;oui;;haute;produit_principal;Base indicative à valider
+petite_maconnerie;20m2;MOR-001;Mortier sac 25 kg;Mortier;20;sac;oui;MOR-ALT;haute;consommable;Quantité selon usage réel
+petite_maconnerie;20m2;LIN-001;Linteau beton;Gros oeuvre;2;unite;non;LIN-ALT;moyenne;accessoire;Selon ouverture
+couverture_accessoire;100m2;COU-001;Ecran sous-toiture HPV;Couverture;100;m2;oui;COU-ALT;haute;produit_principal;Référence couverture accessoire
+couverture_accessoire;100m2;LATTE-001;Liteau traite;Bois couverture;250;ml;oui;LATTE-ALT;haute;structure;Selon entraxe
+couverture_accessoire;100m2;CLOU-001;Pointes ou fixation couverture;Quincaillerie;2;boite;oui;CLOU-ALT;moyenne;fixation;Accessoire à surveiller
