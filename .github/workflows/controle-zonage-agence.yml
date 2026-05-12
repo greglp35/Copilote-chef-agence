@@ -2,18 +2,18 @@ name: Controle Zonage Agence
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'data/zonage-agence*.json'
-      - 'docs/METHODE_ZONAGE_AGENCE.md'
+      - 'data/stock-mini-maxi*.json'
+      - 'scripts/export_zones_tfi.py'
       - '.github/workflows/controle-zonage-agence.yml'
   pull_request:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'data/zonage-agence*.json'
-      - 'docs/METHODE_ZONAGE_AGENCE.md'
+      - 'data/stock-mini-maxi*.json'
+      - 'scripts/export_zones_tfi.py'
       - '.github/workflows/controle-zonage-agence.yml'
   workflow_dispatch:
 
@@ -26,210 +26,19 @@ defaults:
 
 jobs:
   controle-zonage-agence:
-    name: Verifier le referentiel de zonage agence
+    name: Verifier codes zones TFI
     runs-on: ubuntu-latest
-
     steps:
       - name: Recuperer le depot
         uses: actions/checkout@v4
-
-      - name: Controler le zonage agence
-        run: |
-          mkdir -p rapports
-          python3 <<'PY'
-          from pathlib import Path
-          from datetime import datetime, timezone
-          import json
-          import re
-          import sys
-
-          report = Path('rapports/controle-zonage-agence.md')
-          data_file = Path('data/zonage-agence.example.json')
-          now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
-
-          allowed_types = {'cour', 'depot_couvert', 'libre_service', 'preparation', 'reception', 'expedition', 'quarantaine', 'securite', 'administratif'}
-          allowed_risks = {'faible', 'moyen', 'eleve', 'bloquant'}
-          allowed_status = {'active', 'a_revoir', 'saturee', 'bloquee', 'archivee'}
-          required_fields = ['code_zone_erp', 'code_zone_normalise', 'nom_zone', 'type_zone', 'niveau_risque', 'statut_zone']
-          erp_pattern = re.compile(r'^([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})$')
-
-          def normalize_zone(value):
-              return str(value or '').replace('-', '').replace(' ', '').upper()
-
-          errors = []
-          warnings = []
-          rows = []
-
-          if not data_file.is_file():
-              errors.append('Fichier data/zonage-agence.example.json manquant.')
-              data = {}
-          else:
-              try:
-                  data = json.loads(data_file.read_text(encoding='utf-8'))
-              except Exception as exc:
-                  errors.append(f'JSON invalide : {exc}')
-                  data = {}
-
-          zones = data.get('zones') if isinstance(data, dict) else None
-          if not isinstance(zones, list):
-              errors.append('Le fichier doit contenir une propriete zones de type tableau.')
-              zones = []
-
-          if len(zones) < 5:
-              warnings.append('Le referentiel contient moins de 5 zones. Pour une V1 terrain, viser 6 a 12 zones simples.')
-
-          zone_codes = set()
-          type_count = {}
-          risk_count = {}
-          has_security_zone = False
-          has_preparation_zone = False
-          has_reception_zone = False
-          has_quarantine_zone = False
-
-          for index, zone in enumerate(zones, start=1):
-              if not isinstance(zone, dict):
-                  errors.append(f'Ligne {index} : chaque zone doit etre un objet JSON.')
-                  continue
-
-              code = str(zone.get('code_zone_erp', '')).strip().upper()
-              normalized = normalize_zone(code)
-              declared_normalized = str(zone.get('code_zone_normalise', '')).strip().upper()
-              label = code or f'ligne {index}'
-
-              for field in required_fields:
-                  if field not in zone or str(zone.get(field, '')).strip() == '':
-                      errors.append(f'{label} : champ obligatoire manquant ou vide : {field}')
-
-              if not erp_pattern.match(code):
-                  errors.append(f'{label} : code_zone_erp invalide. Format attendu : 3 blocs de 2 chiffres ou 2 lettres, ex. CR-01-01.')
-              if declared_normalized != normalized:
-                  errors.append(f'{label} : code_zone_normalise incoherent. Attendu {normalized}, obtenu {declared_normalized}.')
-              if normalized in zone_codes:
-                  errors.append(f'Code zone ERP duplique : {code} / {normalized}')
-              else:
-                  zone_codes.add(normalized)
-
-              type_zone = zone.get('type_zone')
-              if type_zone not in allowed_types:
-                  errors.append(f'{label} : type_zone non autorise : {type_zone}')
-              else:
-                  type_count[type_zone] = type_count.get(type_zone, 0) + 1
-
-              risk = zone.get('niveau_risque')
-              if risk not in allowed_risks:
-                  errors.append(f'{label} : niveau_risque non autorise : {risk}')
-              else:
-                  risk_count[risk] = risk_count.get(risk, 0) + 1
-
-              status = zone.get('statut_zone')
-              if status not in allowed_status:
-                  errors.append(f'{label} : statut_zone non autorise : {status}')
-
-              capacity = zone.get('capacite_estimee')
-              if capacity is not None and (not isinstance(capacity, (int, float)) or isinstance(capacity, bool) or capacity < 0):
-                  errors.append(f'{label} : capacite_estimee invalide.')
-
-              familles_autorisees = zone.get('familles_autorisees', [])
-              familles_interdites = zone.get('familles_interdites', [])
-              if familles_autorisees is not None and not isinstance(familles_autorisees, list):
-                  errors.append(f'{label} : familles_autorisees doit etre un tableau.')
-              if familles_interdites is not None and not isinstance(familles_interdites, list):
-                  errors.append(f'{label} : familles_interdites doit etre un tableau.')
-
-              if type_zone == 'securite':
-                  has_security_zone = True
-                  if capacity not in (0, None):
-                      warnings.append(f'{label} : une zone securite devrait avoir une capacite de stockage nulle.')
-                  if not familles_interdites:
-                      warnings.append(f'{label} : une zone securite devrait interdire explicitement le stockage.')
-
-              if type_zone == 'preparation':
-                  has_preparation_zone = True
-              if type_zone == 'reception':
-                  has_reception_zone = True
-              if type_zone == 'quarantaine':
-                  has_quarantine_zone = True
-
-              rows.append({
-                  'code': code,
-                  'normalise': normalized,
-                  'nom_zone': zone.get('nom_zone', ''),
-                  'type_zone': type_zone,
-                  'risque': risk,
-                  'statut': status,
-                  'capacite': capacity,
-                  'unite': zone.get('unite_capacite', '')
-              })
-
-          if not has_security_zone:
-              warnings.append('Aucune zone de securite detectee.')
-          if not has_preparation_zone:
-              warnings.append('Aucune zone de preparation detectee.')
-          if not has_reception_zone:
-              warnings.append('Aucune zone de reception detectee.')
-          if not has_quarantine_zone:
-              warnings.append('Aucune zone quarantaine/litige detectee.')
-
-          lines = []
-          lines.append('# Rapport Controle Zonage Agence')
-          lines.append('')
-          lines.append(f'Date : {now}')
-          lines.append(f'Fichier : `{data_file}`')
-          lines.append('')
-          lines.append('## 1. Verdict')
-          lines.append('')
-          if errors:
-              lines.append('**ROUGE - referentiel zonage invalide.**')
-          elif warnings:
-              lines.append('**ORANGE - zonage valide avec alertes terrain.**')
-          else:
-              lines.append('**VERT - referentiel zonage conforme.**')
-          lines.append('')
-          lines.append('## 2. Synthese')
-          lines.append('')
-          lines.append(f'- Nombre de zones : {len(zones)}')
-          lines.append(f'- Types detectes : {type_count}')
-          lines.append(f'- Niveaux de risque : {risk_count}')
-          lines.append('')
-          lines.append('## 3. Zones controlees')
-          lines.append('')
-          if rows:
-              lines.append('| Code ERP | Normalise | Nom | Type | Risque | Statut | Capacite |')
-              lines.append('|---|---|---|---|---|---|---:|')
-              for row in rows:
-                  lines.append(f"| {row['code']} | {row['normalise']} | {row['nom_zone']} | {row['type_zone']} | {row['risque']} | {row['statut']} | {row['capacite']} {row['unite']} |")
-          else:
-              lines.append('Aucune zone analysable.')
-          lines.append('')
-          lines.append('## 4. Erreurs bloquantes')
-          lines.append('')
-          if errors:
-              for error in errors:
-                  lines.append(f'- {error}')
-          else:
-              lines.append('Aucune erreur bloquante.')
-          lines.append('')
-          lines.append('## 5. Alertes')
-          lines.append('')
-          if warnings:
-              for warning in warnings:
-                  lines.append(f'- {warning}')
-          else:
-              lines.append('Aucune alerte.')
-          lines.append('')
-          lines.append('## 6. Regle de decision')
-          lines.append('')
-          lines.append('Le code ERP de zonage est la cle de reference. Le format impose est 3 blocs de 2 chiffres ou 2 lettres. Validation humaine obligatoire avant utilisation operationnelle.')
-          lines.append('')
-          report.write_text('\n'.join(lines), encoding='utf-8')
-          print('\n'.join(lines[:110]))
-          if errors:
-              sys.exit(1)
-          PY
-
-      - name: Publier le rapport zonage agence
+      - name: Generer et verifier export TFI
+        run: python3 scripts/export_zones_tfi.py
+      - name: Publier fichiers de controle
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: rapport-controle-zonage-agence
-          path: rapports/controle-zonage-agence.md
+          name: controle-zonage-agence
+          path: |
+            exports/tfi-zones-articles.csv
+            exports/tfi-zones-articles.controle.json
+            exports/tfi-zones-articles.rapport.md
