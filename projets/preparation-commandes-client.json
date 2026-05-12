@@ -1,0 +1,56 @@
+{
+  "schema_version": "1.0",
+  "project_id": "preparation-commandes-client",
+  "project_name": "Préparation Commandes Client — Localisation et validation",
+  "status": "in_review",
+  "created_at": "2026-05-12",
+  "updated_at": "2026-05-12",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Les commandes clients préparées doivent être suivies clairement : lignes à prendre, quantités prises, localisation de dépose lorsque la préparation est prête, validation finale et anomalies terrain.",
+  "target_users": ["magasinier", "responsable_exploitation", "chef_agence", "vendeur_comptoir"],
+  "operational_goal": "Permettre à un magasinier de préparer une commande client, pointer les articles, localiser la commande prête dans une zone de dépose et demander validation avant remise ou livraison.",
+  "source_files": {
+    "main_html": "src/preparation-commandes-client.html",
+    "project_markdown": "projets/preparation-commandes-client.md",
+    "project_json": "projets/preparation-commandes-client.json"
+  },
+  "data_sources": [
+    {"name":"commandes_demo","source_type":"manual_or_clean_import","sensitive":false,"comment":"Commandes et articles fictifs pour recette terrain."}
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true
+  },
+  "expected_features": [
+    {"priority":"high","name":"Liste commandes","description":"Afficher les commandes à préparer avec statut et progression.","status":"done"},
+    {"priority":"high","name":"Pointage lignes","description":"Marquer une ligne comme prise, partielle ou manquante.","status":"done"},
+    {"priority":"high","name":"Localisation commande prête","description":"Renseigner zone de dépose, emplacement et commentaire lorsque la commande est prête.","status":"done"},
+    {"priority":"high","name":"Validation préparation","description":"Passer une commande en prête validation puis validée après contrôle humain.","status":"done"},
+    {"priority":"medium","name":"Export CSV","description":"Exporter les préparations et leurs localisations.","status":"done"}
+  ],
+  "out_of_scope": ["Ne pas modifier TFI automatiquement.", "Ne pas remplacer le bon de préparation officiel.", "Ne pas stocker de données client sensibles.", "Ne pas connecter directement l'ERP depuis le HTML."],
+  "success_criteria": {
+    "understandable_under_10_seconds": true,
+    "mobile_compatible": true,
+    "local_save_if_needed": true,
+    "export_or_print_if_needed": true,
+    "github_actions_recipe_passed": true
+  },
+  "risks": [
+    {"risk":"Valider une commande incomplète.","level":"medium","mitigation":"Bloquer le passage en prête validation si toutes les lignes ne sont pas marquées prises."},
+    {"risk":"Confondre localisation de préparation et emplacement article.","level":"medium","mitigation":"Séparer zone article et zone de dépose de la commande prête."}
+  ],
+  "human_validation": {
+    "decision": "pending",
+    "validated_by": "Greg",
+    "validated_at": "",
+    "comment": "À tester avec un scénario magasinier complet avant diffusion terrain."
+  },
+  "next_actions": ["Tester sur mobile.", "Ajouter import CSV commandes si besoin.", "Relier aux zones TFI V4.", "Faire valider par un magasinier."]
+}
