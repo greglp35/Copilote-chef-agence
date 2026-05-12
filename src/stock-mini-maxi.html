@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stock mini/maxi — Assistant agence</title>
-  <meta name="description" content="Application locale d'aide au pilotage des stocks mini/maxi avec validation humaine obligatoire.">
+  <title>Stock mini/maxi — Assistant agence avec zonage ERP</title>
+  <meta name="description" content="Application locale d'aide au pilotage des stocks mini/maxi avec analyse du zonage ERP et validation humaine obligatoire.">
   <style>
     :root {
       --jaune: #f5c400;
@@ -17,6 +17,7 @@
       --orange: #a65f00;
       --vert: #1f6b3a;
       --bleu: #244f8f;
+      --violet: #5b3a91;
       --ombre: 0 10px 30px rgba(0, 0, 0, 0.08);
     }
 
@@ -37,20 +38,20 @@
     }
 
     .wrap {
-      width: min(1180px, 100%);
+      width: min(1280px, 100%);
       margin: 0 auto;
       padding: 1rem;
     }
 
     .hero {
       display: grid;
-      grid-template-columns: 1.4fr 0.6fr;
+      grid-template-columns: 1.45fr .55fr;
       gap: 1rem;
       align-items: center;
     }
 
     h1, h2, h3 { margin: 0 0 .55rem; }
-    h1 { font-size: clamp(1.6rem, 4vw, 2.7rem); }
+    h1 { font-size: clamp(1.55rem, 4vw, 2.6rem); }
     p { margin: 0 0 .75rem; }
 
     .badge {
@@ -63,10 +64,11 @@
       padding: .4rem .7rem;
       border-radius: 999px;
       font-size: .9rem;
+      margin-bottom: .6rem;
     }
 
     main {
-      width: min(1180px, 100%);
+      width: min(1280px, 100%);
       margin: 0 auto;
       padding: 1rem;
       display: grid;
@@ -83,7 +85,7 @@
 
     .grid-kpi {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: .85rem;
     }
 
@@ -92,16 +94,18 @@
       background: #fffdf0;
       border-radius: 14px;
       padding: .85rem;
+      min-height: 86px;
     }
 
     .kpi strong {
       display: block;
-      font-size: 1.6rem;
+      font-size: 1.55rem;
+      margin-top: .25rem;
     }
 
     .controls {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: .75rem;
       align-items: end;
     }
@@ -147,6 +151,7 @@
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: .75rem;
+      margin-top: .75rem;
     }
 
     .table-wrap {
@@ -158,7 +163,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 980px;
+      min-width: 1240px;
       background: var(--blanc);
     }
 
@@ -186,6 +191,7 @@
       font-weight: 900;
       font-size: .82rem;
       white-space: nowrap;
+      max-width: 100%;
     }
 
     .ok { background: #dff3e5; color: var(--vert); }
@@ -193,6 +199,9 @@
     .mini { background: #ffe0e0; color: var(--rouge); }
     .sur { background: #e4edff; color: var(--bleu); }
     .bad { background: #ececec; color: #333333; }
+    .zone-alert { background: #ffe0e0; color: var(--rouge); }
+    .zone-watch { background: #fff0cf; color: var(--orange); }
+    .zone-unknown { background: #efe7ff; color: var(--violet); }
 
     .notice {
       background: var(--jaune-clair);
@@ -202,20 +211,39 @@
       font-weight: 700;
     }
 
+    .alert-box {
+      display: grid;
+      gap: .5rem;
+      margin-top: .8rem;
+    }
+
+    .alert-item {
+      border-left: 6px solid var(--orange);
+      background: #fff8ea;
+      padding: .65rem;
+      border-radius: 10px;
+    }
+
     .empty {
       text-align: center;
       padding: 2rem;
       color: #555;
     }
 
+    code {
+      background: #f0f0f0;
+      padding: .15rem .35rem;
+      border-radius: 6px;
+    }
+
     footer {
-      width: min(1180px, 100%);
+      width: min(1280px, 100%);
       margin: 0 auto;
       padding: 1rem;
       color: #555;
     }
 
-    @media (max-width: 860px) {
+    @media (max-width: 980px) {
       .hero, .grid-kpi, .controls, .actions {
         grid-template-columns: 1fr;
       }
@@ -229,8 +257,9 @@
       header, .controls, .actions, footer { display: none; }
       main { width: 100%; padding: 0; }
       section { box-shadow: none; border: 0; }
-      table { min-width: 0; font-size: 10px; }
+      table { min-width: 0; font-size: 9px; }
       th { position: static; }
+      .notice { border: 1px solid #ddd; }
     }
   </style>
 </head>
@@ -238,11 +267,11 @@
   <header>
     <div class="wrap hero">
       <div>
-        <span class="badge">V1 locale — validation humaine obligatoire</span>
+        <span class="badge">V2 locale — stock + zonage ERP</span>
         <h1>Stock mini/maxi</h1>
-        <p>Assistant de pilotage pour détecter les articles sous mini, à commander, incohérents ou en surstock.</p>
+        <p>Assistant de pilotage pour détecter les articles sous mini, à commander, incohérents, en surstock ou mal zonés.</p>
       </div>
-      <div class="notice" role="note">Aucune commande automatique. L'outil aide à décider, il ne décide pas seul.</div>
+      <div class="notice" role="note">Le code zone suit le format ERP : <code>AA-01-01</code>. Aucune action automatique. Validation humaine obligatoire.</div>
     </div>
   </header>
 
@@ -250,6 +279,7 @@
     <section aria-labelledby="kpi-title">
       <h2 id="kpi-title">Synthèse</h2>
       <div class="grid-kpi" id="kpi-grid"></div>
+      <div class="alert-box" id="alert-zone" aria-live="polite"></div>
     </section>
 
     <section aria-labelledby="controls-title">
@@ -257,10 +287,10 @@
       <div class="controls">
         <p>
           <label for="search-input">Recherche</label>
-          <input id="search-input" type="search" placeholder="Article, famille, emplacement">
+          <input id="search-input" type="search" placeholder="Article, famille, zone, emplacement">
         </p>
         <p>
-          <label for="status-filter">Statut</label>
+          <label for="status-filter">Statut stock</label>
           <select id="status-filter">
             <option value="all">Tous</option>
             <option value="SOUS_MINI">Sous mini</option>
@@ -271,21 +301,41 @@
           </select>
         </p>
         <p>
+          <label for="zone-status-filter">Statut zonage</label>
+          <select id="zone-status-filter">
+            <option value="all">Tous</option>
+            <option value="OK">OK</option>
+            <option value="ZONE_INCONNUE">Zone inconnue</option>
+            <option value="FAMILLE_NON_AUTORISEE">Famille non autorisée</option>
+            <option value="ZONE_RISQUE_BLOQUANT">Risque bloquant</option>
+            <option value="ZONE_A_REVOIR">Zone à revoir</option>
+          </select>
+        </p>
+        <p>
           <label for="family-filter">Famille</label>
           <select id="family-filter"><option value="all">Toutes</option></select>
+        </p>
+        <p>
+          <label for="zone-filter">Code zone ERP</label>
+          <select id="zone-filter"><option value="all">Toutes</option></select>
         </p>
         <p>
           <label for="sort-select">Tri</label>
           <select id="sort-select">
             <option value="priority">Priorité</option>
+            <option value="zone">Zone ERP</option>
             <option value="designation">Désignation</option>
             <option value="family">Famille</option>
             <option value="need">Qté recommandée</option>
           </select>
         </p>
         <p>
-          <label for="import-file">Import JSON</label>
-          <input id="import-file" type="file" accept="application/json">
+          <label for="import-stock-file">Import stock JSON</label>
+          <input id="import-stock-file" type="file" accept="application/json">
+        </p>
+        <p>
+          <label for="import-zone-file">Import zonage JSON</label>
+          <input id="import-zone-file" type="file" accept="application/json">
         </p>
       </div>
       <div class="actions" aria-label="Actions principales">
@@ -308,30 +358,69 @@
   </footer>
 
   <script>
-    const storageKey = 'stock-mini-maxi-v1';
+    const storageKey = 'stock-mini-maxi-v2-zonage';
+    const zonePattern = /^([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})$/;
+
+    const demoZones = [
+      { code_zone_erp: 'CR-01-01', code_zone_normalise: 'CR0101', nom_zone: 'Cour extérieure - Bois et panneaux', type_zone: 'cour', familles_autorisees: ['Bois', 'Panneaux', 'Amenagement exterieur', 'Couverture'], familles_interdites: ['Produits sensibles'], niveau_risque: 'moyen', statut_zone: 'active' },
+      { code_zone_erp: 'CR-02-01', code_zone_normalise: 'CR0201', nom_zone: 'Cour extérieure - Gros oeuvre et VRD', type_zone: 'cour', familles_autorisees: ['Gros oeuvre', 'VRD'], familles_interdites: ['Isolation'], niveau_risque: 'moyen', statut_zone: 'active' },
+      { code_zone_erp: 'DP-01-01', code_zone_normalise: 'DP0101', nom_zone: 'Dépôt couvert - Isolation', type_zone: 'depot_couvert', familles_autorisees: ['Isolation'], familles_interdites: ['Produits humides'], niveau_risque: 'faible', statut_zone: 'active' },
+      { code_zone_erp: 'DP-02-01', code_zone_normalise: 'DP0201', nom_zone: 'Dépôt couvert - Plaque de plâtre', type_zone: 'depot_couvert', familles_autorisees: ['Plaque de platre'], familles_interdites: ['VRD'], niveau_risque: 'moyen', statut_zone: 'active' },
+      { code_zone_erp: 'DP-03-01', code_zone_normalise: 'DP0301', nom_zone: 'Dépôt couvert - Mortiers et colles', type_zone: 'depot_couvert', familles_autorisees: ['Mortier'], familles_interdites: ['Bois'], niveau_risque: 'moyen', statut_zone: 'active' },
+      { code_zone_erp: 'LS-01-01', code_zone_normalise: 'LS0101', nom_zone: 'Libre service - Quincaillerie et outillage', type_zone: 'libre_service', familles_autorisees: ['Quincaillerie', 'Outillage'], familles_interdites: ['Produits lourds'], niveau_risque: 'faible', statut_zone: 'active' },
+      { code_zone_erp: 'PR-01-01', code_zone_normalise: 'PR0101', nom_zone: 'Zone préparation commandes', type_zone: 'preparation', familles_autorisees: ['Toutes familles'], familles_interdites: ['Stock longue duree'], niveau_risque: 'eleve', statut_zone: 'a_revoir' },
+      { code_zone_erp: 'RC-01-01', code_zone_normalise: 'RC0101', nom_zone: 'Réception marchandises', type_zone: 'reception', familles_autorisees: ['Toutes familles'], familles_interdites: ['Stockage permanent'], niveau_risque: 'eleve', statut_zone: 'active' },
+      { code_zone_erp: 'QA-01-01', code_zone_normalise: 'QA0101', nom_zone: 'Zone quarantaine / litige', type_zone: 'quarantaine', familles_autorisees: ['Litiges'], familles_interdites: ['Stock vendable'], niveau_risque: 'moyen', statut_zone: 'active' },
+      { code_zone_erp: 'SE-01-01', code_zone_normalise: 'SE0101', nom_zone: 'Zone sécurité - accès permanent', type_zone: 'securite', familles_autorisees: [], familles_interdites: ['Toutes marchandises'], niveau_risque: 'bloquant', statut_zone: 'active' }
+    ];
 
     const demoItems = [
-      { code_article: 'ART-001', designation: 'Laine de verre 100 mm', famille: 'Isolation', stock_physique: 24, stock_reserve: 4, commandes_en_cours: 0, vente_30j: 28, vente_90j: 75, delai_fournisseur_jours: 7, mini: 25, maxi: 60, multiple_achat: 6, emplacement: 'A1', classe: 'A' },
-      { code_article: 'ART-002', designation: 'Plaque plâtre BA13', famille: 'Plaque', stock_physique: 140, stock_reserve: 30, commandes_en_cours: 50, vente_30j: 90, vente_90j: 260, delai_fournisseur_jours: 5, mini: 80, maxi: 180, multiple_achat: 10, emplacement: 'B2', classe: 'A' },
-      { code_article: 'ART-003', designation: 'Chevron traité 63x75', famille: 'Bois', stock_physique: 12, stock_reserve: 8, commandes_en_cours: 0, vente_30j: 36, vente_90j: 70, delai_fournisseur_jours: 10, mini: 20, maxi: 45, multiple_achat: 5, emplacement: 'C1', classe: 'B' },
-      { code_article: 'ART-004', designation: 'Sac mortier colle gris', famille: 'Mortier', stock_physique: 92, stock_reserve: 5, commandes_en_cours: 0, vente_30j: 24, vente_90j: 90, delai_fournisseur_jours: 6, mini: 30, maxi: 70, multiple_achat: 8, emplacement: 'D4', classe: 'B' },
-      { code_article: 'ART-005', designation: 'Panneau OSB 18 mm', famille: 'Panneaux', stock_physique: 18, stock_reserve: 2, commandes_en_cours: 12, vente_30j: 16, vente_90j: 42, delai_fournisseur_jours: 8, mini: 35, maxi: 25, multiple_achat: 3, emplacement: 'E2', classe: 'C' }
+      { code_article: 'ISO-001', designation: 'Laine de verre rouleau 100 mm', famille: 'Isolation', code_zone_erp: 'DP-01-01', stock_physique: 24, stock_reserve: 4, commandes_en_cours: 0, vente_30j: 28, vente_90j: 75, delai_fournisseur_jours: 7, mini: 25, maxi: 60, multiple_achat: 6, emplacement: 'A1', classe: 'A' },
+      { code_article: 'PLA-001', designation: 'Plaque de platre BA13 standard', famille: 'Plaque de platre', code_zone_erp: 'DP-02-01', stock_physique: 140, stock_reserve: 30, commandes_en_cours: 50, vente_30j: 90, vente_90j: 260, delai_fournisseur_jours: 5, mini: 80, maxi: 180, multiple_achat: 10, emplacement: 'B2', classe: 'A' },
+      { code_article: 'BOI-001', designation: 'Chevron traite 63x75', famille: 'Bois', code_zone_erp: 'CR-01-01', stock_physique: 12, stock_reserve: 8, commandes_en_cours: 0, vente_30j: 36, vente_90j: 70, delai_fournisseur_jours: 10, mini: 20, maxi: 45, multiple_achat: 5, emplacement: 'C1', classe: 'B' },
+      { code_article: 'MOR-001', designation: 'Mortier colle gris sac 25 kg', famille: 'Mortier', code_zone_erp: 'DP-03-01', stock_physique: 92, stock_reserve: 5, commandes_en_cours: 0, vente_30j: 24, vente_90j: 90, delai_fournisseur_jours: 6, mini: 30, maxi: 70, multiple_achat: 8, emplacement: 'D4', classe: 'B' },
+      { code_article: 'PAN-001', designation: 'Panneau OSB 18 mm', famille: 'Panneaux', code_zone_erp: 'CR-01-01', stock_physique: 18, stock_reserve: 2, commandes_en_cours: 12, vente_30j: 16, vente_90j: 42, delai_fournisseur_jours: 8, mini: 15, maxi: 45, multiple_achat: 3, emplacement: 'E2', classe: 'B' },
+      { code_article: 'COU-001', designation: 'Ecran sous-toiture HPV', famille: 'Couverture', code_zone_erp: 'CR-01-01', stock_physique: 6, stock_reserve: 1, commandes_en_cours: 0, vente_30j: 9, vente_90j: 25, delai_fournisseur_jours: 12, mini: 8, maxi: 20, multiple_achat: 2, emplacement: 'F1', classe: 'B' },
+      { code_article: 'QUI-001', designation: 'Vis bois torx boite 500', famille: 'Quincaillerie', code_zone_erp: 'LS-01-01', stock_physique: 44, stock_reserve: 3, commandes_en_cours: 12, vente_30j: 18, vente_90j: 54, delai_fournisseur_jours: 4, mini: 30, maxi: 80, multiple_achat: 6, emplacement: 'Q3', classe: 'A' },
+      { code_article: 'AME-001', designation: 'Lame terrasse pin traite', famille: 'Amenagement exterieur', code_zone_erp: 'CR-01-01', stock_physique: 210, stock_reserve: 20, commandes_en_cours: 0, vente_30j: 30, vente_90j: 120, delai_fournisseur_jours: 14, mini: 80, maxi: 180, multiple_achat: 10, emplacement: 'EXT1', classe: 'B' },
+      { code_article: 'OUT-001', designation: 'Seau caoutchouc chantier 40 L', famille: 'Outillage', code_zone_erp: 'LS-01-01', stock_physique: 11, stock_reserve: 0, commandes_en_cours: 6, vente_30j: 7, vente_90j: 20, delai_fournisseur_jours: 3, mini: 10, maxi: 30, multiple_achat: 6, emplacement: 'M1', classe: 'C' },
+      { code_article: 'BLO-001', designation: 'Bloc beton creux 20 cm', famille: 'Gros oeuvre', code_zone_erp: 'CR-02-01', stock_physique: 820, stock_reserve: 120, commandes_en_cours: 0, vente_30j: 260, vente_90j: 780, delai_fournisseur_jours: 5, mini: 500, maxi: 1200, multiple_achat: 40, emplacement: 'P1', classe: 'A' },
+      { code_article: 'DRA-001', designation: 'Drain agricole diametre 100', famille: 'VRD', code_zone_erp: 'CR-02-01', stock_physique: 7, stock_reserve: 2, commandes_en_cours: 0, vente_30j: 12, vente_90j: 22, delai_fournisseur_jours: 10, mini: 10, maxi: 25, multiple_achat: 5, emplacement: 'V2', classe: 'C' }
     ];
 
     let items = [];
+    let zones = [];
 
     const kpiGrid = document.getElementById('kpi-grid');
+    const alertZone = document.getElementById('alert-zone');
     const tableZone = document.getElementById('table-zone');
     const searchInput = document.getElementById('search-input');
     const statusFilter = document.getElementById('status-filter');
+    const zoneStatusFilter = document.getElementById('zone-status-filter');
     const familyFilter = document.getElementById('family-filter');
+    const zoneFilter = document.getElementById('zone-filter');
     const sortSelect = document.getElementById('sort-select');
     const statusMessage = document.getElementById('status-message');
-    const importFile = document.getElementById('import-file');
+    const importStockFile = document.getElementById('import-stock-file');
+    const importZoneFile = document.getElementById('import-zone-file');
 
     function numberValue(value) {
       const parsed = Number(value);
       return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function normalizeZone(value) {
+      return String(value || '').replace(/[-\s]/g, '').toUpperCase();
+    }
+
+    function displayZone(value) {
+      const normalized = normalizeZone(value);
+      if (normalized.length !== 6) return String(value || '-');
+      return `${normalized.slice(0, 2)}-${normalized.slice(2, 4)}-${normalized.slice(4, 6)}`;
+    }
+
+    function isValidZoneCode(value) {
+      return zonePattern.test(String(value || '').trim().toUpperCase());
     }
 
     function roundToMultiple(value, multiple) {
@@ -339,7 +428,53 @@
       return Math.ceil(Math.max(0, value) / safeMultiple) * safeMultiple;
     }
 
+    function getZoneMap() {
+      const map = new Map();
+      zones.forEach(zone => {
+        const normalized = normalizeZone(zone.code_zone_erp || zone.code_zone_normalise);
+        if (normalized) map.set(normalized, zone);
+      });
+      return map;
+    }
+
+    function isFamilyAllowed(zone, family) {
+      const allowed = Array.isArray(zone.familles_autorisees) ? zone.familles_autorisees : [];
+      const forbidden = Array.isArray(zone.familles_interdites) ? zone.familles_interdites : [];
+      if (forbidden.includes('Toutes marchandises') || forbidden.includes(family)) return false;
+      if (allowed.includes('Toutes familles')) return true;
+      if (allowed.length && !allowed.includes(family)) return false;
+      return true;
+    }
+
+    function analyzeZone(item, zoneMap) {
+      const rawCode = item.code_zone_erp || item.zone_id || item.emplacement || '';
+      const normalized = normalizeZone(rawCode);
+      if (!isValidZoneCode(rawCode)) {
+        return { zoneStatus: 'ZONE_INCONNUE', zoneLabel: 'Format zone invalide', zoneCode: rawCode || '-', zoneName: '-', zoneRisk: '-' };
+      }
+
+      const zone = zoneMap.get(normalized);
+      if (!zone) {
+        return { zoneStatus: 'ZONE_INCONNUE', zoneLabel: 'Zone absente du référentiel', zoneCode: displayZone(rawCode), zoneName: '-', zoneRisk: '-' };
+      }
+
+      if (zone.type_zone === 'securite' || zone.niveau_risque === 'bloquant') {
+        return { zoneStatus: 'ZONE_RISQUE_BLOQUANT', zoneLabel: 'Zone bloquante / sécurité', zoneCode: displayZone(rawCode), zoneName: zone.nom_zone, zoneRisk: zone.niveau_risque };
+      }
+
+      if (zone.statut_zone === 'a_revoir' || zone.statut_zone === 'saturee' || zone.statut_zone === 'bloquee') {
+        return { zoneStatus: 'ZONE_A_REVOIR', zoneLabel: `Zone ${zone.statut_zone}`, zoneCode: displayZone(rawCode), zoneName: zone.nom_zone, zoneRisk: zone.niveau_risque };
+      }
+
+      if (!isFamilyAllowed(zone, item.famille)) {
+        return { zoneStatus: 'FAMILLE_NON_AUTORISEE', zoneLabel: 'Famille non autorisée', zoneCode: displayZone(rawCode), zoneName: zone.nom_zone, zoneRisk: zone.niveau_risque };
+      }
+
+      return { zoneStatus: 'OK', zoneLabel: 'Zonage OK', zoneCode: displayZone(rawCode), zoneName: zone.nom_zone, zoneRisk: zone.niveau_risque };
+    }
+
     function analyzeItem(item) {
+      const zoneInfo = analyzeZone(item, getZoneMap());
       const stockPhysique = numberValue(item.stock_physique);
       const stockReserve = numberValue(item.stock_reserve);
       const commandes = numberValue(item.commandes_en_cours);
@@ -353,23 +488,25 @@
       const moyenneJour = Math.max(vente30 / 30, vente90 / 90, 0);
       const couverture = moyenneJour > 0 ? Math.round(projete / moyenneJour) : null;
       let statut = 'OK';
-      let priorite = 4;
+      let priorite = 5;
       let recommandation = 0;
 
-      if (mini > maxi || multiple <= 0) {
+      if (mini > maxi || numberValue(item.multiple_achat) <= 0) {
         statut = 'INCOMPATIBLE';
         priorite = 1;
       } else if (projete < mini) {
         const besoin = mini - projete;
         recommandation = roundToMultiple(besoin, multiple);
         statut = disponible < mini ? 'SOUS_MINI' : 'A_COMMANDER';
-        priorite = statut === 'SOUS_MINI' ? 1 : 2;
+        priorite = statut === 'SOUS_MINI' ? 2 : 3;
       } else if (projete > maxi) {
         statut = 'SURSTOCK';
-        priorite = 3;
+        priorite = 4;
       }
 
-      return { ...item, disponible, projete, moyenneJour, couverture, statut, priorite, recommandation };
+      if (zoneInfo.zoneStatus !== 'OK') priorite = Math.min(priorite, 1);
+
+      return { ...item, ...zoneInfo, disponible, projete, moyenneJour, couverture, statut, priorite, recommandation };
     }
 
     function getAnalyzedItems() {
@@ -378,17 +515,25 @@
 
     function filteredItems() {
       const query = searchInput.value.trim().toLowerCase();
-      const status = statusFilter.value;
+      const stockStatus = statusFilter.value;
+      const zoneStatus = zoneStatusFilter.value;
       const family = familyFilter.value;
+      const zoneCode = zoneFilter.value;
       const sort = sortSelect.value;
+
       let list = getAnalyzedItems().filter(item => {
-        const searchable = `${item.code_article} ${item.designation} ${item.famille} ${item.emplacement}`.toLowerCase();
-        return (!query || searchable.includes(query)) && (status === 'all' || item.statut === status) && (family === 'all' || item.famille === family);
+        const searchable = `${item.code_article} ${item.designation} ${item.famille} ${item.emplacement} ${item.zoneCode} ${item.zoneName}`.toLowerCase();
+        return (!query || searchable.includes(query))
+          && (stockStatus === 'all' || item.statut === stockStatus)
+          && (zoneStatus === 'all' || item.zoneStatus === zoneStatus)
+          && (family === 'all' || item.famille === family)
+          && (zoneCode === 'all' || normalizeZone(item.zoneCode) === zoneCode);
       });
 
       list.sort((a, b) => {
         if (sort === 'designation') return String(a.designation).localeCompare(String(b.designation));
         if (sort === 'family') return String(a.famille).localeCompare(String(b.famille));
+        if (sort === 'zone') return normalizeZone(a.zoneCode).localeCompare(normalizeZone(b.zoneCode));
         if (sort === 'need') return b.recommandation - a.recommandation;
         return a.priorite - b.priorite || String(a.designation).localeCompare(String(b.designation));
       });
@@ -396,49 +541,55 @@
       return list;
     }
 
-    function statusClass(statut) {
-      return {
-        OK: 'ok',
-        A_COMMANDER: 'cmd',
-        SOUS_MINI: 'mini',
-        SURSTOCK: 'sur',
-        INCOMPATIBLE: 'bad'
-      }[statut] || 'bad';
+    function stockStatusClass(statut) {
+      return { OK: 'ok', A_COMMANDER: 'cmd', SOUS_MINI: 'mini', SURSTOCK: 'sur', INCOMPATIBLE: 'bad' }[statut] || 'bad';
     }
 
-    function statusLabel(statut) {
-      return {
-        OK: 'OK',
-        A_COMMANDER: 'À commander',
-        SOUS_MINI: 'Sous mini',
-        SURSTOCK: 'Surstock',
-        INCOMPATIBLE: 'Incompatible'
-      }[statut] || statut;
+    function zoneStatusClass(statut) {
+      return { OK: 'ok', ZONE_A_REVOIR: 'zone-watch', ZONE_INCONNUE: 'zone-unknown', FAMILLE_NON_AUTORISEE: 'zone-alert', ZONE_RISQUE_BLOQUANT: 'zone-alert' }[statut] || 'bad';
     }
 
-    function renderKpis() {
+    function stockStatusLabel(statut) {
+      return { OK: 'OK', A_COMMANDER: 'À commander', SOUS_MINI: 'Sous mini', SURSTOCK: 'Surstock', INCOMPATIBLE: 'Incompatible' }[statut] || statut;
+    }
+
+    function zoneStatusLabel(statut) {
+      return { OK: 'OK', ZONE_INCONNUE: 'Zone inconnue', FAMILLE_NON_AUTORISEE: 'Famille non autorisée', ZONE_RISQUE_BLOQUANT: 'Risque bloquant', ZONE_A_REVOIR: 'Zone à revoir' }[statut] || statut;
+    }
+
+    function renderKpisAndAlerts() {
       const analyzed = getAnalyzedItems();
-      const count = analyzed.length;
       const sousMini = analyzed.filter(item => item.statut === 'SOUS_MINI').length;
       const aCommander = analyzed.filter(item => item.statut === 'A_COMMANDER').length;
-      const incoherent = analyzed.filter(item => item.statut === 'INCOMPATIBLE').length;
+      const zoneAlerts = analyzed.filter(item => item.zoneStatus !== 'OK').length;
       const totalReco = analyzed.reduce((sum, item) => sum + item.recommandation, 0);
       const kpis = [
-        ['Articles', count],
+        ['Articles', analyzed.length],
         ['Sous mini', sousMini],
         ['À commander', aCommander],
-        ['Incohérents', incoherent],
-        ['Qté recommandée totale', totalReco]
+        ['Alertes zonage', zoneAlerts],
+        ['Qté reco totale', totalReco]
       ];
 
       kpiGrid.innerHTML = kpis.map(([label, value]) => `<div class="kpi"><span>${label}</span><strong>${value}</strong></div>`).join('');
+
+      const alerts = analyzed.filter(item => item.zoneStatus !== 'OK').slice(0, 6);
+      alertZone.innerHTML = alerts.length
+        ? alerts.map(item => `<div class="alert-item"><strong>${escapeHtml(item.code_article)}</strong> — ${escapeHtml(item.zoneLabel)} sur <code>${escapeHtml(item.zoneCode)}</code> (${escapeHtml(item.zoneName)})</div>`).join('')
+        : '<div class="alert-item">Aucune alerte de zonage sur le jeu affiché.</div>';
     }
 
-    function renderFamilies() {
-      const current = familyFilter.value;
+    function renderFilters() {
+      const currentFamily = familyFilter.value;
+      const currentZone = zoneFilter.value;
       const families = [...new Set(items.map(item => item.famille).filter(Boolean))].sort();
+      const zoneCodes = [...new Set(items.map(item => normalizeZone(item.code_zone_erp || item.zone_id || item.emplacement)).filter(Boolean))].sort();
+
       familyFilter.innerHTML = '<option value="all">Toutes</option>' + families.map(family => `<option value="${escapeHtml(family)}">${escapeHtml(family)}</option>`).join('');
-      familyFilter.value = families.includes(current) ? current : 'all';
+      familyFilter.value = families.includes(currentFamily) ? currentFamily : 'all';
+
+      zoneFilter.innerHTML = '<option value="all">Toutes</option>' + zoneCodes.map(code => `<option value="${escapeHtml(code)}">${escapeHtml(displayZone(code))}</option>`).join('');
+      zoneFilter.value = zoneCodes.includes(currentZone) ? currentZone : 'all';
     }
 
     function escapeHtml(value) {
@@ -447,8 +598,8 @@
 
     function renderTable() {
       const list = filteredItems();
-      renderKpis();
-      renderFamilies();
+      renderKpisAndAlerts();
+      renderFilters();
 
       if (!list.length) {
         tableZone.innerHTML = '<div class="empty">Aucun article ne correspond aux filtres.</div>';
@@ -459,6 +610,8 @@
         <tr>
           <td><strong>${escapeHtml(item.code_article)}</strong><br>${escapeHtml(item.designation)}</td>
           <td>${escapeHtml(item.famille)}<br><small>${escapeHtml(item.emplacement || '-')} — classe ${escapeHtml(item.classe || '-')}</small></td>
+          <td><code>${escapeHtml(item.zoneCode)}</code><br><small>${escapeHtml(item.zoneName)}</small></td>
+          <td><span class="status ${zoneStatusClass(item.zoneStatus)}">${zoneStatusLabel(item.zoneStatus)}</span><br><small>${escapeHtml(item.zoneLabel)}</small></td>
           <td>${item.stock_physique}</td>
           <td>${item.stock_reserve}</td>
           <td>${item.disponible}</td>
@@ -467,7 +620,7 @@
           <td>mini ${item.mini}<br>maxi ${item.maxi}</td>
           <td>${item.multiple_achat}</td>
           <td>${item.couverture === null ? '-' : `${item.couverture} j`}</td>
-          <td><span class="status ${statusClass(item.statut)}">${statusLabel(item.statut)}</span></td>
+          <td><span class="status ${stockStatusClass(item.statut)}">${stockStatusLabel(item.statut)}</span></td>
           <td><strong>${item.recommandation}</strong></td>
         </tr>
       `).join('');
@@ -478,6 +631,8 @@
             <tr>
               <th>Article</th>
               <th>Famille</th>
+              <th>Code zone ERP</th>
+              <th>Statut zonage</th>
               <th>Stock</th>
               <th>Réservé</th>
               <th>Dispo</th>
@@ -486,7 +641,7 @@
               <th>Mini / maxi</th>
               <th>Multiple</th>
               <th>Couverture</th>
-              <th>Statut</th>
+              <th>Statut stock</th>
               <th>Reco</th>
             </tr>
           </thead>
@@ -500,8 +655,8 @@
 
     function saveLocal() {
       try {
-        localStorage.setItem(storageKey, JSON.stringify(items));
-        setStatus('Jeu de données sauvegardé localement.');
+        localStorage.setItem(storageKey, JSON.stringify({ items, zones, saved_at: new Date().toISOString() }));
+        setStatus('Jeu stock + zonage sauvegardé localement.');
       } catch (error) {
         setStatus('Sauvegarde locale impossible sur cet appareil.');
       }
@@ -512,9 +667,15 @@
         const raw = localStorage.getItem(storageKey);
         if (!raw) return false;
         const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return false;
-        items = parsed;
-        setStatus('Dernier jeu de données restauré depuis la sauvegarde locale.');
+        if (Array.isArray(parsed)) {
+          items = parsed;
+          zones = JSON.parse(JSON.stringify(demoZones));
+          return true;
+        }
+        if (!Array.isArray(parsed.items)) return false;
+        items = parsed.items;
+        zones = Array.isArray(parsed.zones) ? parsed.zones : JSON.parse(JSON.stringify(demoZones));
+        setStatus('Dernier jeu stock + zonage restauré depuis la sauvegarde locale.');
         return true;
       } catch (error) {
         setStatus('Lecture de sauvegarde locale impossible.');
@@ -524,7 +685,8 @@
 
     function loadDemo() {
       items = JSON.parse(JSON.stringify(demoItems));
-      setStatus('Données d’exemple chargées.');
+      zones = JSON.parse(JSON.stringify(demoZones));
+      setStatus('Données stock + zonage d’exemple chargées.');
       renderTable();
     }
 
@@ -532,22 +694,24 @@
       try {
         const payload = {
           exported_at: new Date().toISOString(),
-          warning: 'Analyse locale. Validation humaine obligatoire avant action.',
+          warning: 'Analyse locale stock + zonage. Validation humaine obligatoire avant action.',
+          zone_format: '3 blocs de 2 chiffres ou 2 lettres, exemple CR-01-01',
+          zones_count: zones.length,
           items: getAnalyzedItems()
         };
         const file = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(file);
-        link.download = 'stock-mini-maxi-analyse.json';
+        link.download = 'stock-mini-maxi-zonage-analyse.json';
         link.click();
         URL.revokeObjectURL(link.href);
-        setStatus('Export JSON généré.');
+        setStatus('Export JSON enrichi avec analyse zonage généré.');
       } catch (error) {
         setStatus('Export impossible sur cet appareil.');
       }
     }
 
-    function handleImport(event) {
+    function handleStockImport(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -557,10 +721,29 @@
           const imported = Array.isArray(parsed) ? parsed : parsed.items;
           if (!Array.isArray(imported)) throw new Error('Format attendu : tableau ou objet avec propriété items.');
           items = imported;
-          setStatus('Import JSON chargé. Vérifie les résultats avant toute action.');
+          setStatus('Import stock chargé. Vérifie les résultats et le zonage avant toute action.');
           renderTable();
         } catch (error) {
-          setStatus('Import impossible : format JSON non reconnu.');
+          setStatus('Import stock impossible : format JSON non reconnu.');
+        }
+      });
+      reader.readAsText(file);
+    }
+
+    function handleZoneImport(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        try {
+          const parsed = JSON.parse(String(reader.result));
+          const imported = Array.isArray(parsed) ? parsed : parsed.zones;
+          if (!Array.isArray(imported)) throw new Error('Format attendu : tableau ou objet avec propriété zones.');
+          zones = imported;
+          setStatus('Import zonage chargé. Les statuts zonage ont été recalculés.');
+          renderTable();
+        } catch (error) {
+          setStatus('Import zonage impossible : format JSON non reconnu.');
         }
       });
       reader.readAsText(file);
@@ -570,14 +753,18 @@
     document.getElementById('save-local').addEventListener('click', saveLocal);
     document.getElementById('export-json').addEventListener('click', exportAnalysis);
     document.getElementById('print-page').addEventListener('click', () => window.print());
-    importFile.addEventListener('change', handleImport);
+    importStockFile.addEventListener('change', handleStockImport);
+    importZoneFile.addEventListener('change', handleZoneImport);
     searchInput.addEventListener('input', renderTable);
     statusFilter.addEventListener('change', renderTable);
+    zoneStatusFilter.addEventListener('change', renderTable);
     familyFilter.addEventListener('change', renderTable);
+    zoneFilter.addEventListener('change', renderTable);
     sortSelect.addEventListener('change', renderTable);
 
     if (!loadLocal()) {
       items = JSON.parse(JSON.stringify(demoItems));
+      zones = JSON.parse(JSON.stringify(demoZones));
     }
     renderTable();
   </script>
