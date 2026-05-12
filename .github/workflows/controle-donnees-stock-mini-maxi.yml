@@ -1,0 +1,258 @@
+name: Controle Donnees Stock Mini Maxi
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'data/stock-mini-maxi*.json'
+      - 'src/stock-mini-maxi.html'
+      - 'projets/stock-mini-maxi.*'
+      - 'docs/UTILISATION_STOCK_MINI_MAXI.md'
+      - 'docs/RECETTE_MANUELLE_STOCK_MINI_MAXI.md'
+      - '.github/workflows/controle-donnees-stock-mini-maxi.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'data/stock-mini-maxi*.json'
+      - 'src/stock-mini-maxi.html'
+      - 'projets/stock-mini-maxi.*'
+      - 'docs/UTILISATION_STOCK_MINI_MAXI.md'
+      - 'docs/RECETTE_MANUELLE_STOCK_MINI_MAXI.md'
+      - '.github/workflows/controle-donnees-stock-mini-maxi.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  controle-donnees-stock-mini-maxi:
+    name: Verifier le jeu de donnees stock mini/maxi
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le depot
+        uses: actions/checkout@v4
+
+      - name: Controler le JSON exemple stock mini/maxi
+        run: |
+          mkdir -p rapports
+          python3 <<'PY'
+          from pathlib import Path
+          from datetime import datetime, timezone
+          import json
+          import math
+          import sys
+
+          report = Path('rapports/controle-donnees-stock-mini-maxi.md')
+          data_file = Path('data/stock-mini-maxi.example.json')
+          now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
+
+          required_fields = [
+              'code_article',
+              'designation',
+              'famille',
+              'stock_physique',
+              'stock_reserve',
+              'commandes_en_cours',
+              'vente_30j',
+              'vente_90j',
+              'delai_fournisseur_jours',
+              'mini',
+              'maxi',
+              'multiple_achat'
+          ]
+
+          numeric_fields = [
+              'stock_physique',
+              'stock_reserve',
+              'commandes_en_cours',
+              'vente_30j',
+              'vente_90j',
+              'delai_fournisseur_jours',
+              'mini',
+              'maxi',
+              'multiple_achat'
+          ]
+
+          errors = []
+          warnings = []
+          rows = []
+
+          def is_number(value):
+              return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
+
+          def status_for(item):
+              stock_physique = item['stock_physique']
+              stock_reserve = item['stock_reserve']
+              commandes = item['commandes_en_cours']
+              mini = item['mini']
+              maxi = item['maxi']
+              multiple = item['multiple_achat']
+              disponible = stock_physique - stock_reserve
+              projete = disponible + commandes
+              if mini > maxi or multiple <= 0:
+                  return 'INCOMPATIBLE', disponible, projete, 0
+              if projete < mini:
+                  besoin = mini - projete
+                  reco = math.ceil(max(0, besoin) / multiple) * multiple
+                  return ('SOUS_MINI' if disponible < mini else 'A_COMMANDER'), disponible, projete, reco
+              if projete > maxi:
+                  return 'SURSTOCK', disponible, projete, 0
+              return 'OK', disponible, projete, 0
+
+          if not data_file.is_file():
+              errors.append('Fichier data/stock-mini-maxi.example.json manquant.')
+              data = {}
+          else:
+              try:
+                  data = json.loads(data_file.read_text(encoding='utf-8'))
+              except Exception as exc:
+                  errors.append(f'JSON invalide : {exc}')
+                  data = {}
+
+          items = data.get('items') if isinstance(data, dict) else None
+          if not isinstance(items, list):
+              errors.append('Le fichier doit contenir une propriete items de type tableau.')
+              items = []
+
+          if len(items) < 10:
+              warnings.append('Le jeu exemple contient moins de 10 articles. Pour une recette métier, viser 10 à 20 articles.')
+
+          codes = set()
+          families = set()
+          status_count = {}
+
+          for index, item in enumerate(items, start=1):
+              if not isinstance(item, dict):
+                  errors.append(f'Ligne {index} : chaque item doit être un objet JSON.')
+                  continue
+
+              code = item.get('code_article', f'ligne-{index}')
+              if code in codes:
+                  errors.append(f'Code article dupliqué : {code}')
+              codes.add(code)
+
+              for field in required_fields:
+                  if field not in item:
+                      errors.append(f'{code} : champ obligatoire manquant : {field}')
+
+              for field in ['code_article', 'designation', 'famille']:
+                  if not str(item.get(field, '')).strip():
+                      errors.append(f'{code} : champ texte vide : {field}')
+
+              for field in numeric_fields:
+                  value = item.get(field)
+                  if not is_number(value):
+                      errors.append(f'{code} : champ numerique invalide : {field}')
+                      continue
+                  if field != 'multiple_achat' and value < 0:
+                      errors.append(f'{code} : valeur negative interdite pour {field}')
+
+              if all(field in item and is_number(item[field]) for field in numeric_fields):
+                  if item['stock_reserve'] > item['stock_physique']:
+                      warnings.append(f'{code} : stock reserve supérieur au stock physique. A vérifier.')
+                  if item['multiple_achat'] <= 0:
+                      errors.append(f'{code} : multiple_achat doit être supérieur à 0.')
+                  if item['mini'] > item['maxi']:
+                      errors.append(f'{code} : mini supérieur au maxi. Corriger le paramétrage.')
+
+                  statut, disponible, projete, reco = status_for(item)
+                  status_count[statut] = status_count.get(statut, 0) + 1
+                  families.add(item.get('famille', ''))
+                  rows.append({
+                      'code': code,
+                      'designation': item.get('designation', ''),
+                      'famille': item.get('famille', ''),
+                      'disponible': disponible,
+                      'projete': projete,
+                      'statut': statut,
+                      'reco': reco
+                  })
+
+          if len(families) < 5:
+              warnings.append('Le jeu exemple couvre moins de 5 familles. Pour tester correctement les filtres, viser au moins 5 familles.')
+
+          if not any(row['statut'] == 'SOUS_MINI' for row in rows):
+              warnings.append('Aucun cas SOUS_MINI dans le jeu exemple.')
+          if not any(row['statut'] == 'SURSTOCK' for row in rows):
+              warnings.append('Aucun cas SURSTOCK dans le jeu exemple.')
+          if not any(row['statut'] == 'OK' for row in rows):
+              warnings.append('Aucun cas OK dans le jeu exemple.')
+
+          lines = []
+          lines.append('# Rapport Controle Donnees Stock Mini Maxi')
+          lines.append('')
+          lines.append(f'Date : {now}')
+          lines.append(f'Fichier : `{data_file}`')
+          lines.append('')
+          lines.append('## 1. Verdict')
+          lines.append('')
+          if errors:
+              lines.append('**ROUGE - fichier de donnees invalide.**')
+          elif warnings:
+              lines.append('**ORANGE - fichier valide avec alertes métier.**')
+          else:
+              lines.append('**VERT - fichier de donnees conforme.**')
+          lines.append('')
+
+          lines.append('## 2. Synthese')
+          lines.append('')
+          lines.append(f'- Nombre articles : {len(items)}')
+          lines.append(f'- Nombre familles : {len(families)}')
+          lines.append(f'- Statuts calcules : {status_count}')
+          lines.append('')
+
+          lines.append('## 3. Articles analyses')
+          lines.append('')
+          if rows:
+              lines.append('| Code | Famille | Disponible | Projeté | Statut | Reco |')
+              lines.append('|---|---|---:|---:|---|---:|')
+              for row in rows:
+                  lines.append(f"| {row['code']} | {row['famille']} | {row['disponible']} | {row['projete']} | {row['statut']} | {row['reco']} |")
+          else:
+              lines.append('Aucun article analysable.')
+          lines.append('')
+
+          lines.append('## 4. Erreurs bloquantes')
+          lines.append('')
+          if errors:
+              for error in errors:
+                  lines.append(f'- {error}')
+          else:
+              lines.append('Aucune erreur bloquante.')
+          lines.append('')
+
+          lines.append('## 5. Alertes')
+          lines.append('')
+          if warnings:
+              for warning in warnings:
+                  lines.append(f'- {warning}')
+          else:
+              lines.append('Aucune alerte.')
+          lines.append('')
+
+          lines.append('## 6. Regle de decision')
+          lines.append('')
+          lines.append('Ce contrôle valide la cohérence technique du fichier exemple. Il ne valide pas automatiquement une décision de commande.')
+          lines.append('Validation humaine obligatoire avant toute action métier.')
+          lines.append('')
+
+          report.write_text('\n'.join(lines), encoding='utf-8')
+          print('\n'.join(lines[:90]))
+
+          if errors:
+              sys.exit(1)
+          PY
+
+      - name: Publier le rapport controle donnees stock mini/maxi
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-controle-donnees-stock-mini-maxi
+          path: rapports/controle-donnees-stock-mini-maxi.md
