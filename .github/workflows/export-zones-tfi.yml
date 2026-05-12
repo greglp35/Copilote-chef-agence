@@ -1,0 +1,50 @@
+name: Export Zones TFI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'data/stock-mini-maxi.example.json'
+      - 'data/zonage-agence.example.json'
+      - 'scripts/export_zones_tfi.py'
+      - '.github/workflows/export-zones-tfi.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'data/stock-mini-maxi.example.json'
+      - 'data/zonage-agence.example.json'
+      - 'scripts/export_zones_tfi.py'
+      - '.github/workflows/export-zones-tfi.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  export-zones-tfi:
+    name: Generer export zones articles TFI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Recuperer le depot
+        uses: actions/checkout@v4
+
+      - name: Generer export TFI
+        run: |
+          python3 scripts/export_zones_tfi.py
+
+      - name: Publier export TFI
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: export-zones-tfi
+          path: |
+            exports/tfi-zones-articles.csv
+            exports/tfi-zones-articles.controle.json
+            exports/tfi-zones-articles.rapport.md
