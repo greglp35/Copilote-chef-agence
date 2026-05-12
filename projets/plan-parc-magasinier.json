@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "project_id": "plan-parc-magasinier",
+  "project_name": "Plan Parc Magasinier — Interface terrain TFI",
+  "status": "in_review",
+  "created_at": "2026-05-12",
+  "updated_at": "2026-05-12",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Les magasiniers ont besoin d'une interface simple pour visualiser le parc, retrouver rapidement une zone TFI, comprendre les consignes de stockage et remonter les anomalies terrain sans modifier directement l'ERP.",
+  "target_users": ["magasinier", "responsable_exploitation", "chef_agence", "vendeur_comptoir"],
+  "operational_goal": "Fournir un plan visuel cliquable du parc et du depot, relie aux codes zones TFI, afin de guider la localisation des articles, la lecture des consignes et la remontee d'anomalies terrain.",
+  "source_files": {
+    "main_html": "src/plan-parc-magasinier.html",
+    "project_markdown": "projets/plan-parc-magasinier.md",
+    "project_json": "projets/plan-parc-magasinier.json"
+  },
+  "data_sources": [
+    {
+      "name": "zones_tfi_demo",
+      "source_type": "manual_or_clean_import",
+      "sensitive": false,
+      "comment": "Zones fictives ou anonymisees compatibles avec la logique code_zone_tfi."
+    },
+    {
+      "name": "articles_demo",
+      "source_type": "manual_or_clean_import",
+      "sensitive": false,
+      "comment": "Articles de demonstration sans donnees sensibles."
+    }
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true
+  },
+  "expected_features": [
+    {"priority":"high","name":"Plan SVG interactif","description":"Afficher des zones TFI cliquables sur un plan visuel du parc.","status":"done"},
+    {"priority":"high","name":"Recherche magasinier","description":"Rechercher par article, famille ou code zone TFI.","status":"done"},
+    {"priority":"high","name":"Fiche zone","description":"Afficher consignes, familles et articles rattaches a la zone selectionnee.","status":"done"},
+    {"priority":"high","name":"Anomalies terrain","description":"Permettre la saisie locale et l'export CSV des anomalies.","status":"done"}
+  ],
+  "out_of_scope": [
+    "Ne pas modifier TFI automatiquement.",
+    "Ne pas remplacer le plan officiel de securite.",
+    "Ne pas stocker de donnees client nominatives.",
+    "Ne pas utiliser de connexion ERP directe depuis le HTML."
+  ],
+  "success_criteria": {
+    "understandable_under_10_seconds": true,
+    "mobile_compatible": true,
+    "local_save_if_needed": true,
+    "export_or_print_if_needed": true,
+    "github_actions_recipe_passed": true
+  },
+  "risks": [
+    {"risk":"Le plan visuel peut etre interprete comme un plan officiel de securite.","level":"medium","mitigation":"Documenter que le module sert au guidage magasinier et ne remplace pas les documents reglementaires."},
+    {"risk":"Les zones de demonstration peuvent ne pas correspondre au parc reel.","level":"medium","mitigation":"Remplacer progressivement les zones fictives par le releve terrain valide."}
+  ],
+  "human_validation": {
+    "decision": "pending",
+    "validated_by": "Greg",
+    "validated_at": "",
+    "comment": "V1 a tester sur mobile et avec les magasiniers avant diffusion terrain."
+  },
+  "next_actions": [
+    "Tester le plan sur mobile.",
+    "Faire valider les zones avec les magasiniers.",
+    "Relier plus tard les donnees aux CSV TFI V4.",
+    "Ajouter un mode inventaire si le besoin est confirme."
+  ]
+}
