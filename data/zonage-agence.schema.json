@@ -1,21 +1,27 @@
 {
-  "schema_version": "1.1",
-  "dataset": "zonage-agence",
-  "description": "Schema de reference pour le zonage agence compatible avec le format ERP en 3 blocs de 2 chiffres ou 2 lettres.",
-  "principle": "Le code ERP est la cle de reference. Les libelles restent lisibles pour l'humain, mais les croisements stock, preparation et securite doivent utiliser code_zone_erp.",
-  "erp_zone_format": {
-    "canonical_field": "code_zone_erp",
-    "description": "3 blocs de 2 caracteres. Chaque bloc contient soit 2 chiffres, soit 2 lettres. Les tirets sont acceptes pour la lisibilite mais le code normalise supprime les tirets.",
-    "display_format": "AA-01-BB",
-    "normalized_format": "AA01BB",
-    "accepted_examples": ["AA-01-BB", "01-02-03", "AB-CD-01", "AA01BB", "010203", "ABCD01"],
-    "invalid_examples": ["COUR-A", "DEPOT-D", "A-01-BB", "AAA-01-BB", "A1-02-CD"],
-    "normalization_rule": "Supprimer espaces et tirets, passer en majuscules, verifier 6 caracteres organises en 3 blocs de 2 chiffres ou 2 lettres.",
-    "regex_display_or_normalized": "^([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})$"
+  "schema_version": "2.0",
+  "dataset": "zonage-agence-tfi",
+  "description": "Schema de reference du zonage agence compatible TFI. Dans TFI, la zone article est un champ de 6 caracteres utilise pour positionner les articles en stock et faciliter l'inventaire.",
+  "principle": "La cle officielle est code_zone_tfi : exactement 6 caracteres alphanumeriques, sans espace ni tiret. Les libelles et affichages sont uniquement des aides humaines.",
+  "source_reference": {
+    "erp": "TFI",
+    "field": "zone article",
+    "length": 6,
+    "usage": "position en stock de l'article et selection par zone lors des editions ou inventaires"
+  },
+  "tfi_zone_format": {
+    "canonical_field": "code_zone_tfi",
+    "canonical_format": "AAAAAA ou 010203 ou CR0101",
+    "display_helper": "CR-01-01 peut etre affiche, mais ne doit pas etre exporte comme valeur TFI",
+    "required_length": 6,
+    "regex": "^[A-Z0-9]{6}$",
+    "normalization_rule": "Supprimer espaces et tirets, passer en majuscules, verifier exactement 6 caracteres alphanumeriques.",
+    "accepted_examples": ["CR0101", "DP0201", "LS0101", "SE0101", "010203", "AABB01"],
+    "invalid_examples": ["CR-01-01", "COUR-A", "DEPOTD", "A101", "A1-02-CD", "1234567"]
   },
   "fields": [
-    { "name": "code_zone_erp", "type": "string", "required": true, "example": "AA-01-BB" },
-    { "name": "code_zone_normalise", "type": "string", "required": true, "example": "AA01BB" },
+    { "name": "code_zone_tfi", "type": "string", "required": true, "example": "CR0101" },
+    { "name": "code_zone_affiche", "type": "string", "required": false, "example": "CR-01-01" },
     { "name": "nom_zone", "type": "string", "required": true, "example": "Cour exterieure - Bois et panneaux" },
     { "name": "type_zone", "type": "string", "required": true, "allowed_values": ["cour", "depot_couvert", "libre_service", "preparation", "reception", "expedition", "quarantaine", "securite", "administratif"], "example": "cour" },
     { "name": "familles_autorisees", "type": "array_string", "required": false, "example": ["Bois", "Couverture"] },
@@ -28,13 +34,20 @@
     { "name": "sens_circulation", "type": "string", "required": false, "example": "sens unique conseille" },
     { "name": "observations", "type": "string", "required": false, "example": "Zone a controler chaque semaine." }
   ],
+  "export_rules": {
+    "tfi_export_field": "code_zone_tfi",
+    "must_export_without_hyphen": true,
+    "must_export_length": 6,
+    "recommended_csv_columns": ["code_article", "code_zone_tfi", "designation", "famille", "controle"]
+  },
   "linked_modules": [
     "stock-mini-maxi",
+    "plan-parc",
     "preparation-commandes",
     "livraisons",
     "securite",
     "irritants-terrain",
     "rapport-global-projet"
   ],
-  "security_note": "Le zonage peut contenir des informations d'organisation interne. Ne pas y placer de donnees sensibles, identifiants, mots de passe ou informations client nominatives."
+  "internal_data_rule": "Aucune information nominative client ou donnée confidentielle ne doit etre placee dans ce referentiel."
 }
