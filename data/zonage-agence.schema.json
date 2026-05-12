@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0",
+  "dataset": "zonage-agence",
+  "description": "Schema de reference pour le zonage agence, depot, cour, zones de stockage, circulation et preparation.",
+  "principle": "Le zonage est un referentiel transversal. Il ne doit pas etre enferme uniquement dans le stock.",
+  "fields": [
+    { "name": "zone_id", "type": "string", "required": true, "example": "COUR-A" },
+    { "name": "nom_zone", "type": "string", "required": true, "example": "Cour exterieure - Zone A" },
+    { "name": "type_zone", "type": "string", "required": true, "allowed_values": ["cour", "depot_couvert", "libre_service", "preparation", "reception", "expedition", "quarantaine", "securite", "administratif"], "example": "cour" },
+    { "name": "familles_autorisees", "type": "array_string", "required": false, "example": ["Bois", "Couverture"] },
+    { "name": "familles_interdites", "type": "array_string", "required": false, "example": ["Produits sensibles"] },
+    { "name": "niveau_risque", "type": "string", "required": true, "allowed_values": ["faible", "moyen", "eleve", "bloquant"], "example": "moyen" },
+    { "name": "regles_securite", "type": "array_string", "required": false, "example": ["Port EPI", "Circulation chariot limitee"] },
+    { "name": "capacite_estimee", "type": "number", "required": false, "example": 120 },
+    { "name": "unite_capacite", "type": "string", "required": false, "example": "palettes" },
+    { "name": "statut_zone", "type": "string", "required": true, "allowed_values": ["active", "a_revoir", "saturee", "bloquee", "archivee"], "example": "active" },
+    { "name": "sens_circulation", "type": "string", "required": false, "example": "sens unique conseillé" },
+    { "name": "observations", "type": "string", "required": false, "example": "Zone à contrôler chaque semaine." }
+  ],
+  "linked_modules": [
+    "stock-mini-maxi",
+    "preparation-commandes",
+    "livraisons",
+    "securite",
+    "irritants-terrain",
+    "rapport-global-projet"
+  ],
+  "security_note": "Le zonage peut contenir des informations d'organisation interne. Ne pas y placer de donnees sensibles, identifiants, mots de passe ou informations client nominatives."
+}
