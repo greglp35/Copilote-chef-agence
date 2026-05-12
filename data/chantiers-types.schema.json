@@ -1,0 +1,69 @@
+{
+  "schema_version": "1.0",
+  "dataset": "chantiers-types-source",
+  "description": "Schema de reference pour calculer la couverture chantier a partir des composants obligatoires, quantites de reference, substitutions et priorites.",
+  "source_file": "data/chantiers-types-source.csv",
+  "separator": ";",
+  "encoding": "UTF-8",
+  "fields": [
+    {"name":"chantier_type","type":"string","required":true,"example":"cloison_ba13","description":"Identifiant stable du chantier type."},
+    {"name":"surface_reference","type":"string","required":true,"example":"50m2","description":"Surface ou quantite de reference utilisée pour les quantites de base."},
+    {"name":"code_article","type":"string","required":true,"example":"PLA-001","description":"Code article rattaché au stock mini/maxi."},
+    {"name":"designation","type":"string","required":true,"example":"Plaque BA13 standard","description":"Libelle lisible par le vendeur et le magasinier."},
+    {"name":"famille","type":"string","required":true,"example":"Plaque de platre","description":"Famille métier de rattachement."},
+    {"name":"quantite_pour_surface","type":"number","required":true,"example":50,"description":"Quantite necessaire pour couvrir la surface_reference."},
+    {"name":"unite","type":"string","required":true,"example":"m2","description":"Unite de calcul ou de vente."},
+    {"name":"obligatoire","type":"boolean_string","required":true,"allowed_values":["oui","non"],"example":"oui","description":"Indique si l'article bloque le verdict chantier en cas de manque."},
+    {"name":"produit_remplacement","type":"string","required":false,"example":"BANDE-ALT","description":"Code article de substitution possible, à valider humainement."},
+    {"name":"priorite","type":"string","required":true,"allowed_values":["haute","moyenne","basse"],"example":"haute","description":"Priorité métier dans le calcul du verdict."},
+    {"name":"role_chantier","type":"string","required":false,"allowed_values":["produit_principal","structure","fixation","accessoire_bloquant","consommable","option","protection","finition","accessoire"],"example":"accessoire_bloquant","description":"Rôle de l'article dans la solution chantier."},
+    {"name":"commentaire","type":"string","required":false,"example":"Produit bloquant si absent","description":"Note métier utile pour la validation terrain."}
+  ],
+  "computed_fields": [
+    "stock_disponible_article = stock_physique - stock_reserve",
+    "besoin_article = quantite_pour_surface * surface_demandee / surface_reference_numérique",
+    "couverture_article = min(stock_disponible_article / besoin_article, 1)",
+    "article_ok = stock_disponible_article >= besoin_article",
+    "article_bloquant = obligatoire == oui AND article_ok == false AND produit_remplacement vide",
+    "taux_couverture_chantier = moyenne pondérée des couvertures articles obligatoires et prioritaires",
+    "produits_disponibles = nombre articles avec article_ok == true",
+    "produits_total = nombre articles du chantier type",
+    "produits_manquants = liste articles avec article_ok == false",
+    "verdict_chantier = CHANTIER_COMPLET / CHANTIER_PRESQUE_COMPLET / CHANTIER_POSSIBLE_AVEC_COMPLEMENT / CHANTIER_NON_COUVERT"
+  ],
+  "verdict_rules": {
+    "CHANTIER_COMPLET": {
+      "description": "Tous les articles obligatoires sont disponibles en quantite suffisante.",
+      "conditions": ["aucun article obligatoire manquant", "taux_couverture_chantier = 100", "preparation_possible = true"]
+    },
+    "CHANTIER_PRESQUE_COMPLET": {
+      "description": "Le chantier est vendable avec vigilance, sans manquant obligatoire critique.",
+      "conditions": ["aucun article obligatoire haute priorite manquant", "taux_couverture_chantier >= 0.90", "manque limité et explicable"]
+    },
+    "CHANTIER_POSSIBLE_AVEC_COMPLEMENT": {
+      "description": "Le chantier nécessite une solution claire : équivalent, complément, réservation ou délai annoncé.",
+      "conditions": ["au moins un article manquant", "produit_remplacement defini OU delai annoncé OU reservation possible", "validation humaine obligatoire"]
+    },
+    "CHANTIER_NON_COUVERT": {
+      "description": "Le chantier ne doit pas être annoncé comme complet ou vendable immédiatement.",
+      "conditions": ["article obligatoire manquant sans solution", "produit principal manquant", "accessoire bloquant manquant", "delai inconnu", "zone introuvable"]
+    }
+  },
+  "kpi": [
+    "nombre_chantiers_complets_vendables_aujourdhui",
+    "taux_couverture_chantier_complet",
+    "nombre_chantiers_standards_couverts",
+    "produit_bloquant_le_plus_frequent",
+    "familles_avec_accessoires_manquants",
+    "articles_principaux_ok_mais_chantier_incomplet"
+  ],
+  "security_rules": {
+    "test_data_only": true,
+    "human_validation_required": true,
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "no_direct_erp_write": true
+  }
+}
