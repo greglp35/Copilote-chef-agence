@@ -40,6 +40,7 @@ jobs:
           from pathlib import Path
           from datetime import datetime, timezone
           import json
+          import re
           import sys
 
           report = Path('rapports/controle-zonage-agence.md')
@@ -49,7 +50,11 @@ jobs:
           allowed_types = {'cour', 'depot_couvert', 'libre_service', 'preparation', 'reception', 'expedition', 'quarantaine', 'securite', 'administratif'}
           allowed_risks = {'faible', 'moyen', 'eleve', 'bloquant'}
           allowed_status = {'active', 'a_revoir', 'saturee', 'bloquee', 'archivee'}
-          required_fields = ['zone_id', 'nom_zone', 'type_zone', 'niveau_risque', 'statut_zone']
+          required_fields = ['code_zone_erp', 'code_zone_normalise', 'nom_zone', 'type_zone', 'niveau_risque', 'statut_zone']
+          erp_pattern = re.compile(r'^([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})-?([A-Z]{2}|[0-9]{2})$')
+
+          def normalize_zone(value):
+              return str(value or '').replace('-', '').replace(' ', '').upper()
 
           errors = []
           warnings = []
@@ -71,9 +76,9 @@ jobs:
               zones = []
 
           if len(zones) < 5:
-              warnings.append('Le referentiel contient moins de 5 zones. Pour une V1 terrain, viser 6 à 12 zones simples.')
+              warnings.append('Le referentiel contient moins de 5 zones. Pour une V1 terrain, viser 6 a 12 zones simples.')
 
-          zone_ids = set()
+          zone_codes = set()
           type_count = {}
           risk_count = {}
           has_security_zone = False
@@ -86,51 +91,57 @@ jobs:
                   errors.append(f'Ligne {index} : chaque zone doit etre un objet JSON.')
                   continue
 
-              zone_id = str(zone.get('zone_id', '')).strip()
-              if not zone_id:
-                  errors.append(f'Ligne {index} : zone_id vide.')
-              elif zone_id in zone_ids:
-                  errors.append(f'zone_id duplique : {zone_id}')
-              else:
-                  zone_ids.add(zone_id)
+              code = str(zone.get('code_zone_erp', '')).strip().upper()
+              normalized = normalize_zone(code)
+              declared_normalized = str(zone.get('code_zone_normalise', '')).strip().upper()
+              label = code or f'ligne {index}'
 
               for field in required_fields:
                   if field not in zone or str(zone.get(field, '')).strip() == '':
-                      errors.append(f'{zone_id or "ligne " + str(index)} : champ obligatoire manquant ou vide : {field}')
+                      errors.append(f'{label} : champ obligatoire manquant ou vide : {field}')
+
+              if not erp_pattern.match(code):
+                  errors.append(f'{label} : code_zone_erp invalide. Format attendu : 3 blocs de 2 chiffres ou 2 lettres, ex. CR-01-01.')
+              if declared_normalized != normalized:
+                  errors.append(f'{label} : code_zone_normalise incoherent. Attendu {normalized}, obtenu {declared_normalized}.')
+              if normalized in zone_codes:
+                  errors.append(f'Code zone ERP duplique : {code} / {normalized}')
+              else:
+                  zone_codes.add(normalized)
 
               type_zone = zone.get('type_zone')
               if type_zone not in allowed_types:
-                  errors.append(f'{zone_id} : type_zone non autorise : {type_zone}')
+                  errors.append(f'{label} : type_zone non autorise : {type_zone}')
               else:
                   type_count[type_zone] = type_count.get(type_zone, 0) + 1
 
               risk = zone.get('niveau_risque')
               if risk not in allowed_risks:
-                  errors.append(f'{zone_id} : niveau_risque non autorise : {risk}')
+                  errors.append(f'{label} : niveau_risque non autorise : {risk}')
               else:
                   risk_count[risk] = risk_count.get(risk, 0) + 1
 
               status = zone.get('statut_zone')
               if status not in allowed_status:
-                  errors.append(f'{zone_id} : statut_zone non autorise : {status}')
+                  errors.append(f'{label} : statut_zone non autorise : {status}')
 
               capacity = zone.get('capacite_estimee')
               if capacity is not None and (not isinstance(capacity, (int, float)) or isinstance(capacity, bool) or capacity < 0):
-                  errors.append(f'{zone_id} : capacite_estimee invalide.')
+                  errors.append(f'{label} : capacite_estimee invalide.')
 
               familles_autorisees = zone.get('familles_autorisees', [])
               familles_interdites = zone.get('familles_interdites', [])
               if familles_autorisees is not None and not isinstance(familles_autorisees, list):
-                  errors.append(f'{zone_id} : familles_autorisees doit etre un tableau.')
+                  errors.append(f'{label} : familles_autorisees doit etre un tableau.')
               if familles_interdites is not None and not isinstance(familles_interdites, list):
-                  errors.append(f'{zone_id} : familles_interdites doit etre un tableau.')
+                  errors.append(f'{label} : familles_interdites doit etre un tableau.')
 
               if type_zone == 'securite':
                   has_security_zone = True
                   if capacity not in (0, None):
-                      warnings.append(f'{zone_id} : une zone securite devrait avoir une capacite de stockage nulle.')
+                      warnings.append(f'{label} : une zone securite devrait avoir une capacite de stockage nulle.')
                   if not familles_interdites:
-                      warnings.append(f'{zone_id} : une zone securite devrait interdire explicitement le stockage.')
+                      warnings.append(f'{label} : une zone securite devrait interdire explicitement le stockage.')
 
               if type_zone == 'preparation':
                   has_preparation_zone = True
@@ -140,7 +151,8 @@ jobs:
                   has_quarantine_zone = True
 
               rows.append({
-                  'zone_id': zone_id,
+                  'code': code,
+                  'normalise': normalized,
                   'nom_zone': zone.get('nom_zone', ''),
                   'type_zone': type_zone,
                   'risque': risk,
@@ -173,25 +185,22 @@ jobs:
           else:
               lines.append('**VERT - referentiel zonage conforme.**')
           lines.append('')
-
           lines.append('## 2. Synthese')
           lines.append('')
           lines.append(f'- Nombre de zones : {len(zones)}')
           lines.append(f'- Types detectes : {type_count}')
           lines.append(f'- Niveaux de risque : {risk_count}')
           lines.append('')
-
           lines.append('## 3. Zones controlees')
           lines.append('')
           if rows:
-              lines.append('| Zone | Nom | Type | Risque | Statut | Capacite |')
-              lines.append('|---|---|---|---|---|---:|')
+              lines.append('| Code ERP | Normalise | Nom | Type | Risque | Statut | Capacite |')
+              lines.append('|---|---|---|---|---|---|---:|')
               for row in rows:
-                  lines.append(f"| {row['zone_id']} | {row['nom_zone']} | {row['type_zone']} | {row['risque']} | {row['statut']} | {row['capacite']} {row['unite']} |")
+                  lines.append(f"| {row['code']} | {row['normalise']} | {row['nom_zone']} | {row['type_zone']} | {row['risque']} | {row['statut']} | {row['capacite']} {row['unite']} |")
           else:
               lines.append('Aucune zone analysable.')
           lines.append('')
-
           lines.append('## 4. Erreurs bloquantes')
           lines.append('')
           if errors:
@@ -200,7 +209,6 @@ jobs:
           else:
               lines.append('Aucune erreur bloquante.')
           lines.append('')
-
           lines.append('## 5. Alertes')
           lines.append('')
           if warnings:
@@ -209,17 +217,12 @@ jobs:
           else:
               lines.append('Aucune alerte.')
           lines.append('')
-
           lines.append('## 6. Regle de decision')
           lines.append('')
-          lines.append('Le zonage est un referentiel terrain. Un workflow peut valider la coherence de structure, mais seule une validation humaine sur site peut valider la realite du plan.')
+          lines.append('Le code ERP de zonage est la cle de reference. Le format impose est 3 blocs de 2 chiffres ou 2 lettres. Validation humaine obligatoire avant utilisation operationnelle.')
           lines.append('')
-          lines.append('Validation humaine obligatoire avant utilisation operationnelle.')
-          lines.append('')
-
           report.write_text('\n'.join(lines), encoding='utf-8')
-          print('\n'.join(lines[:100]))
-
+          print('\n'.join(lines[:110]))
           if errors:
               sys.exit(1)
           PY
