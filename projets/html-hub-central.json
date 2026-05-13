@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "project_id": "html-hub-central",
+  "project_name": "Hub HTML Métier — Copilote Chef d'Agence",
+  "status": "created",
+  "created_at": "2026-05-13",
+  "updated_at": "2026-05-13",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Le dépôt contient plusieurs modules HTML métier autonomes. Sans point d'entrée unique, l'utilisateur doit connaître les fichiers et leur rôle, ce qui rend le projet moins lisible, moins maintenable et moins exploitable sur mobile.",
+  "operational_goal": "Créer un hub central unique permettant d'accéder à tous les modules HTML métier, de les filtrer par domaine, de comprendre leur rôle et de respecter l'architecture zéro dépendance externe.",
+  "source_files": {
+    "main_html": "src/index.html",
+    "module_index": "data/html-hub-index.json",
+    "project_json": "projets/html-hub-central.json"
+  },
+  "target_users": [
+    "chef_agence",
+    "responsable_exploitation",
+    "magasinier",
+    "vendeur_comptoir",
+    "commercial_agence",
+    "developpeur_ou_assistant_ia"
+  ],
+  "linked_modules": [
+    "src/stock-mini-maxi.html",
+    "src/stock-mini-maxi-tfi.html",
+    "src/pilotage-stock-chantier.html",
+    "src/couverture-chantier.html",
+    "src/plan-parc-magasinier.html",
+    "src/preparation-commandes-client.html",
+    "src/recette-test.html",
+    "docs/MEMOIRE_BONNES_PRATIQUES_STOCK_NEGOCE_MATERIAUX.md",
+    "docs/STRUCTURE_GOOGLE_SHEETS_STOCK_MINI_MAXI.md"
+  ],
+  "expected_features": [
+    {"priority":"high","name":"Point d'entrée unique","description":"Créer src/index.html comme hub central de navigation.","status":"done"},
+    {"priority":"high","name":"Recherche module","description":"Permettre une recherche texte par mots-clés.","status":"done"},
+    {"priority":"high","name":"Filtre domaine","description":"Filtrer par stock, chantier, terrain, préparation, référentiel, recette.","status":"done"},
+    {"priority":"high","name":"Index JSON","description":"Créer data/html-hub-index.json pour garder la liste des modules exploitable par outil ou GPT.","status":"done"},
+    {"priority":"medium","name":"Retour hub dans chaque module","description":"Ajouter un lien ou bouton retour vers index.html dans chaque HTML métier.","status":"to_build"},
+    {"priority":"medium","name":"Convention nouveaux modules","description":"Documenter la règle : tout nouveau HTML doit être ajouté au hub et à l'index JSON.","status":"to_build"}
+  ],
+  "architecture_rules": {
+    "single_entry_point": true,
+    "modules_remain_autonomous": true,
+    "zero_external_dependency": true,
+    "no_cdn": true,
+    "no_framework_required": true,
+    "no_hidden_network_call": true,
+    "no_password_or_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "human_validation_required": true,
+    "mobile_first": true
+  },
+  "success_criteria": {
+    "user_finds_module_under_10_seconds": true,
+    "mobile_compatible": true,
+    "works_offline_local": true,
+    "no_external_dependency": true,
+    "all_known_html_modules_listed": true,
+    "json_index_created": true
+  },
+  "risks": [
+    {"risk":"Le hub devient une simple page de liens sans logique métier.","level":"medium","mitigation":"Classer les modules par domaine et parcours métier."},
+    {"risk":"Un nouveau HTML est créé mais oublié dans le hub.","level":"medium","mitigation":"Ajouter une règle de maintenance : tout nouveau module doit être inscrit dans data/html-hub-index.json."},
+    {"risk":"Les modules restent difficiles à parcourir sur mobile.","level":"medium","mitigation":"Ajouter un retour hub dans chaque module."}
+  ],
+  "human_validation": {
+    "decision": "created",
+    "validated_by": "Greg",
+    "validated_at": "2026-05-13",
+    "comment": "Hub central créé comme point d'entrée principal pour tous les HTML métier du projet."
+  },
+  "next_actions": [
+    "Tester src/index.html sur mobile.",
+    "Ajouter un bouton retour hub dans chaque module HTML.",
+    "Mettre à jour README.md pour indiquer src/index.html comme point d'entrée.",
+    "Créer une règle de contribution pour chaque futur module HTML."
+  ]
+}
