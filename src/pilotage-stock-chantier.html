@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Pilotage stock chantier — Hub agence</title>
-  <meta name="description" content="Hub local pour accéder au stock mini/maxi, à la couverture chantier, au plan parc et à la préparation commande.">
+  <meta name="description" content="Hub local pour accéder au stock mini/maxi, à la couverture chantier, au plan parc, à la préparation commande et aux référentiels métier stock.">
   <style>
     :root {
       --jaune:#f5c400;
@@ -17,6 +17,7 @@
       --orange:#a65f00;
       --vert:#1f6b3a;
       --bleu:#244f8f;
+      --violet:#5b3a91;
       --ombre:0 10px 30px rgba(0,0,0,.08);
     }
     *{box-sizing:border-box}
@@ -37,13 +38,18 @@
     .ok{border-left:7px solid var(--vert)}
     .warn{border-left:7px solid var(--orange)}
     .info{border-left:7px solid var(--bleu)}
-    a.button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.8rem 1rem;border-radius:12px;background:var(--jaune);color:var(--noir);font-weight:900;text-decoration:none;width:max-content;max-width:100%}
+    .ref{border-left:7px solid var(--violet)}
+    a.button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.8rem 1rem;border-radius:12px;background:var(--jaune);color:var(--noir);font-weight:900;text-decoration:none;width:max-content;max-width:100%;margin-right:.45rem;margin-bottom:.45rem}
     a.button.secondary{background:var(--noir);color:var(--blanc)}
+    a.button.light{background:var(--gris-2);color:var(--noir)}
     ul{margin:.2rem 0 .75rem;padding-left:1.2rem} li{margin:.25rem 0}
     .flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}
     .step{background:#fffdf0;border:1px solid #f1df8a;border-radius:14px;padding:.8rem;font-weight:800}
+    .mini-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.75rem}
+    .mini{background:#fffdf0;border:1px solid #f1df8a;border-radius:14px;padding:.8rem}
+    .mini strong{display:block;margin-bottom:.25rem}
     footer{color:#555}
-    @media(max-width:900px){.hero,.grid,.flow{grid-template-columns:1fr}.wrap,main,footer{padding:.85rem}section,.card{border-radius:14px}}
+    @media(max-width:900px){.hero,.grid,.flow,.mini-grid{grid-template-columns:1fr}.wrap,main,footer{padding:.85rem}section,.card{border-radius:14px}}
     @media print{header,footer,a.button{display:none}body{background:#fff}section,.card{box-shadow:none}}
   </style>
 </head>
@@ -53,7 +59,7 @@
       <div>
         <span class="badge">Pilotage stock chantier</span>
         <h1>Stocker des solutions chantier complètes</h1>
-        <p>Hub local pour passer du contrôle article au contrôle chantier : disponibilité réelle, zone, préparation et message client fiable.</p>
+        <p>Hub local pour passer du contrôle article au contrôle chantier : disponibilité réelle, zone, préparation, mémoire métier et données structurées.</p>
       </div>
       <div class="notice">Règle métier : article disponible ≠ chantier vendable. Un chantier vendable exige produit principal, accessoires, quantité suffisante, localisation et préparation possible.</div>
     </div>
@@ -71,7 +77,7 @@
     </section>
 
     <section aria-labelledby="modules-title">
-      <h2 id="modules-title">Modules liés</h2>
+      <h2 id="modules-title">Outils terrain</h2>
       <div class="grid">
         <article class="card primary">
           <span class="tag">Stock article</span>
@@ -123,16 +129,63 @@
       </div>
     </section>
 
+    <section aria-labelledby="ref-title">
+      <h2 id="ref-title">Référentiels projet</h2>
+      <div class="grid">
+        <article class="card ref">
+          <span class="tag">Mémoire métier</span>
+          <strong>Bonnes pratiques stock négoce matériaux</strong>
+          <p>Référentiel complet pour former l'équipe et cadrer les évolutions du module stock mini/maxi.</p>
+          <ul>
+            <li>Réception, rangement, préparation, inventaires, écarts</li>
+            <li>Stock dormant, QHSE, checklists et procédures</li>
+            <li>20 règles d'or du stock</li>
+          </ul>
+          <div>
+            <a class="button" href="../docs/MEMOIRE_BONNES_PRATIQUES_STOCK_NEGOCE_MATERIAUX.md">Ouvrir la mémoire</a>
+            <a class="button light" href="../data/memoire-stock-index.json">Index JSON</a>
+          </div>
+        </article>
+
+        <article class="card ref">
+          <span class="tag">Données</span>
+          <strong>Structure Google Sheets stock</strong>
+          <p>Modèle de base de données pour Articles, Emplacements, Mouvements, Inventaires, Écarts, Fournisseurs, Retours, Litiges et Chantiers types.</p>
+          <ul>
+            <li>Champs recommandés par onglet</li>
+            <li>Règles de validation</li>
+            <li>Schéma exploitable par un outil ou un GPT</li>
+          </ul>
+          <div>
+            <a class="button" href="../docs/STRUCTURE_GOOGLE_SHEETS_STOCK_MINI_MAXI.md">Ouvrir la structure</a>
+            <a class="button light" href="../data/google-sheets-stock.schema.json">Schéma JSON</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
     <section aria-labelledby="decision-title">
       <h2 id="decision-title">Décision opérationnelle</h2>
       <div class="notice">
-        Le stock mini/maxi dit si l'article est bien piloté. La couverture chantier dit si l'agence peut vendre une solution complète et fiable aujourd'hui. Les deux lectures doivent coexister : l'article seul ne suffit pas à sécuriser l'expérience client.
+        Le stock mini/maxi dit si l'article est bien piloté. La couverture chantier dit si l'agence peut vendre une solution complète et fiable aujourd'hui. La mémoire métier dit comment fiabiliser durablement le cycle stock : réception, rangement, préparation, inventaire, écarts, dormants, QHSE et amélioration continue.
+      </div>
+    </section>
+
+    <section aria-labelledby="build-title">
+      <h2 id="build-title">Ordre de construction recommandé</h2>
+      <div class="mini-grid">
+        <div class="mini"><strong>1. Donnée propre</strong>Articles, unités, conditionnements, emplacements, mini/maxi.</div>
+        <div class="mini"><strong>2. Contrôle terrain</strong>Réception, préparation, inventaires tournants, écarts.</div>
+        <div class="mini"><strong>3. Logique chantier</strong>Produits principaux, accessoires, chantiers types, disponibilité complète.</div>
+        <div class="mini"><strong>4. Pilotage</strong>KPI, rituels, dormants, litiges, actions correctives.</div>
+        <div class="mini"><strong>5. Automatisation</strong>Google Sheets, Glide, Make ou GPT uniquement après validation des données.</div>
+        <div class="mini"><strong>6. Sécurité</strong>QHSE bloquant si risque détecté : stockage, manutention, racks, produits dangereux.</div>
       </div>
     </section>
   </main>
 
   <footer>
-    <p>Hub autonome. Aucun appel réseau, aucune dépendance externe, aucune connexion ERP directe.</p>
+    <p>Hub autonome. Aucun appel réseau, aucune dépendance externe, aucune connexion ERP directe. Validation humaine obligatoire avant commande, correction ou annonce client.</p>
   </footer>
 </body>
 </html>
