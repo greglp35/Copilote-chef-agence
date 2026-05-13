@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pilotage stock chantier — Hub agence</title>
+  <meta name="description" content="Hub local pour accéder au stock mini/maxi, à la couverture chantier, au plan parc et à la préparation commande.">
+  <style>
+    :root {
+      --jaune:#f5c400;
+      --jaune-clair:#fff6c7;
+      --noir:#1a1a1a;
+      --gris:#f4f5f7;
+      --gris-2:#e3e5e8;
+      --blanc:#ffffff;
+      --rouge:#9f1d1d;
+      --orange:#a65f00;
+      --vert:#1f6b3a;
+      --bleu:#244f8f;
+      --ombre:0 10px 30px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:var(--gris);color:var(--noir);line-height:1.45}
+    header{background:var(--noir);color:var(--blanc);border-bottom:7px solid var(--jaune)}
+    .wrap,main,footer{width:min(1180px,100%);margin:0 auto;padding:1rem}
+    .hero{display:grid;grid-template-columns:1.35fr .65fr;gap:1rem;align-items:center}
+    h1,h2,h3{margin:0 0 .55rem} h1{font-size:clamp(1.55rem,4vw,2.5rem)} p{margin:0 0 .75rem}
+    .badge{display:inline-flex;background:var(--jaune);color:var(--noir);font-weight:900;padding:.4rem .7rem;border-radius:999px;font-size:.9rem;margin-bottom:.65rem}
+    main{display:grid;gap:1rem}
+    section,.card{background:var(--blanc);border:1px solid var(--gris-2);border-radius:18px;padding:1rem;box-shadow:var(--ombre)}
+    .notice{background:var(--jaune-clair);border-left:7px solid var(--jaune);padding:.85rem;border-radius:12px;font-weight:700}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}
+    .card{display:grid;gap:.55rem;min-height:210px}
+    .card strong{font-size:1.35rem}
+    .tag{display:inline-flex;width:max-content;padding:.25rem .55rem;border-radius:999px;font-weight:900;font-size:.82rem;background:#eef1f5;color:#333}
+    .primary{border-left:7px solid var(--jaune)}
+    .ok{border-left:7px solid var(--vert)}
+    .warn{border-left:7px solid var(--orange)}
+    .info{border-left:7px solid var(--bleu)}
+    a.button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.8rem 1rem;border-radius:12px;background:var(--jaune);color:var(--noir);font-weight:900;text-decoration:none;width:max-content;max-width:100%}
+    a.button.secondary{background:var(--noir);color:var(--blanc)}
+    ul{margin:.2rem 0 .75rem;padding-left:1.2rem} li{margin:.25rem 0}
+    .flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}
+    .step{background:#fffdf0;border:1px solid #f1df8a;border-radius:14px;padding:.8rem;font-weight:800}
+    footer{color:#555}
+    @media(max-width:900px){.hero,.grid,.flow{grid-template-columns:1fr}.wrap,main,footer{padding:.85rem}section,.card{border-radius:14px}}
+    @media print{header,footer,a.button{display:none}body{background:#fff}section,.card{box-shadow:none}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <div>
+        <span class="badge">Pilotage stock chantier</span>
+        <h1>Stocker des solutions chantier complètes</h1>
+        <p>Hub local pour passer du contrôle article au contrôle chantier : disponibilité réelle, zone, préparation et message client fiable.</p>
+      </div>
+      <div class="notice">Règle métier : article disponible ≠ chantier vendable. Un chantier vendable exige produit principal, accessoires, quantité suffisante, localisation et préparation possible.</div>
+    </div>
+  </header>
+
+  <main>
+    <section aria-labelledby="flow-title">
+      <h2 id="flow-title">Parcours recommandé</h2>
+      <div class="flow">
+        <div class="step">1. Contrôler le stock mini/maxi</div>
+        <div class="step">2. Vérifier le chantier complet</div>
+        <div class="step">3. Localiser les composants au parc</div>
+        <div class="step">4. Préparer ou annoncer une solution fiable</div>
+      </div>
+    </section>
+
+    <section aria-labelledby="modules-title">
+      <h2 id="modules-title">Modules liés</h2>
+      <div class="grid">
+        <article class="card primary">
+          <span class="tag">Stock article</span>
+          <strong>Stock mini/maxi</strong>
+          <p>Analyse les articles sous mini, à commander, en surstock, incohérents ou mal zonés.</p>
+          <ul>
+            <li>Stock disponible = physique - réservé</li>
+            <li>Quantité recommandée arrondie au multiple d'achat</li>
+            <li>Contrôle zonage ERP</li>
+          </ul>
+          <a class="button" href="stock-mini-maxi.html">Ouvrir le stock mini/maxi</a>
+        </article>
+
+        <article class="card ok">
+          <span class="tag">Stock chantier</span>
+          <strong>Vérifier chantier complet</strong>
+          <p>Contrôle si l'agence peut vendre un chantier type complet pour une surface donnée.</p>
+          <ul>
+            <li>Verdict : complet, presque complet, complément ou non couvert</li>
+            <li>Produits manquants et bloquants</li>
+            <li>Message vendeur conseillé</li>
+          </ul>
+          <a class="button" href="couverture-chantier.html">Ouvrir la couverture chantier</a>
+        </article>
+
+        <article class="card info">
+          <span class="tag">Terrain</span>
+          <strong>Plan parc magasinier</strong>
+          <p>Retrouve les zones, familles, consignes et anomalies terrain pour localiser les composants.</p>
+          <ul>
+            <li>Recherche article / famille / zone</li>
+            <li>Consignes de stockage</li>
+            <li>Remontée d'anomalies</li>
+          </ul>
+          <a class="button secondary" href="plan-parc-magasinier.html">Ouvrir le plan parc</a>
+        </article>
+
+        <article class="card warn">
+          <span class="tag">Préparation</span>
+          <strong>Préparation commandes client</strong>
+          <p>Pointe les lignes, les manquants, les zones de dépose et la validation avant remise ou livraison.</p>
+          <ul>
+            <li>Pointage pris / partiel / manquant</li>
+            <li>Localisation commande prête</li>
+            <li>Validation humaine obligatoire</li>
+          </ul>
+          <a class="button secondary" href="preparation-commandes-client.html">Ouvrir la préparation</a>
+        </article>
+      </div>
+    </section>
+
+    <section aria-labelledby="decision-title">
+      <h2 id="decision-title">Décision opérationnelle</h2>
+      <div class="notice">
+        Le stock mini/maxi dit si l'article est bien piloté. La couverture chantier dit si l'agence peut vendre une solution complète et fiable aujourd'hui. Les deux lectures doivent coexister : l'article seul ne suffit pas à sécuriser l'expérience client.
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Hub autonome. Aucun appel réseau, aucune dépendance externe, aucune connexion ERP directe.</p>
+  </footer>
+</body>
+</html>
