@@ -1,0 +1,119 @@
+{
+  "schema_version": "1.0",
+  "dataset": "html-hub-index",
+  "project": "Copilote Chef d'Agence",
+  "hub_file": "src/index.html",
+  "description": "Index central des modules HTML métier autonomes du dépôt.",
+  "architecture_rules": {
+    "single_entry_point": true,
+    "modules_remain_autonomous": true,
+    "zero_external_dependency": true,
+    "no_cdn": true,
+    "no_framework_required": true,
+    "no_hidden_network_call": true,
+    "no_password_or_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "human_validation_required": true,
+    "mobile_first": true
+  },
+  "categories": [
+    {"id":"stock", "label":"Stock & mini/maxi"},
+    {"id":"chantier", "label":"Couverture chantier"},
+    {"id":"terrain", "label":"Parc & magasinier"},
+    {"id":"preparation", "label":"Préparation commande"},
+    {"id":"referentiel", "label":"Référentiels"},
+    {"id":"recette", "label":"Recette & test"}
+  ],
+  "modules": [
+    {
+      "id": "stock-mini-maxi",
+      "title": "Stock mini/maxi",
+      "category": "stock",
+      "path": "src/stock-mini-maxi.html",
+      "status": "operational",
+      "purpose": "Analyser les articles sous mini, à commander, en surstock, incohérents ou mal zonés.",
+      "keywords": ["stock", "mini", "maxi", "article", "rupture", "surstock", "commande", "zonage"]
+    },
+    {
+      "id": "stock-mini-maxi-tfi",
+      "title": "Stock mini/maxi TFI",
+      "category": "stock",
+      "path": "src/stock-mini-maxi-tfi.html",
+      "status": "operational",
+      "purpose": "Contrôler les zones TFI et préparer une exploitation compatible avec la logique ERP en lecture.",
+      "keywords": ["stock", "TFI", "ERP", "zone", "export", "contrôle"]
+    },
+    {
+      "id": "pilotage-stock-chantier",
+      "title": "Pilotage stock chantier",
+      "category": "chantier",
+      "path": "src/pilotage-stock-chantier.html",
+      "status": "operational",
+      "purpose": "Hub spécialisé reliant stock mini/maxi, couverture chantier, plan parc, préparation et référentiels.",
+      "keywords": ["hub", "stock", "chantier", "référentiels", "parcours"]
+    },
+    {
+      "id": "couverture-chantier",
+      "title": "Vérifier chantier complet",
+      "category": "chantier",
+      "path": "src/couverture-chantier.html",
+      "status": "operational",
+      "purpose": "Vérifier si un chantier type est vendable complet aujourd'hui pour une surface donnée.",
+      "keywords": ["chantier", "couverture", "accessoires", "verdict", "vendable"]
+    },
+    {
+      "id": "plan-parc-magasinier",
+      "title": "Plan parc magasinier",
+      "category": "terrain",
+      "path": "src/plan-parc-magasinier.html",
+      "status": "operational",
+      "purpose": "Visualiser les zones, rechercher les articles et remonter les anomalies terrain.",
+      "keywords": ["parc", "magasinier", "zone", "dépôt", "cour", "emplacement"]
+    },
+    {
+      "id": "preparation-commandes-client",
+      "title": "Préparation commandes client",
+      "category": "preparation",
+      "path": "src/preparation-commandes-client.html",
+      "status": "operational",
+      "purpose": "Pointer les lignes de commandes, les quantités, les manquants, la zone de dépose et la validation.",
+      "keywords": ["préparation", "commande", "client", "pointage", "livraison", "manquant"]
+    },
+    {
+      "id": "memoire-stock",
+      "title": "Mémoire bonnes pratiques stock",
+      "category": "referentiel",
+      "path": "docs/MEMOIRE_BONNES_PRATIQUES_STOCK_NEGOCE_MATERIAUX.md",
+      "status": "reference",
+      "purpose": "Base métier complète pour former, cadrer et développer les pratiques stock.",
+      "keywords": ["mémoire", "stock", "formation", "QHSE", "inventaire", "écarts", "dormants"]
+    },
+    {
+      "id": "structure-google-sheets-stock",
+      "title": "Structure Google Sheets stock",
+      "category": "referentiel",
+      "path": "docs/STRUCTURE_GOOGLE_SHEETS_STOCK_MINI_MAXI.md",
+      "status": "reference",
+      "purpose": "Définir les onglets, champs et règles de validation pour une base stock exploitable.",
+      "keywords": ["Google Sheets", "base données", "articles", "emplacements", "inventaires", "écarts"]
+    },
+    {
+      "id": "recette-test",
+      "title": "Recette test HTML",
+      "category": "recette",
+      "path": "src/recette-test.html",
+      "status": "test",
+      "purpose": "Contrôler les applications HTML métier avant diffusion.",
+      "keywords": ["recette", "test", "audit", "validation", "HTML"]
+    }
+  ],
+  "recommended_next_actions": [
+    "Utiliser src/index.html comme point d'entrée principal du dépôt.",
+    "Ajouter un lien retour hub dans chaque HTML métier.",
+    "Créer une convention de nommage pour tous les futurs fichiers HTML.",
+    "Ajouter une fiche projet JSON pour chaque futur module HTML.",
+    "Maintenir data/html-hub-index.json à jour à chaque ajout de module."
+  ]
+}
