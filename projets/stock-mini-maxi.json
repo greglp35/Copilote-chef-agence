@@ -1,13 +1,14 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "project_id": "stock-mini-maxi",
   "project_name": "Stock mini/maxi — Assistant de pilotage agence",
   "status": "validated",
   "created_at": "2026-05-11",
-  "updated_at": "2026-05-11",
+  "updated_at": "2026-05-13",
   "owner": "Greg",
   "validator": "Greg",
-  "problem_to_solve": "Le pilotage du stock doit croiser stock physique, réservations, commandes en cours, vitesse de vente, délai fournisseur, mini, maxi et multiples d'achat pour éviter rupture, surstock ou commande mal calibrée.",
+  "problem_to_solve": "Le pilotage du stock doit croiser stock physique, réservations, commandes en cours, vitesse de vente, délai fournisseur, mini, maxi et multiples d'achat pour éviter rupture, surstock ou commande mal calibrée. Cette logique doit maintenant être complétée par une lecture chantier : un article principal disponible ne garantit pas qu'un chantier complet soit vendable.",
+  "business_rule_added": "Article disponible ne veut pas dire chantier vendable. Chantier vendable = produit principal + accessoires + quantité suffisante + zone localisée + préparation possible.",
   "target_users": [
     "chef_agence",
     "responsable_exploitation",
@@ -15,11 +16,17 @@
     "magasinier",
     "commercial_agence"
   ],
-  "operational_goal": "Analyser rapidement les articles suivis en mini/maxi afin d'identifier les ruptures potentielles, commandes recommandées, incohérences et surstocks avant validation humaine.",
+  "operational_goal": "Analyser rapidement les articles suivis en mini/maxi afin d'identifier les ruptures potentielles, commandes recommandées, incohérences et surstocks avant validation humaine, puis basculer vers une vérification chantier complet quand l'enjeu client concerne un lot vendable.",
   "source_files": {
     "main_html": "src/stock-mini-maxi.html",
     "project_markdown": "projets/stock-mini-maxi.md",
-    "project_json": "projets/stock-mini-maxi.json"
+    "project_json": "projets/stock-mini-maxi.json",
+    "pilotage_hub": "src/pilotage-stock-chantier.html",
+    "chantier_coverage_html": "src/couverture-chantier.html",
+    "chantier_coverage_project": "projets/couverture-chantier.json",
+    "chantier_types_csv": "data/chantiers-types-source.csv",
+    "chantier_types_schema": "data/chantiers-types.schema.json",
+    "chantier_business_reference": "docs/REFERENTIEL_COUVERTURE_CHANTIER.md"
   },
   "data_sources": [
     {
@@ -27,6 +34,12 @@
       "source_type": "manual_or_clean_import",
       "sensitive": false,
       "comment": "Données fictives ou anonymisées uniquement."
+    },
+    {
+      "name": "chantiers_types_source",
+      "source_type": "manual_or_clean_import",
+      "sensitive": false,
+      "comment": "Référentiel chantier type permettant de calculer si une solution complète est vendable."
     }
   ],
   "security_rules": {
@@ -36,7 +49,8 @@
     "no_odbc_string_in_html": true,
     "no_sensitive_sql_in_html": true,
     "test_data_only": true,
-    "human_validation_required": true
+    "human_validation_required": true,
+    "no_direct_erp_write": true
   },
   "expected_features": [
     {
@@ -56,20 +70,62 @@
       "name": "Quantité recommandée",
       "description": "Calculer une proposition arrondie au multiple d'achat.",
       "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Lien couverture chantier",
+      "description": "Relier le pilotage article au contrôle chantier complet via le hub src/pilotage-stock-chantier.html et le module src/couverture-chantier.html.",
+      "status": "done_as_standalone_hub"
+    },
+    {
+      "priority": "high",
+      "name": "Mini métier chantier",
+      "description": "Comparer le mini article avec la quantité nécessaire pour couvrir au moins un chantier standard.",
+      "status": "to_build"
+    },
+    {
+      "priority": "medium",
+      "name": "Articles principaux OK mais chantier incomplet",
+      "description": "Détecter les cas où le produit principal est disponible mais un accessoire obligatoire bloque la vente du chantier complet.",
+      "status": "to_build"
+    }
+  ],
+  "connected_modules": [
+    {
+      "module": "couverture-chantier",
+      "path": "src/couverture-chantier.html",
+      "role": "Vérifier si un chantier type est vendable complet aujourd'hui."
+    },
+    {
+      "module": "pilotage-stock-chantier",
+      "path": "src/pilotage-stock-chantier.html",
+      "role": "Hub de navigation entre stock mini/maxi, couverture chantier, plan parc et préparation commande."
+    },
+    {
+      "module": "plan-parc-magasinier",
+      "path": "src/plan-parc-magasinier.html",
+      "role": "Localiser les composants et contrôler les zones."
+    },
+    {
+      "module": "preparation-commandes-client",
+      "path": "src/preparation-commandes-client.html",
+      "role": "Préparer et valider les lots client sans annoncer un chantier complet incomplet."
     }
   ],
   "out_of_scope": [
     "Ne pas modifier directement une source métier.",
     "Ne pas passer automatiquement de commande fournisseur.",
     "Ne pas remplacer la validation humaine.",
-    "Ne pas utiliser de données sensibles non anonymisées."
+    "Ne pas utiliser de données sensibles non anonymisées.",
+    "Ne pas annoncer un chantier complet si un article obligatoire est manquant ou si le délai n'est pas confirmé."
   ],
   "success_criteria": {
     "understandable_under_10_seconds": true,
     "mobile_compatible": true,
     "local_save_if_needed": true,
     "export_or_print_if_needed": true,
-    "github_actions_recipe_passed": true
+    "github_actions_recipe_passed": true,
+    "chantier_coverage_reference_created": true
   },
   "risks": [
     {
@@ -81,17 +137,24 @@
       "risk": "Mini/maxi mal renseignés.",
       "level": "high",
       "mitigation": "Afficher un statut incohérent si mini supérieur au maxi."
+    },
+    {
+      "risk": "Produit principal disponible mais chantier incomplet à cause d'un accessoire manquant.",
+      "level": "high",
+      "mitigation": "Utiliser le module couverture chantier avant promesse client sur les chantiers réflexes."
     }
   ],
   "human_validation": {
     "decision": "validated",
     "validated_by": "Greg",
-    "validated_at": "2026-05-11",
-    "comment": "V1 acceptée comme outil local d'aide à l'analyse, sans action automatique sur le stock."
+    "validated_at": "2026-05-13",
+    "comment": "V1 acceptée comme outil local d'aide à l'analyse, sans action automatique sur le stock. La logique couverture chantier est ajoutée comme couche de décision complémentaire."
   },
   "next_actions": [
-    "Tester l'application avec des données fictives.",
-    "Ajuster les seuils métiers selon les familles produits.",
-    "Ajouter plus tard un import CSV si nécessaire."
+    "Tester src/pilotage-stock-chantier.html comme point d'entrée métier.",
+    "Tester src/couverture-chantier.html avec les données de démonstration.",
+    "Valider les quantités chantier type avec vendeur et magasinier.",
+    "Ajouter ensuite un lien visuel directement dans src/stock-mini-maxi.html si la recette du hub est validée.",
+    "Construire le mini métier chantier dans le module stock."
   ]
 }
