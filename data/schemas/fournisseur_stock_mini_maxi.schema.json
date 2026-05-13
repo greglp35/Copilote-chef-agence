@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/greglp35/Copilote-chef-agence/data/schemas/fournisseur_stock_mini_maxi.schema.json",
+  "title": "Fournisseur Stock Mini Maxi",
+  "description": "Schéma de données pour qualifier un fournisseur et ses paramètres utiles au pilotage stock mini/maxi dans un négoce de matériaux.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fournisseur",
+    "parametres_stock",
+    "risques_stock",
+    "donnees_manquantes",
+    "recommandations"
+  ],
+  "properties": {
+    "fournisseur": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nom",
+        "typologie",
+        "familles_produits",
+        "niveau_fiabilite",
+        "delai_livraison_moyen_jours",
+        "delai_livraison_prudent_jours",
+        "franco_port",
+        "minimum_commande",
+        "frequence_livraison",
+        "contraintes_logistiques",
+        "risque_global_rupture",
+        "commentaire_synthese"
+      ],
+      "properties": {
+        "nom": {
+          "type": "string",
+          "description": "Nom du fournisseur."
+        },
+        "typologie": {
+          "type": "string",
+          "enum": [
+            "local",
+            "regional",
+            "national",
+            "industriel",
+            "importateur",
+            "plateforme",
+            "distributeur",
+            "inconnu"
+          ],
+          "description": "Typologie principale du fournisseur."
+        },
+        "familles_produits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Familles produits concernées."
+        },
+        "niveau_fiabilite": {
+          "type": "string",
+          "enum": [
+            "eleve",
+            "moyen",
+            "faible",
+            "inconnu"
+          ],
+          "description": "Fiabilité globale des informations fournisseur."
+        },
+        "delai_livraison_moyen_jours": {
+          "type": ["number", "string", "null"],
+          "description": "Délai moyen de livraison en jours. Utiliser null ou 'Non communiqué' si absent."
+        },
+        "delai_livraison_prudent_jours": {
+          "type": ["number", "string", "null"],
+          "description": "Délai prudent à utiliser pour le stock minimum. Prendre la valeur haute si fourchette."
+        },
+        "franco_port": {
+          "type": "string",
+          "description": "Franco de port global ou par famille, si connu."
+        },
+        "minimum_commande": {
+          "type": "string",
+          "description": "Minimum de commande global ou par référence, si connu."
+        },
+        "frequence_livraison": {
+          "type": "string",
+          "description": "Fréquence de livraison ou jours fixes."
+        },
+        "jours_commande": {
+          "type": "string",
+          "description": "Jours fixes de commande, si connus."
+        },
+        "jours_livraison": {
+          "type": "string",
+          "description": "Jours fixes de livraison, si connus."
+        },
+        "contraintes_logistiques": {
+          "type": "string",
+          "description": "Contraintes de transport, palette, camion, déchargement, délais spécifiques."
+        },
+        "contraintes_stockage": {
+          "type": "string",
+          "description": "Contraintes de stockage : volume, humidité, fragilité, péremption, sécurité."
+        },
+        "taux_service": {
+          "type": "string",
+          "description": "Taux de service fournisseur si communiqué."
+        },
+        "risque_global_rupture": {
+          "type": "string",
+          "enum": [
+            "faible",
+            "moyen",
+            "eleve",
+            "critique",
+            "inconnu"
+          ],
+          "description": "Risque global de rupture fournisseur."
+        },
+        "commentaire_synthese": {
+          "type": "string",
+          "description": "Commentaire métier court sur l'utilisation stock du fournisseur."
+        }
+      }
+    },
+    "parametres_stock": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "famille_produit",
+          "produit_ou_reference",
+          "stock_minimum",
+          "stock_maximum",
+          "seuil_alerte",
+          "quantite_reapprovisionnement",
+          "priorite",
+          "risque_rupture",
+          "type_parametrage",
+          "niveau_fiabilite",
+          "justification"
+        ],
+        "properties": {
+          "famille_produit": {
+            "type": "string"
+          },
+          "produit_ou_reference": {
+            "type": "string"
+          },
+          "unite_achat": {
+            "type": "string"
+          },
+          "unite_stock": {
+            "type": "string"
+          },
+          "unite_vente": {
+            "type": "string"
+          },
+          "conditionnement": {
+            "type": "string"
+          },
+          "multiple_achat": {
+            "type": ["number", "string", "null"]
+          },
+          "quantite_palette": {
+            "type": ["number", "string", "null"]
+          },
+          "delai_fournisseur_prudent_jours": {
+            "type": ["number", "string", "null"]
+          },
+          "consommation_moyenne": {
+            "type": ["number", "string", "null"],
+            "description": "Consommation moyenne utilisée pour le calcul. Si absente, ne pas chiffrer mini/maxi."
+          },
+          "stock_minimum": {
+            "type": ["number", "string", "null"]
+          },
+          "stock_maximum": {
+            "type": ["number", "string", "null"]
+          },
+          "seuil_alerte": {
+            "type": ["number", "string", "null"]
+          },
+          "quantite_reapprovisionnement": {
+            "type": ["number", "string", "null"]
+          },
+          "priorite": {
+            "type": "string",
+            "enum": [
+              "haute",
+              "moyenne",
+              "basse",
+              "critique",
+              "inconnu"
+            ]
+          },
+          "risque_rupture": {
+            "type": "string",
+            "enum": [
+              "faible",
+              "moyen",
+              "eleve",
+              "critique",
+              "inconnu"
+            ]
+          },
+          "type_parametrage": {
+            "type": "string",
+            "enum": [
+              "calcule",
+              "deduit_a_confirmer",
+              "impossible_donnees_manquantes",
+              "manuel",
+              "inconnu"
+            ]
+          },
+          "niveau_fiabilite": {
+            "type": "string",
+            "enum": [
+              "eleve",
+              "moyen",
+              "faible",
+              "inconnu"
+            ]
+          },
+          "justification": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "risques_stock": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "risque",
+          "cause",
+          "impact",
+          "gravite",
+          "mesure_maitrise"
+        ],
+        "properties": {
+          "risque": {
+            "type": "string"
+          },
+          "cause": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "string"
+          },
+          "gravite": {
+            "type": "string",
+            "enum": [
+              "faible",
+              "moyenne",
+              "haute",
+              "critique"
+            ]
+          },
+          "mesure_maitrise": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "donnees_manquantes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "donnee",
+          "question_fournisseur",
+          "importance",
+          "raison"
+        ],
+        "properties": {
+          "donnee": {
+            "type": "string"
+          },
+          "question_fournisseur": {
+            "type": "string"
+          },
+          "importance": {
+            "type": "string",
+            "enum": [
+              "critique",
+              "haute",
+              "moyenne",
+              "basse"
+            ]
+          },
+          "raison": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "recommandations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "impact_attendu",
+          "priorite",
+          "effort_mise_en_place",
+          "commentaire"
+        ],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "impact_attendu": {
+            "type": "string"
+          },
+          "priorite": {
+            "type": "string",
+            "enum": [
+              "haute",
+              "moyenne",
+              "basse",
+              "critique"
+            ]
+          },
+          "effort_mise_en_place": {
+            "type": "string",
+            "enum": [
+              "faible",
+              "moyen",
+              "eleve"
+            ]
+          },
+          "commentaire": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
