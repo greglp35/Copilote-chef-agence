@@ -1,8 +1,9 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "dataset": "html-hub-index",
   "project": "Copilote Chef d'Agence",
   "hub_file": "src/index.html",
+  "navigation_convention": "docs/CONVENTION_NAVIGATION_HTML_METIER.md",
   "description": "Index central des modules HTML métier autonomes du dépôt.",
   "architecture_rules": {
     "single_entry_point": true,
@@ -16,7 +17,8 @@
     "no_odbc_string_in_html": true,
     "no_sensitive_sql_in_html": true,
     "human_validation_required": true,
-    "mobile_first": true
+    "mobile_first": true,
+    "hub_return_required": true
   },
   "categories": [
     {"id":"stock", "label":"Stock & mini/maxi"},
@@ -33,6 +35,7 @@
       "category": "stock",
       "path": "src/stock-mini-maxi.html",
       "status": "operational",
+      "hub_return_status": "to_patch_carefully_large_file",
       "purpose": "Analyser les articles sous mini, à commander, en surstock, incohérents ou mal zonés.",
       "keywords": ["stock", "mini", "maxi", "article", "rupture", "surstock", "commande", "zonage"]
     },
@@ -42,6 +45,7 @@
       "category": "stock",
       "path": "src/stock-mini-maxi-tfi.html",
       "status": "operational",
+      "hub_return_status": "to_patch",
       "purpose": "Contrôler les zones TFI et préparer une exploitation compatible avec la logique ERP en lecture.",
       "keywords": ["stock", "TFI", "ERP", "zone", "export", "contrôle"]
     },
@@ -51,6 +55,7 @@
       "category": "chantier",
       "path": "src/pilotage-stock-chantier.html",
       "status": "operational",
+      "hub_return_status": "to_patch",
       "purpose": "Hub spécialisé reliant stock mini/maxi, couverture chantier, plan parc, préparation et référentiels.",
       "keywords": ["hub", "stock", "chantier", "référentiels", "parcours"]
     },
@@ -60,6 +65,7 @@
       "category": "chantier",
       "path": "src/couverture-chantier.html",
       "status": "operational",
+      "hub_return_status": "to_patch",
       "purpose": "Vérifier si un chantier type est vendable complet aujourd'hui pour une surface donnée.",
       "keywords": ["chantier", "couverture", "accessoires", "verdict", "vendable"]
     },
@@ -69,6 +75,7 @@
       "category": "terrain",
       "path": "src/plan-parc-magasinier.html",
       "status": "operational",
+      "hub_return_status": "to_patch",
       "purpose": "Visualiser les zones, rechercher les articles et remonter les anomalies terrain.",
       "keywords": ["parc", "magasinier", "zone", "dépôt", "cour", "emplacement"]
     },
@@ -78,6 +85,7 @@
       "category": "preparation",
       "path": "src/preparation-commandes-client.html",
       "status": "operational",
+      "hub_return_status": "to_patch",
       "purpose": "Pointer les lignes de commandes, les quantités, les manquants, la zone de dépose et la validation.",
       "keywords": ["préparation", "commande", "client", "pointage", "livraison", "manquant"]
     },
@@ -87,6 +95,7 @@
       "category": "referentiel",
       "path": "docs/MEMOIRE_BONNES_PRATIQUES_STOCK_NEGOCE_MATERIAUX.md",
       "status": "reference",
+      "hub_return_status": "not_applicable_markdown",
       "purpose": "Base métier complète pour former, cadrer et développer les pratiques stock.",
       "keywords": ["mémoire", "stock", "formation", "QHSE", "inventaire", "écarts", "dormants"]
     },
@@ -96,6 +105,7 @@
       "category": "referentiel",
       "path": "docs/STRUCTURE_GOOGLE_SHEETS_STOCK_MINI_MAXI.md",
       "status": "reference",
+      "hub_return_status": "not_applicable_markdown",
       "purpose": "Définir les onglets, champs et règles de validation pour une base stock exploitable.",
       "keywords": ["Google Sheets", "base données", "articles", "emplacements", "inventaires", "écarts"]
     },
@@ -105,13 +115,16 @@
       "category": "recette",
       "path": "src/recette-test.html",
       "status": "test",
+      "hub_return_status": "to_patch",
       "purpose": "Contrôler les applications HTML métier avant diffusion.",
       "keywords": ["recette", "test", "audit", "validation", "HTML"]
     }
   ],
   "recommended_next_actions": [
     "Utiliser src/index.html comme point d'entrée principal du dépôt.",
-    "Ajouter un lien retour hub dans chaque HTML métier.",
+    "Ajouter un lien retour hub dans chaque HTML métier selon docs/CONVENTION_NAVIGATION_HTML_METIER.md.",
+    "Patch prioritaire : modules courts et récents.",
+    "Patch prudent : gros modules historiques après contrôle complet du fichier.",
     "Créer une convention de nommage pour tous les futurs fichiers HTML.",
     "Ajouter une fiche projet JSON pour chaque futur module HTML.",
     "Maintenir data/html-hub-index.json à jour à chaque ajout de module."
