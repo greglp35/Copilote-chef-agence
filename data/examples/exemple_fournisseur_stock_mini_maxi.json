@@ -1,0 +1,139 @@
+{
+  "fournisseur": {
+    "nom": "Fournisseur Exemple Isolation Ouest",
+    "typologie": "regional",
+    "familles_produits": [
+      "Isolation",
+      "Second oeuvre"
+    ],
+    "niveau_fiabilite": "moyen",
+    "delai_livraison_moyen_jours": 4,
+    "delai_livraison_prudent_jours": 6,
+    "franco_port": "900 EUR HT",
+    "minimum_commande": "1 palette ou 450 EUR HT minimum selon famille",
+    "frequence_livraison": "2 passages par semaine selon tournée",
+    "jours_commande": "Lundi et mercredi avant 11h00",
+    "jours_livraison": "Mercredi et vendredi",
+    "contraintes_logistiques": "Livraison par porteur hayon possible. Palette complète recommandée pour optimiser le franco. Reliquats à confirmer.",
+    "contraintes_stockage": "Produits volumineux à stocker au sec. Sensibles à l'humidité et à l'écrasement.",
+    "taux_service": "Non communiqué",
+    "risque_global_rupture": "moyen",
+    "commentaire_synthese": "Fournisseur fictif adapté au stock courant d'isolation, sous réserve de confirmer les conditionnements par référence et le taux de service réel. Le délai prudent de 6 jours doit être utilisé tant que les délais constatés ne sont pas fiabilisés."
+  },
+  "parametres_stock": [
+    {
+      "famille_produit": "Isolation",
+      "produit_ou_reference": "Laine de verre rouleau R fictif 100 mm",
+      "unite_achat": "palette",
+      "unite_stock": "rouleau",
+      "unite_vente": "rouleau",
+      "conditionnement": "24 rouleaux par palette",
+      "multiple_achat": 24,
+      "quantite_palette": 24,
+      "delai_fournisseur_prudent_jours": 6,
+      "consommation_moyenne": "12 rouleaux / semaine - exemple fictif",
+      "stock_minimum": 14,
+      "stock_maximum": 38,
+      "seuil_alerte": 14,
+      "quantite_reapprovisionnement": 24,
+      "priorite": "haute",
+      "risque_rupture": "moyen",
+      "type_parametrage": "deduit_a_confirmer",
+      "niveau_fiabilite": "moyen",
+      "justification": "Exemple fictif : produit volumineux mais stratégique chantier. Stock minimum calculé de manière prudente sur environ 6 jours de consommation avec sécurité. Réapprovisionnement aligné sur une palette complète."
+    },
+    {
+      "famille_produit": "Isolation",
+      "produit_ou_reference": "Panneau isolant fictif haute densité",
+      "unite_achat": "colis",
+      "unite_stock": "panneau",
+      "unite_vente": "panneau",
+      "conditionnement": "Non communiqué",
+      "multiple_achat": "Non communiqué",
+      "quantite_palette": "Non communiqué",
+      "delai_fournisseur_prudent_jours": 6,
+      "consommation_moyenne": "Non communiquée",
+      "stock_minimum": "Calcul impossible sans consommation moyenne.",
+      "stock_maximum": "À ajuster selon conditionnement fournisseur et capacité dépôt.",
+      "seuil_alerte": "Calcul impossible sans stock minimum fiable.",
+      "quantite_reapprovisionnement": "Réapprovisionnement à sécuriser : conditionnement fournisseur inconnu.",
+      "priorite": "moyenne",
+      "risque_rupture": "inconnu",
+      "type_parametrage": "impossible_donnees_manquantes",
+      "niveau_fiabilite": "faible",
+      "justification": "Exemple fictif volontairement incomplet pour tester le blocage des calculs mini/maxi quand la consommation et le conditionnement sont absents."
+    }
+  ],
+  "risques_stock": [
+    {
+      "risque": "Mini/maxi calculé sur données incomplètes",
+      "cause": "Consommation moyenne ou conditionnement absent selon les références",
+      "impact": "Risque de rupture ou de surstock si l'application chiffre automatiquement sans contrôle",
+      "gravite": "critique",
+      "mesure_maitrise": "Bloquer le calcul automatique tant que les données critiques ne sont pas renseignées."
+    },
+    {
+      "risque": "Surstock sur produits volumineux",
+      "cause": "Conditionnement palette et franco pouvant pousser à commander trop large",
+      "impact": "Immobilisation de place dépôt et capital stock",
+      "gravite": "haute",
+      "mesure_maitrise": "Limiter le stock maximum selon capacité réelle de stockage et rotation 90 jours."
+    },
+    {
+      "risque": "Rupture en période haute",
+      "cause": "Délai prudent supérieur au délai moyen et taux de service non communiqué",
+      "impact": "Perte de disponibilité chantier et insatisfaction client pro",
+      "gravite": "haute",
+      "mesure_maitrise": "Utiliser le délai prudent de 6 jours et demander le taux de service fournisseur."
+    }
+  ],
+  "donnees_manquantes": [
+    {
+      "donnee": "Taux de service fournisseur",
+      "question_fournisseur": "Quel est votre taux de service moyen sur les 12 derniers mois pour les familles isolation et second oeuvre ?",
+      "importance": "haute",
+      "raison": "Permet d'évaluer la fiabilité réelle du fournisseur et d'ajuster le stock de sécurité."
+    },
+    {
+      "donnee": "Conditionnement par référence",
+      "question_fournisseur": "Pouvez-vous fournir un fichier Excel ou CSV avec les conditionnements, multiples d'achat et quantités palettes par référence ?",
+      "importance": "critique",
+      "raison": "Indispensable pour calculer une quantité de réapprovisionnement réaliste."
+    },
+    {
+      "donnee": "Consommation moyenne article",
+      "question_fournisseur": "Donnée interne agence à compléter : quelle est la consommation 30/90/365 jours par référence ?",
+      "importance": "critique",
+      "raison": "Sans consommation moyenne, le mini/maxi ne peut pas être calculé de façon fiable."
+    },
+    {
+      "donnee": "Références alternatives",
+      "question_fournisseur": "Quelles références alternatives recommandez-vous en cas de rupture sur les produits principaux ?",
+      "importance": "haute",
+      "raison": "Réduit le risque client et permet de proposer une substitution rapide."
+    }
+  ],
+  "recommandations": [
+    {
+      "action": "Créer un contrôle bloquant si consommation moyenne ou conditionnement absent",
+      "impact_attendu": "Évite les mini/maxi fictifs ou dangereux",
+      "priorite": "critique",
+      "effort_mise_en_place": "moyen",
+      "commentaire": "L'application doit afficher une alerte plutôt que calculer un seuil approximatif."
+    },
+    {
+      "action": "Paramétrer les réapprovisionnements par multiples d'achat",
+      "impact_attendu": "Commandes plus réalistes et compatibles fournisseur",
+      "priorite": "haute",
+      "effort_mise_en_place": "faible",
+      "commentaire": "Le multiple d'achat doit arrondir automatiquement la quantité de commande."
+    },
+    {
+      "action": "Créer une vue produits stratégiques sous mini",
+      "impact_attendu": "Meilleure maîtrise du risque de rupture chantier",
+      "priorite": "haute",
+      "effort_mise_en_place": "moyen",
+      "commentaire": "Vue prioritaire pour le chef d'agence et le comptoir."
+    }
+  ]
+}
