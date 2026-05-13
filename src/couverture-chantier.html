@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Couverture chantier — Vérifier chantier complet</title>
+  <meta name="description" content="Application locale pour vérifier si un chantier type est vendable complet selon le stock disponible, les accessoires obligatoires et les solutions de complément.">
+  <style>
+    :root {
+      --jaune: #f5c400;
+      --jaune-clair: #fff6c7;
+      --noir: #1a1a1a;
+      --gris: #f4f5f7;
+      --gris-2: #e3e5e8;
+      --blanc: #ffffff;
+      --rouge: #9f1d1d;
+      --orange: #a65f00;
+      --vert: #1f6b3a;
+      --bleu: #244f8f;
+      --violet: #5b3a91;
+      --ombre: 0 10px 30px rgba(0,0,0,.08);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, sans-serif; background: var(--gris); color: var(--noir); line-height: 1.45; }
+    header { background: var(--noir); color: var(--blanc); border-bottom: 7px solid var(--jaune); }
+    .wrap, main, footer { width: min(1280px, 100%); margin: 0 auto; padding: 1rem; }
+    .hero { display: grid; grid-template-columns: 1.4fr .6fr; gap: 1rem; align-items: center; }
+    h1, h2, h3 { margin: 0 0 .55rem; }
+    h1 { font-size: clamp(1.55rem, 4vw, 2.5rem); }
+    p { margin: 0 0 .75rem; }
+    .badge { display: inline-flex; align-items: center; background: var(--jaune); color: var(--noir); font-weight: 900; padding: .4rem .7rem; border-radius: 999px; font-size: .9rem; margin-bottom: .65rem; }
+    main { display: grid; gap: 1rem; }
+    section, .card { background: var(--blanc); border: 1px solid var(--gris-2); border-radius: 18px; padding: 1rem; box-shadow: var(--ombre); }
+    .notice { background: var(--jaune-clair); border-left: 7px solid var(--jaune); padding: .85rem; border-radius: 12px; font-weight: 700; }
+    .grid-kpi { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .85rem; }
+    .kpi { border-left: 7px solid var(--jaune); background: #fffdf0; border-radius: 14px; padding: .85rem; min-height: 88px; }
+    .kpi strong { display: block; font-size: 1.45rem; margin-top: .25rem; }
+    .controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; align-items: end; }
+    label { display: block; font-weight: 900; margin-bottom: .35rem; }
+    input, select, textarea, button { width: 100%; font: inherit; border-radius: 12px; }
+    input, select, textarea { border: 1px solid #cdd1d5; padding: .75rem; background: var(--blanc); }
+    button { min-height: 44px; border: 0; padding: .8rem 1rem; background: var(--jaune); color: var(--noir); font-weight: 900; cursor: pointer; touch-action: manipulation; }
+    button.secondary { background: var(--noir); color: var(--blanc); }
+    button.light { background: var(--gris-2); color: var(--noir); }
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--jaune); outline-offset: 3px; }
+    .actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin-top: .75rem; }
+    .verdict { border-radius: 18px; padding: 1rem; border: 2px solid var(--gris-2); display: grid; gap: .5rem; }
+    .verdict strong { font-size: clamp(1.3rem, 4vw, 2rem); }
+    .verdict.ok { background: #e4f5ea; border-color: #82c89a; color: var(--vert); }
+    .verdict.near { background: #fff8df; border-color: #e7c65c; color: #6c4a00; }
+    .verdict.complement { background: #fff0dc; border-color: #d99b4f; color: var(--orange); }
+    .verdict.blocked { background: #ffe3e3; border-color: #ce7777; color: var(--rouge); }
+    .status { display: inline-flex; padding: .25rem .5rem; border-radius: 999px; font-weight: 900; font-size: .82rem; white-space: nowrap; }
+    .status-ok { background: #dff3e5; color: var(--vert); }
+    .status-warn { background: #fff0cf; color: var(--orange); }
+    .status-bad { background: #ffe0e0; color: var(--rouge); }
+    .status-info { background: #e4edff; color: var(--bleu); }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--gris-2); border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; min-width: 1040px; background: var(--blanc); }
+    th, td { padding: .7rem; border-bottom: 1px solid var(--gris-2); text-align: left; vertical-align: top; }
+    th { background: var(--noir); color: var(--blanc); position: sticky; top: 0; z-index: 1; }
+    tr:hover { background: #fff9dc; }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .list { display: grid; gap: .6rem; }
+    .line { border-left: 6px solid var(--jaune); background: #fffdf0; padding: .7rem; border-radius: 12px; }
+    .small { color: #555; font-size: .92rem; }
+    .empty { text-align: center; color: #555; padding: 2rem; }
+    footer { color: #555; }
+    @media (max-width: 980px) {
+      .hero, .grid-kpi, .controls, .actions, .split { grid-template-columns: 1fr; }
+      .wrap, main, footer { padding: .85rem; }
+      section, .card { border-radius: 14px; }
+      table { min-width: 900px; }
+    }
+    @media print {
+      body { background: #fff; }
+      header, .controls, .actions, footer { display: none; }
+      main { width: 100%; padding: 0; }
+      section { box-shadow: none; border: 0; }
+      th { position: static; }
+      table { min-width: 0; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <div>
+        <span class="badge">V1 locale — couverture chantier</span>
+        <h1>Vérifier chantier complet</h1>
+        <p>Contrôle terrain pour savoir si l'agence peut vendre aujourd'hui une solution chantier complète, ou proposer immédiatement un équivalent, un complément, une réservation ou un délai fiable.</p>
+      </div>
+      <div class="notice" role="note">Règle bloquante : un article disponible ne veut pas dire chantier vendable. Validation humaine obligatoire avant annonce client.</div>
+    </div>
+  </header>
+
+  <main>
+    <section aria-labelledby="kpi-title">
+      <h2 id="kpi-title">Synthèse chantiers vendables aujourd'hui</h2>
+      <div class="grid-kpi" id="kpi-grid"></div>
+    </section>
+
+    <section aria-labelledby="controls-title">
+      <h2 id="controls-title">Contrôle chantier</h2>
+      <div class="controls">
+        <p>
+          <label for="chantier-select">Type de chantier</label>
+          <select id="chantier-select"></select>
+        </p>
+        <p>
+          <label for="surface-input">Surface ou quantité demandée</label>
+          <input id="surface-input" type="number" min="1" step="1" value="50">
+        </p>
+        <p>
+          <label for="stock-file">Import stock JSON</label>
+          <input id="stock-file" type="file" accept="application/json">
+        </p>
+        <p>
+          <label for="chantier-file">Import chantiers CSV</label>
+          <input id="chantier-file" type="file" accept=".csv,text/csv">
+        </p>
+      </div>
+      <div class="actions" aria-label="Actions principales">
+        <button id="analyze-btn" type="button">Vérifier chantier</button>
+        <button id="load-demo" type="button" class="secondary">Charger exemple</button>
+        <button id="export-json" type="button" class="light">Exporter analyse</button>
+        <button id="print-page" type="button" class="light">Imprimer</button>
+      </div>
+    </section>
+
+    <section aria-labelledby="verdict-title">
+      <h2 id="verdict-title">Verdict</h2>
+      <div id="verdict-zone" class="verdict near">
+        <strong>Analyse prête</strong>
+        <span>Choisis un chantier puis lance la vérification.</span>
+      </div>
+    </section>
+
+    <section aria-labelledby="detail-title">
+      <h2 id="detail-title">Détail des composants</h2>
+      <div class="table-wrap" id="table-zone"></div>
+    </section>
+
+    <section aria-labelledby="actions-title">
+      <h2 id="actions-title">Message vendeur et actions recommandées</h2>
+      <div class="split">
+        <div class="card">
+          <h3>Phrase client conseillée</h3>
+          <p id="customer-message" class="notice">Le message s'affichera après analyse.</p>
+        </div>
+        <div class="card">
+          <h3>Actions internes</h3>
+          <div id="action-list" class="list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Module autonome HTML/CSS/JS natif. Données fictives ou anonymisées uniquement. Aucun accès direct ERP, AS400, ODBC ou fournisseur. Validation humaine obligatoire.</p>
+  </footer>
+
+  <script>
+    const demoStock = [
+      { code_article: 'PLA-001', designation: 'Plaque de platre BA13 standard', famille: 'Plaque de platre', code_zone_erp: 'DP-02-01', stock_physique: 140, stock_reserve: 30, commandes_en_cours: 50, mini: 80, maxi: 180, emplacement: 'B2' },
+      { code_article: 'RAIL-001', designation: 'Rail 48', famille: 'Ossature cloison', code_zone_erp: 'DP-02-01', stock_physique: 24, stock_reserve: 0, commandes_en_cours: 0, mini: 20, maxi: 60, emplacement: 'B3' },
+      { code_article: 'MON-001', designation: 'Montant 48', famille: 'Ossature cloison', code_zone_erp: 'DP-02-01', stock_physique: 44, stock_reserve: 2, commandes_en_cours: 0, mini: 40, maxi: 100, emplacement: 'B4' },
+      { code_article: 'VIS-500', designation: 'Vis placo boite 500', famille: 'Quincaillerie', code_zone_erp: 'LS-01-01', stock_physique: 4, stock_reserve: 0, commandes_en_cours: 0, mini: 4, maxi: 20, emplacement: 'Q3' },
+      { code_article: 'BANDE-001', designation: 'Bande a joint', famille: 'Traitement joints', code_zone_erp: 'LS-01-02', stock_physique: 0, stock_reserve: 0, commandes_en_cours: 0, mini: 4, maxi: 20, emplacement: 'Q4' },
+      { code_article: 'BANDE-ALT', designation: 'Bande a joint alternative', famille: 'Traitement joints', code_zone_erp: 'LS-01-02', stock_physique: 3, stock_reserve: 0, commandes_en_cours: 0, mini: 2, maxi: 10, emplacement: 'Q4' },
+      { code_article: 'END-001', designation: 'Enduit a joint', famille: 'Traitement joints', code_zone_erp: 'DP-03-01', stock_physique: 5, stock_reserve: 0, commandes_en_cours: 0, mini: 4, maxi: 20, emplacement: 'D4' },
+      { code_article: 'ISO-001', designation: 'Laine de verre rouleau 100 mm', famille: 'Isolation', code_zone_erp: 'DP-01-01', stock_physique: 120, stock_reserve: 20, commandes_en_cours: 0, mini: 80, maxi: 180, emplacement: 'A1' },
+      { code_article: 'AME-001', designation: 'Lame terrasse pin traite', famille: 'Amenagement exterieur', code_zone_erp: 'CR-01-01', stock_physique: 210, stock_reserve: 20, commandes_en_cours: 0, mini: 80, maxi: 180, emplacement: 'EXT1' },
+      { code_article: 'LAMBOURDE-001', designation: 'Lambourde traitee', famille: 'Bois exterieur', code_zone_erp: 'CR-01-01', stock_physique: 45, stock_reserve: 0, commandes_en_cours: 0, mini: 30, maxi: 90, emplacement: 'EXT2' },
+      { code_article: 'PLOT-001', designation: 'Plot terrasse reglable', famille: 'Accessoire terrasse', code_zone_erp: 'LS-02-01', stock_physique: 60, stock_reserve: 0, commandes_en_cours: 20, mini: 80, maxi: 200, emplacement: 'T1' },
+      { code_article: 'VIS-TERR-001', designation: 'Vis terrasse inox', famille: 'Quincaillerie', code_zone_erp: 'LS-01-01', stock_physique: 3, stock_reserve: 0, commandes_en_cours: 0, mini: 4, maxi: 20, emplacement: 'Q5' },
+      { code_article: 'BANDE-PROT-001', designation: 'Bande protection lambourde', famille: 'Accessoire terrasse', code_zone_erp: 'LS-02-01', stock_physique: 3, stock_reserve: 0, commandes_en_cours: 0, mini: 3, maxi: 15, emplacement: 'T2' },
+      { code_article: 'SAT-001', designation: 'Saturateur terrasse', famille: 'Traitement bois', code_zone_erp: 'LS-03-01', stock_physique: 2, stock_reserve: 0, commandes_en_cours: 0, mini: 2, maxi: 8, emplacement: 'P3' },
+      { code_article: 'SUSP-001', designation: 'Suspente isolation', famille: 'Accessoire isolation', code_zone_erp: 'LS-04-01', stock_physique: 300, stock_reserve: 0, commandes_en_cours: 0, mini: 250, maxi: 600, emplacement: 'I1' },
+      { code_article: 'FOUR-001', designation: 'Fourrure', famille: 'Ossature isolation', code_zone_erp: 'DP-01-01', stock_physique: 180, stock_reserve: 0, commandes_en_cours: 0, mini: 180, maxi: 400, emplacement: 'I2' },
+      { code_article: 'MEMB-001', designation: 'Membrane etancheite air', famille: 'Etancheite', code_zone_erp: 'LS-04-02', stock_physique: 100, stock_reserve: 0, commandes_en_cours: 0, mini: 100, maxi: 300, emplacement: 'I3' },
+      { code_article: 'ADH-001', designation: 'Adhesif membrane', famille: 'Etancheite', code_zone_erp: 'LS-04-02', stock_physique: 1, stock_reserve: 0, commandes_en_cours: 0, mini: 4, maxi: 20, emplacement: 'I4' },
+      { code_article: 'DRA-001', designation: 'Drain agricole diametre 100', famille: 'VRD', code_zone_erp: 'CR-02-01', stock_physique: 30, stock_reserve: 5, commandes_en_cours: 0, mini: 25, maxi: 80, emplacement: 'V2' },
+      { code_article: 'GEO-001', designation: 'Geotextile', famille: 'VRD', code_zone_erp: 'CR-02-01', stock_physique: 40, stock_reserve: 0, commandes_en_cours: 0, mini: 50, maxi: 150, emplacement: 'V3' },
+      { code_article: 'GRAV-001', designation: 'Gravier drainage', famille: 'VRD', code_zone_erp: 'CR-02-01', stock_physique: 5, stock_reserve: 0, commandes_en_cours: 0, mini: 2, maxi: 10, emplacement: 'V4' },
+      { code_article: 'BLO-001', designation: 'Bloc beton creux 20 cm', famille: 'Gros oeuvre', code_zone_erp: 'CR-02-01', stock_physique: 820, stock_reserve: 120, commandes_en_cours: 0, mini: 500, maxi: 1200, emplacement: 'P1' },
+      { code_article: 'MOR-001', designation: 'Mortier sac 25 kg', famille: 'Mortier', code_zone_erp: 'DP-03-01', stock_physique: 92, stock_reserve: 5, commandes_en_cours: 0, mini: 30, maxi: 70, emplacement: 'D4' },
+      { code_article: 'COU-001', designation: 'Ecran sous-toiture HPV', famille: 'Couverture', code_zone_erp: 'CR-01-01', stock_physique: 6, stock_reserve: 1, commandes_en_cours: 0, mini: 8, maxi: 20, emplacement: 'F1' },
+      { code_article: 'LATTE-001', designation: 'Liteau traite', famille: 'Bois couverture', code_zone_erp: 'CR-01-01', stock_physique: 280, stock_reserve: 0, commandes_en_cours: 0, mini: 250, maxi: 600, emplacement: 'F2' },
+      { code_article: 'CLOU-001', designation: 'Pointes ou fixation couverture', famille: 'Quincaillerie', code_zone_erp: 'LS-01-01', stock_physique: 3, stock_reserve: 0, commandes_en_cours: 0, mini: 2, maxi: 10, emplacement: 'F3' }
+    ];
+
+    const demoChantiers = [
+      { chantier_type: 'cloison_ba13', surface_reference: '50m2', code_article: 'PLA-001', designation: 'Plaque BA13 standard', famille: 'Plaque de platre', quantite_pour_surface: 50, unite: 'm2', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'produit_principal' },
+      { chantier_type: 'cloison_ba13', surface_reference: '50m2', code_article: 'RAIL-001', designation: 'Rail 48', famille: 'Ossature cloison', quantite_pour_surface: 20, unite: 'unite', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'structure' },
+      { chantier_type: 'cloison_ba13', surface_reference: '50m2', code_article: 'MON-001', designation: 'Montant 48', famille: 'Ossature cloison', quantite_pour_surface: 40, unite: 'unite', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'structure' },
+      { chantier_type: 'cloison_ba13', surface_reference: '50m2', code_article: 'VIS-500', designation: 'Vis placo boite 500', famille: 'Quincaillerie', quantite_pour_surface: 2, unite: 'boite', obligatoire: 'oui', produit_remplacement: '', priorite: 'moyenne', role_chantier: 'fixation' },
+      { chantier_type: 'cloison_ba13', surface_reference: '50m2', code_article: 'BANDE-001', designation: 'Bande a joint', famille: 'Traitement joints', quantite_pour_surface: 3, unite: 'rouleau', obligatoire: 'oui', produit_remplacement: 'BANDE-ALT', priorite: 'haute', role_chantier: 'accessoire_bloquant' },
+      { chantier_type: 'cloison_ba13', surface_reference: '50m2', code_article: 'END-001', designation: 'Enduit a joint', famille: 'Traitement joints', quantite_pour_surface: 3, unite: 'sac', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'accessoire_bloquant' },
+      { chantier_type: 'cloison_ba13', surface_reference: '50m2', code_article: 'ISO-001', designation: 'Laine de verre cloison', famille: 'Isolation', quantite_pour_surface: 50, unite: 'm2', obligatoire: 'non', produit_remplacement: '', priorite: 'moyenne', role_chantier: 'option' },
+      { chantier_type: 'terrasse_bois', surface_reference: '20m2', code_article: 'AME-001', designation: 'Lame terrasse pin traite', famille: 'Amenagement exterieur', quantite_pour_surface: 20, unite: 'm2', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'produit_principal' },
+      { chantier_type: 'terrasse_bois', surface_reference: '20m2', code_article: 'LAMBOURDE-001', designation: 'Lambourde traitee', famille: 'Bois exterieur', quantite_pour_surface: 30, unite: 'ml', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'structure' },
+      { chantier_type: 'terrasse_bois', surface_reference: '20m2', code_article: 'PLOT-001', designation: 'Plot terrasse reglable', famille: 'Accessoire terrasse', quantite_pour_surface: 80, unite: 'unite', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'accessoire_bloquant' },
+      { chantier_type: 'terrasse_bois', surface_reference: '20m2', code_article: 'VIS-TERR-001', designation: 'Vis terrasse inox', famille: 'Quincaillerie', quantite_pour_surface: 2, unite: 'boite', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'fixation' },
+      { chantier_type: 'terrasse_bois', surface_reference: '20m2', code_article: 'BANDE-PROT-001', designation: 'Bande protection lambourde', famille: 'Accessoire terrasse', quantite_pour_surface: 3, unite: 'rouleau', obligatoire: 'non', produit_remplacement: '', priorite: 'moyenne', role_chantier: 'protection' },
+      { chantier_type: 'terrasse_bois', surface_reference: '20m2', code_article: 'SAT-001', designation: 'Saturateur terrasse', famille: 'Traitement bois', quantite_pour_surface: 1, unite: 'bidon', obligatoire: 'non', produit_remplacement: '', priorite: 'basse', role_chantier: 'finition' },
+      { chantier_type: 'isolation_laine', surface_reference: '100m2', code_article: 'ISO-001', designation: 'Laine de verre rouleau 100 mm', famille: 'Isolation', quantite_pour_surface: 100, unite: 'm2', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'produit_principal' },
+      { chantier_type: 'isolation_laine', surface_reference: '100m2', code_article: 'SUSP-001', designation: 'Suspente isolation', famille: 'Accessoire isolation', quantite_pour_surface: 250, unite: 'unite', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'structure' },
+      { chantier_type: 'isolation_laine', surface_reference: '100m2', code_article: 'FOUR-001', designation: 'Fourrure', famille: 'Ossature isolation', quantite_pour_surface: 180, unite: 'ml', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'structure' },
+      { chantier_type: 'isolation_laine', surface_reference: '100m2', code_article: 'MEMB-001', designation: 'Membrane etancheite air', famille: 'Etancheite', quantite_pour_surface: 100, unite: 'm2', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'accessoire_bloquant' },
+      { chantier_type: 'isolation_laine', surface_reference: '100m2', code_article: 'ADH-001', designation: 'Adhesif membrane', famille: 'Etancheite', quantite_pour_surface: 4, unite: 'rouleau', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'accessoire_bloquant' },
+      { chantier_type: 'vrd_courant', surface_reference: '25ml', code_article: 'DRA-001', designation: 'Drain agricole diametre 100', famille: 'VRD', quantite_pour_surface: 25, unite: 'ml', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'produit_principal' },
+      { chantier_type: 'vrd_courant', surface_reference: '25ml', code_article: 'GEO-001', designation: 'Geotextile', famille: 'VRD', quantite_pour_surface: 50, unite: 'm2', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'accessoire_bloquant' },
+      { chantier_type: 'vrd_courant', surface_reference: '25ml', code_article: 'GRAV-001', designation: 'Gravier drainage', famille: 'VRD', quantite_pour_surface: 2, unite: 'm3', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'consommable' },
+      { chantier_type: 'petite_maconnerie', surface_reference: '20m2', code_article: 'BLO-001', designation: 'Bloc beton creux 20 cm', famille: 'Gros oeuvre', quantite_pour_surface: 200, unite: 'unite', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'produit_principal' },
+      { chantier_type: 'petite_maconnerie', surface_reference: '20m2', code_article: 'MOR-001', designation: 'Mortier sac 25 kg', famille: 'Mortier', quantite_pour_surface: 20, unite: 'sac', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'consommable' },
+      { chantier_type: 'couverture_accessoire', surface_reference: '100m2', code_article: 'COU-001', designation: 'Ecran sous-toiture HPV', famille: 'Couverture', quantite_pour_surface: 100, unite: 'm2', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'produit_principal' },
+      { chantier_type: 'couverture_accessoire', surface_reference: '100m2', code_article: 'LATTE-001', designation: 'Liteau traite', famille: 'Bois couverture', quantite_pour_surface: 250, unite: 'ml', obligatoire: 'oui', produit_remplacement: '', priorite: 'haute', role_chantier: 'structure' },
+      { chantier_type: 'couverture_accessoire', surface_reference: '100m2', code_article: 'CLOU-001', designation: 'Pointes ou fixation couverture', famille: 'Quincaillerie', quantite_pour_surface: 2, unite: 'boite', obligatoire: 'oui', produit_remplacement: '', priorite: 'moyenne', role_chantier: 'fixation' }
+    ];
+
+    let stockItems = [];
+    let chantierRows = [];
+    let lastAnalysis = null;
+
+    const chantierSelect = document.getElementById('chantier-select');
+    const surfaceInput = document.getElementById('surface-input');
+    const kpiGrid = document.getElementById('kpi-grid');
+    const verdictZone = document.getElementById('verdict-zone');
+    const tableZone = document.getElementById('table-zone');
+    const customerMessage = document.getElementById('customer-message');
+    const actionList = document.getElementById('action-list');
+    const stockFile = document.getElementById('stock-file');
+    const chantierFile = document.getElementById('chantier-file');
+
+    function numberValue(value) {
+      const parsed = Number(String(value ?? '').replace(',', '.'));
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function referenceNumber(value) {
+      const match = String(value || '').replace(',', '.').match(/[0-9]+(?:\.[0-9]+)?/);
+      return match ? Number(match[0]) : 1;
+    }
+
+    function availableStock(item) {
+      return numberValue(item.stock_physique) - numberValue(item.stock_reserve);
+    }
+
+    function projectedStock(item) {
+      return availableStock(item) + numberValue(item.commandes_en_cours);
+    }
+
+    function uniqueChantiers() {
+      return [...new Set(chantierRows.map(row => row.chantier_type))].sort();
+    }
+
+    function chantierLabel(value) {
+      return String(value || '').replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+    }
+
+    function fillChantierSelect() {
+      const current = chantierSelect.value;
+      chantierSelect.innerHTML = uniqueChantiers().map(type => `<option value="${escapeHtml(type)}">${escapeHtml(chantierLabel(type))}</option>`).join('');
+      if (current && uniqueChantiers().includes(current)) chantierSelect.value = current;
+      const selectedRows = chantierRows.filter(row => row.chantier_type === chantierSelect.value);
+      if (selectedRows[0]) surfaceInput.value = referenceNumber(selectedRows[0].surface_reference);
+    }
+
+    function stockMap() {
+      const map = new Map();
+      stockItems.forEach(item => map.set(String(item.code_article || '').trim(), item));
+      return map;
+    }
+
+    function analyzeChantier(type, requestedSurface) {
+      const rows = chantierRows.filter(row => row.chantier_type === type);
+      const map = stockMap();
+      const details = rows.map(row => {
+        const item = map.get(String(row.code_article || '').trim());
+        const ref = referenceNumber(row.surface_reference);
+        const need = Math.ceil(numberValue(row.quantite_pour_surface) * requestedSurface / Math.max(ref, 1));
+        const available = item ? availableStock(item) : 0;
+        const projected = item ? projectedStock(item) : 0;
+        const replacement = row.produit_remplacement ? map.get(String(row.produit_remplacement).trim()) : null;
+        const replacementAvailable = replacement ? availableStock(replacement) : 0;
+        const ok = available >= need;
+        const projectedOk = projected >= need;
+        const replacementOk = replacementAvailable >= need;
+        const obligatory = String(row.obligatoire || '').toLowerCase() === 'oui';
+        const highPriority = String(row.priorite || '').toLowerCase() === 'haute';
+        const blockingRole = ['produit_principal', 'accessoire_bloquant', 'structure'].includes(String(row.role_chantier || '').toLowerCase());
+        const blocking = obligatory && !ok && !replacementOk && (highPriority || blockingRole);
+        const coverage = need > 0 ? Math.min(available / need, 1) : 1;
+        let status = 'OK';
+        if (!item) status = 'ABSENT_BASE_STOCK';
+        else if (ok) status = 'DISPONIBLE';
+        else if (replacementOk) status = 'REMPLACEMENT_POSSIBLE';
+        else if (projectedOk) status = 'POSSIBLE_AVEC_COMPLEMENT';
+        else status = obligatory ? 'MANQUANT_BLOQUANT' : 'OPTION_MANQUANTE';
+        return { ...row, item, need, available, projected, replacement, replacementAvailable, ok, projectedOk, replacementOk, obligatory, blocking, coverage, status };
+      });
+
+      const required = details.filter(line => line.obligatory);
+      const total = details.length || 1;
+      const availableCount = details.filter(line => line.ok).length;
+      const missing = details.filter(line => !line.ok);
+      const blocking = details.filter(line => line.blocking);
+      const replacementPossible = details.filter(line => !line.ok && line.replacementOk);
+      const complementPossible = details.filter(line => !line.ok && !line.replacementOk && line.projectedOk);
+      const globalCoverage = Math.round((details.reduce((sum, line) => sum + line.coverage, 0) / total) * 100);
+      const requiredCoverage = required.length ? Math.round((required.reduce((sum, line) => sum + line.coverage, 0) / required.length) * 100) : 100;
+      let verdict = 'CHANTIER_COMPLET';
+      if (blocking.length > 0) verdict = 'CHANTIER_NON_COUVERT';
+      else if (missing.length === 0) verdict = 'CHANTIER_COMPLET';
+      else if ((replacementPossible.length + complementPossible.length) === missing.length) verdict = 'CHANTIER_POSSIBLE_AVEC_COMPLEMENT';
+      else if (requiredCoverage >= 90) verdict = 'CHANTIER_PRESQUE_COMPLET';
+      else verdict = 'CHANTIER_NON_COUVERT';
+      return { type, requestedSurface, details, total, availableCount, missing, blocking, replacementPossible, complementPossible, globalCoverage, requiredCoverage, verdict };
+    }
+
+    function classForVerdict(verdict) {
+      return {
+        CHANTIER_COMPLET: 'ok',
+        CHANTIER_PRESQUE_COMPLET: 'near',
+        CHANTIER_POSSIBLE_AVEC_COMPLEMENT: 'complement',
+        CHANTIER_NON_COUVERT: 'blocked'
+      }[verdict] || 'near';
+    }
+
+    function verdictLabel(verdict) {
+      return {
+        CHANTIER_COMPLET: 'Chantier complet',
+        CHANTIER_PRESQUE_COMPLET: 'Chantier presque complet',
+        CHANTIER_POSSIBLE_AVEC_COMPLEMENT: 'Chantier possible avec complément',
+        CHANTIER_NON_COUVERT: 'Chantier non couvert'
+      }[verdict] || verdict;
+    }
+
+    function statusLabel(status) {
+      return {
+        OK: 'OK',
+        DISPONIBLE: 'Disponible',
+        REMPLACEMENT_POSSIBLE: 'Remplacement possible',
+        POSSIBLE_AVEC_COMPLEMENT: 'Avec complément',
+        MANQUANT_BLOQUANT: 'Manquant bloquant',
+        OPTION_MANQUANTE: 'Option manquante',
+        ABSENT_BASE_STOCK: 'Absent base stock'
+      }[status] || status;
+    }
+
+    function statusClass(status) {
+      if (status === 'DISPONIBLE' || status === 'OK') return 'status-ok';
+      if (status === 'REMPLACEMENT_POSSIBLE' || status === 'POSSIBLE_AVEC_COMPLEMENT') return 'status-warn';
+      if (status === 'OPTION_MANQUANTE') return 'status-info';
+      return 'status-bad';
+    }
+
+    function renderAnalysis(analysis) {
+      lastAnalysis = analysis;
+      verdictZone.className = `verdict ${classForVerdict(analysis.verdict)}`;
+      verdictZone.innerHTML = `
+        <strong>${escapeHtml(verdictLabel(analysis.verdict))}</strong>
+        <span>Couverture globale : ${analysis.globalCoverage} % — Produits disponibles : ${analysis.availableCount}/${analysis.total} — Obligatoires : ${analysis.requiredCoverage} %</span>
+        <span class="small">Chantier : ${escapeHtml(chantierLabel(analysis.type))} — Demande : ${analysis.requestedSurface}</span>
+      `;
+
+      tableZone.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>Statut</th><th>Code</th><th>Désignation</th><th>Rôle</th><th>Besoin</th><th>Disponible</th><th>Projeté</th><th>Remplacement</th><th>Zone</th><th>Priorité</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${analysis.details.map(line => `
+              <tr>
+                <td><span class="status ${statusClass(line.status)}">${escapeHtml(statusLabel(line.status))}</span></td>
+                <td>${escapeHtml(line.code_article)}</td>
+                <td><strong>${escapeHtml(line.designation)}</strong><br><span class="small">${escapeHtml(line.famille || '')}</span></td>
+                <td>${escapeHtml(line.role_chantier || '-')}<br><span class="small">${line.obligatory ? 'Obligatoire' : 'Option'}</span></td>
+                <td>${line.need} ${escapeHtml(line.unite || '')}</td>
+                <td>${line.available}</td>
+                <td>${line.projected}</td>
+                <td>${line.produit_remplacement ? `${escapeHtml(line.produit_remplacement)}<br><span class="small">Dispo : ${line.replacementAvailable}</span>` : '-'}</td>
+                <td>${escapeHtml(line.item?.code_zone_erp || '-')}<br><span class="small">${escapeHtml(line.item?.emplacement || '')}</span></td>
+                <td>${escapeHtml(line.priorite || '-')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      `;
+
+      customerMessage.textContent = buildCustomerMessage(analysis);
+      renderActions(analysis);
+      renderKpis();
+    }
+
+    function buildCustomerMessage(analysis) {
+      if (analysis.verdict === 'CHANTIER_COMPLET') return 'Oui, on peut vous faire le lot complet. On vérifie la préparation et on vous confirme les quantités avant enlèvement ou livraison.';
+      if (analysis.verdict === 'CHANTIER_PRESQUE_COMPLET') return 'Le chantier est quasiment couvert. Je contrôle le point faible avant de vous confirmer le lot complet.';
+      if (analysis.verdict === 'CHANTIER_POSSIBLE_AVEC_COMPLEMENT') return 'On peut vous préparer le principal aujourd’hui. Il y a un complément ou un équivalent à valider tout de suite pour éviter qu’il vous manque une pièce sur chantier.';
+      const names = analysis.blocking.map(line => line.designation).slice(0, 3).join(', ');
+      return `Je préfère être transparent : je ne peux pas vous annoncer un chantier complet immédiatement. Il manque un élément bloquant${names ? ` : ${names}` : ''}. Je vérifie une solution fiable avant de vous engager.`;
+    }
+
+    function renderActions(analysis) {
+      const actions = [];
+      if (analysis.verdict === 'CHANTIER_COMPLET') actions.push('Préparer le lot complet et réserver les quantités avant annonce client.');
+      if (analysis.verdict === 'CHANTIER_PRESQUE_COMPLET') actions.push('Contrôler les lignes faibles et confirmer si elles sont non bloquantes.');
+      analysis.replacementPossible.forEach(line => actions.push(`Valider humainement le remplacement ${line.produit_remplacement} pour ${line.designation}.`));
+      analysis.complementPossible.forEach(line => actions.push(`Annoncer un complément ou délai pour ${line.designation}.`));
+      analysis.blocking.forEach(line => actions.push(`Ne pas vendre comme chantier complet : ${line.designation} est bloquant.`));
+      analysis.missing.filter(line => !line.obligatory).forEach(line => actions.push(`Proposer en option ou upsell : ${line.designation}.`));
+      if (!actions.length) actions.push('Aucune action bloquante détectée. Validation humaine finale obligatoire.');
+      actionList.innerHTML = actions.map(action => `<div class="line">${escapeHtml(action)}</div>`).join('');
+    }
+
+    function renderKpis() {
+      const types = uniqueChantiers();
+      const defaultSurfaceByType = new Map();
+      chantierRows.forEach(row => {
+        if (!defaultSurfaceByType.has(row.chantier_type)) defaultSurfaceByType.set(row.chantier_type, referenceNumber(row.surface_reference));
+      });
+      const analyses = types.map(type => analyzeChantier(type, defaultSurfaceByType.get(type) || 1));
+      const complete = analyses.filter(a => a.verdict === 'CHANTIER_COMPLET').length;
+      const possible = analyses.filter(a => a.verdict === 'CHANTIER_POSSIBLE_AVEC_COMPLEMENT' || a.verdict === 'CHANTIER_PRESQUE_COMPLET').length;
+      const blocked = analyses.filter(a => a.verdict === 'CHANTIER_NON_COUVERT').length;
+      const blockerCount = new Map();
+      analyses.forEach(a => a.blocking.forEach(line => blockerCount.set(line.designation, (blockerCount.get(line.designation) || 0) + 1)));
+      const topBlocker = [...blockerCount.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || 'Aucun';
+      kpiGrid.innerHTML = [
+        ['Chantiers complets', complete],
+        ['Possibles avec solution', possible],
+        ['Non couverts', blocked],
+        ['Chantiers types', types.length],
+        ['Bloquant fréquent', topBlocker]
+      ].map(([label, value]) => `<div class="kpi"><span>${escapeHtml(label)}</span><strong>${escapeHtml(String(value))}</strong></div>`).join('');
+    }
+
+    function parseCsv(text) {
+      const clean = text.replace(/^\uFEFF/, '').trim();
+      if (!clean) return [];
+      const lines = clean.split(/\r?\n/).filter(Boolean);
+      const separator = lines[0].includes(';') ? ';' : ',';
+      const headers = splitCsvLine(lines.shift(), separator).map(h => h.trim());
+      return lines.map(line => {
+        const cells = splitCsvLine(line, separator);
+        const row = {};
+        headers.forEach((header, index) => row[header] = cells[index] ?? '');
+        if ('quantite_pour_surface' in row) row.quantite_pour_surface = numberValue(row.quantite_pour_surface);
+        return row;
+      });
+    }
+
+    function splitCsvLine(line, separator) {
+      const cells = [];
+      let current = '';
+      let quoted = false;
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"' && line[i + 1] === '"') { current += '"'; i++; continue; }
+        if (char === '"') { quoted = !quoted; continue; }
+        if (char === separator && !quoted) { cells.push(current); current = ''; continue; }
+        current += char;
+      }
+      cells.push(current);
+      return cells.map(cell => cell.trim());
+    }
+
+    function normalizeImportedStock(data) {
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.items)) return data.items;
+      if (Array.isArray(data.stock)) return data.stock;
+      return [];
+    }
+
+    function exportAnalysis() {
+      const payload = {
+        exported_at: new Date().toISOString(),
+        module: 'couverture-chantier',
+        human_validation_required: true,
+        analysis: lastAnalysis
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `couverture-chantier-${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[char]));
+    }
+
+    function loadDemo() {
+      stockItems = [...demoStock];
+      chantierRows = [...demoChantiers];
+      fillChantierSelect();
+      renderKpis();
+      analyzeCurrent();
+    }
+
+    function analyzeCurrent() {
+      const type = chantierSelect.value;
+      const requested = Math.max(1, numberValue(surfaceInput.value));
+      if (!type) {
+        tableZone.innerHTML = '<div class="empty">Aucun chantier type disponible.</div>';
+        return;
+      }
+      renderAnalysis(analyzeChantier(type, requested));
+    }
+
+    document.getElementById('analyze-btn').addEventListener('click', analyzeCurrent);
+    document.getElementById('load-demo').addEventListener('click', loadDemo);
+    document.getElementById('export-json').addEventListener('click', exportAnalysis);
+    document.getElementById('print-page').addEventListener('click', () => window.print());
+    chantierSelect.addEventListener('change', () => {
+      const selectedRows = chantierRows.filter(row => row.chantier_type === chantierSelect.value);
+      if (selectedRows[0]) surfaceInput.value = referenceNumber(selectedRows[0].surface_reference);
+      analyzeCurrent();
+    });
+    surfaceInput.addEventListener('input', analyzeCurrent);
+
+    stockFile.addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        const data = JSON.parse(await file.text());
+        stockItems = normalizeImportedStock(data);
+        analyzeCurrent();
+      } catch (error) {
+        alert('Import stock impossible : JSON invalide.');
+      }
+    });
+
+    chantierFile.addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        chantierRows = parseCsv(await file.text());
+        fillChantierSelect();
+        analyzeCurrent();
+      } catch (error) {
+        alert('Import chantiers impossible : CSV invalide.');
+      }
+    });
+
+    loadDemo();
+  </script>
+</body>
+</html>
