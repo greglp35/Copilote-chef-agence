@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0",
+  "dataset": "google-sheets-stock-mini-maxi",
+  "description": "Structure cible Google Sheets pour le projet stock mini/maxi négoce matériaux.",
+  "security_rules": {
+    "no_password": true,
+    "no_token": true,
+    "no_as400_credentials": true,
+    "no_odbc_string": true,
+    "no_sensitive_sql": true,
+    "human_validation_required": true
+  },
+  "sheets": [
+    {
+      "name": "Articles",
+      "priority": "high",
+      "primary_key": "id_article",
+      "required_fields": ["id_article", "code_article", "designation", "famille", "fournisseur_principal", "unite_achat", "unite_vente", "coefficient_conversion", "conditionnement", "emplacement_principal", "stock_physique", "stock_reserve", "commandes_en_cours", "vente_30j", "vente_90j", "delai_fournisseur_jours", "mini", "maxi", "multiple_achat", "statut_article"],
+      "fields": [
+        "id_article", "code_article", "designation", "famille", "sous_famille", "fournisseur_principal", "unite_achat", "unite_vente", "coefficient_conversion", "conditionnement", "poids_unitaire", "volume_unitaire", "code_barres", "emplacement_principal", "emplacement_secondaire", "stock_physique", "stock_reserve", "commandes_en_cours", "vente_30j", "vente_90j", "delai_fournisseur_jours", "mini", "maxi", "stock_securite", "multiple_achat", "classe_abc", "statut_article", "produit_remplacement", "contrainte_qhse", "date_derniere_revue"
+      ],
+      "computed_fields": [
+        "stock_disponible = stock_physique - stock_reserve",
+        "stock_projete = stock_physique - stock_reserve + commandes_en_cours",
+        "conso_jour = max(vente_30j / 30, vente_90j / 90)",
+        "point_commande = conso_jour * delai_fournisseur_jours + stock_securite",
+        "besoin_theorique = max(0, mini - stock_projete)",
+        "quantite_recommandee = besoin_theorique arrondi au multiple_achat superieur",
+        "statut_stock = OK / SOUS_MINI / A_COMMANDER / SURSTOCK / INCOMPATIBLE"
+      ]
+    },
+    {
+      "name": "Fournisseurs",
+      "priority": "high",
+      "primary_key": "id_fournisseur",
+      "fields": ["id_fournisseur", "nom_fournisseur", "contact", "delai_standard_jours", "delai_reel_observe_jours", "franco", "minimum_commande", "unite_franco", "conditions_retour", "fiabilite", "commentaire"]
+    },
+    {
+      "name": "Emplacements",
+      "priority": "high",
+      "primary_key": "id_emplacement",
+      "fields": ["id_emplacement", "code_emplacement", "libelle_zone", "batiment", "allee", "travee", "niveau", "position", "famille_autorisee", "famille_interdite", "capacite", "niveau_risque", "statut_emplacement", "commentaire"]
+    },
+    {
+      "name": "Mouvements",
+      "priority": "high",
+      "primary_key": "id_mouvement",
+      "fields": ["id_mouvement", "date_mouvement", "code_article", "type_mouvement", "quantite", "unite", "origine", "destination", "utilisateur", "justificatif", "commentaire"]
+    },
+    {
+      "name": "Inventaires",
+      "priority": "high",
+      "primary_key": "id_inventaire",
+      "fields": ["id_inventaire", "date_comptage", "type_inventaire", "zone", "code_article", "stock_systeme", "stock_compte", "ecart_quantite", "compteur_1", "compteur_2", "statut_validation", "commentaire"]
+    },
+    {
+      "name": "Ecarts",
+      "priority": "high",
+      "primary_key": "id_ecart",
+      "fields": ["id_ecart", "date_constat", "code_article", "famille", "emplacement", "stock_systeme", "stock_physique", "ecart_quantite", "ecart_valeur", "cause_probable", "cause_confirmee", "action_corrective", "responsable", "statut"]
+    },
+    {
+      "name": "Chantiers_types",
+      "priority": "high",
+      "primary_key": "chantier_type_code_article",
+      "fields": ["chantier_type", "surface_reference", "code_article", "designation", "famille", "quantite_pour_surface", "unite", "obligatoire", "produit_remplacement", "priorite", "role_chantier", "commentaire"]
+    },
+    {
+      "name": "Retours",
+      "priority": "medium",
+      "primary_key": "id_retour",
+      "fields": ["id_retour", "date_retour", "client", "code_article", "quantite", "facture_ou_bl", "etat_produit", "decision", "impact_stock", "validation"]
+    },
+    {
+      "name": "Litiges",
+      "priority": "medium",
+      "primary_key": "id_litige",
+      "fields": ["id_litige", "date_litige", "fournisseur", "code_article", "type_litige", "quantite", "reserve_bl", "photo", "statut", "action"]
+    },
+    {
+      "name": "Actions_correctives",
+      "priority": "medium",
+      "primary_key": "id_action",
+      "fields": ["id_action", "date_creation", "origine", "probleme", "action", "responsable", "echeance", "statut", "resultat"]
+    },
+    {
+      "name": "KPI_stock",
+      "priority": "medium",
+      "primary_key": "date_kpi",
+      "fields": ["date_kpi", "taux_rupture", "taux_disponibilite", "rotation_stock", "couverture_stock_jours", "valeur_stock", "valeur_stock_dormant", "ecarts_inventaire_valeur", "taux_service", "litiges_reception", "chantiers_vendables_aujourdhui", "commentaire"]
+    },
+    {
+      "name": "Parametres",
+      "priority": "medium",
+      "primary_key": "cle",
+      "fields": ["cle", "valeur", "categorie", "actif", "commentaire"]
+    }
+  ],
+  "validation_rules": [
+    {"field":"code_article", "rule":"unique_non_empty"},
+    {"field":"code_emplacement", "rule":"stable_non_empty"},
+    {"field":"mini", "rule":"number_greater_or_equal_0"},
+    {"field":"maxi", "rule":"number_greater_or_equal_mini"},
+    {"field":"multiple_achat", "rule":"number_greater_than_0"},
+    {"field":"obligatoire", "rule":"allowed_values: oui, non"},
+    {"field":"priorite", "rule":"allowed_values: haute, moyenne, basse"},
+    {"field":"statut_article", "rule":"controlled_list"}
+  ],
+  "build_order": [
+    "Articles",
+    "Fournisseurs",
+    "Emplacements",
+    "Chantiers_types",
+    "Inventaires",
+    "Ecarts",
+    "Mouvements",
+    "Retours",
+    "Litiges",
+    "Actions_correctives",
+    "KPI_stock",
+    "Parametres"
+  ]
+}
