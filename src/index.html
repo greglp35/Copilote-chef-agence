@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hub HTML Métier — Copilote Chef d'Agence</title>
+  <meta name="description" content="Hub central local pour accéder à tous les modules HTML métier du projet Copilote Chef d'Agence.">
+  <style>
+    :root{
+      --jaune:#f5c400;
+      --jaune-clair:#fff6c7;
+      --noir:#1a1a1a;
+      --gris:#f4f5f7;
+      --gris-2:#e3e5e8;
+      --blanc:#fff;
+      --vert:#1f6b3a;
+      --bleu:#244f8f;
+      --orange:#a65f00;
+      --rouge:#9f1d1d;
+      --violet:#5b3a91;
+      --ombre:0 10px 30px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:var(--gris);color:var(--noir);line-height:1.45}
+    header{background:var(--noir);color:var(--blanc);border-bottom:7px solid var(--jaune)}
+    .wrap,main,footer{width:min(1240px,100%);margin:0 auto;padding:1rem}
+    .hero{display:grid;grid-template-columns:1.35fr .65fr;gap:1rem;align-items:center}
+    h1,h2,h3{margin:0 0 .55rem} h1{font-size:clamp(1.6rem,4vw,2.7rem)} p{margin:0 0 .75rem}
+    .badge{display:inline-flex;background:var(--jaune);color:var(--noir);font-weight:900;padding:.4rem .7rem;border-radius:999px;font-size:.9rem;margin-bottom:.65rem}
+    main{display:grid;gap:1rem}
+    section,.card{background:var(--blanc);border:1px solid var(--gris-2);border-radius:18px;padding:1rem;box-shadow:var(--ombre)}
+    .notice{background:var(--jaune-clair);border-left:7px solid var(--jaune);padding:.85rem;border-radius:12px;font-weight:700}
+    .toolbar{display:grid;grid-template-columns:1.2fr .8fr;gap:.75rem;align-items:end}
+    label{display:block;font-weight:900;margin-bottom:.35rem}
+    input,select{width:100%;font:inherit;border:1px solid #cdd1d5;border-radius:12px;padding:.75rem;background:#fff}
+    input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--jaune);outline-offset:3px}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+    .card{display:grid;gap:.55rem;min-height:245px;position:relative;overflow:hidden}
+    .card strong{font-size:1.25rem}
+    .card.primary{border-left:7px solid var(--jaune)}
+    .card.stock{border-left:7px solid var(--vert)}
+    .card.terrain{border-left:7px solid var(--bleu)}
+    .card.prep{border-left:7px solid var(--orange)}
+    .card.audit{border-left:7px solid var(--violet)}
+    .card.test{border-left:7px solid var(--rouge)}
+    .tag{display:inline-flex;width:max-content;max-width:100%;padding:.25rem .55rem;border-radius:999px;font-weight:900;font-size:.82rem;background:#eef1f5;color:#333}
+    .meta{display:flex;flex-wrap:wrap;gap:.35rem;margin:.1rem 0 .25rem}
+    .pill{display:inline-flex;padding:.2rem .45rem;border-radius:999px;background:#f1f3f5;color:#333;font-size:.8rem;font-weight:800}
+    a.button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:.8rem 1rem;border-radius:12px;background:var(--jaune);color:var(--noir);font-weight:900;text-decoration:none;width:max-content;max-width:100%;margin-top:auto}
+    a.button.secondary{background:var(--noir);color:var(--blanc)}
+    ul{margin:.2rem 0 .75rem;padding-left:1.2rem} li{margin:.25rem 0}
+    .flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.75rem}
+    .step{background:#fffdf0;border:1px solid #f1df8a;border-radius:14px;padding:.8rem;font-weight:800}
+    .empty{display:none;text-align:center;color:#555;padding:2rem;background:#fff;border:1px dashed #cdd1d5;border-radius:14px}
+    .footer-links{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.6rem}
+    footer{color:#555}
+    @media(max-width:1040px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:760px){.hero,.toolbar,.grid,.flow{grid-template-columns:1fr}.wrap,main,footer{padding:.85rem}section,.card{border-radius:14px}}
+    @media print{header,.toolbar,footer,a.button{display:none}body{background:#fff}section,.card{box-shadow:none}.grid{grid-template-columns:1fr 1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <div>
+        <span class="badge">Hub central HTML métier</span>
+        <h1>Copilote Chef d'Agence</h1>
+        <p>Point d'entrée unique pour les modules HTML autonomes : stock, chantier, parc, préparation, recette et référentiels.</p>
+      </div>
+      <div class="notice">Règle d'architecture : un hub central oriente, les modules spécialisés exécutent. Aucun appel réseau caché, aucune dépendance externe, aucune connexion ERP directe.</div>
+    </div>
+  </header>
+
+  <main>
+    <section aria-labelledby="search-title">
+      <h2 id="search-title">Accès rapide</h2>
+      <div class="toolbar">
+        <p>
+          <label for="search">Rechercher un module</label>
+          <input id="search" type="search" placeholder="stock, chantier, parc, préparation, TFI, recette...">
+        </p>
+        <p>
+          <label for="category">Filtrer par domaine</label>
+          <select id="category">
+            <option value="all">Tous les domaines</option>
+            <option value="stock">Stock & mini/maxi</option>
+            <option value="chantier">Couverture chantier</option>
+            <option value="terrain">Parc & magasinier</option>
+            <option value="preparation">Préparation commande</option>
+            <option value="referentiel">Référentiels</option>
+            <option value="recette">Recette & test</option>
+          </select>
+        </p>
+      </div>
+    </section>
+
+    <section aria-labelledby="flow-title">
+      <h2 id="flow-title">Parcours métier recommandé</h2>
+      <div class="flow">
+        <div class="step">1. Piloter les articles</div>
+        <div class="step">2. Vérifier les chantiers complets</div>
+        <div class="step">3. Localiser au parc</div>
+        <div class="step">4. Préparer / livrer</div>
+        <div class="step">5. Recetter / améliorer</div>
+      </div>
+    </section>
+
+    <section aria-labelledby="modules-title">
+      <h2 id="modules-title">Modules HTML disponibles</h2>
+      <div class="grid" id="module-grid">
+        <article class="card stock" data-category="stock" data-keywords="stock mini maxi article seuil commande rupture surstock">
+          <span class="tag">Stock & mini/maxi</span>
+          <strong>Stock mini/maxi</strong>
+          <p>Module principal pour analyser les articles sous mini, à commander, en surstock, incohérents ou mal zonés.</p>
+          <div class="meta"><span class="pill">opérationnel</span><span class="pill">mobile</span><span class="pill">local</span></div>
+          <ul>
+            <li>Stock disponible et projeté</li>
+            <li>Quantité recommandée</li>
+            <li>Zonage ERP</li>
+          </ul>
+          <a class="button" href="stock-mini-maxi.html">Ouvrir</a>
+        </article>
+
+        <article class="card stock" data-category="stock" data-keywords="stock mini maxi tfi erp zone export controle">
+          <span class="tag">Stock & TFI</span>
+          <strong>Stock mini/maxi TFI</strong>
+          <p>Version orientée compatibilité TFI avec contrôle des zones articles et préparation d'export.</p>
+          <div class="meta"><span class="pill">ERP lecture</span><span class="pill">contrôle</span></div>
+          <ul>
+            <li>Zone article TFI</li>
+            <li>Contrôle de cohérence</li>
+            <li>Préparation export</li>
+          </ul>
+          <a class="button" href="stock-mini-maxi-tfi.html">Ouvrir</a>
+        </article>
+
+        <article class="card primary" data-category="chantier" data-keywords="pilotage stock chantier hub solutions chantier complet">
+          <span class="tag">Pilotage chantier</span>
+          <strong>Pilotage stock chantier</strong>
+          <p>Hub spécialisé stock chantier : relie stock mini/maxi, couverture chantier, plan parc, préparation et référentiels.</p>
+          <div class="meta"><span class="pill">hub métier</span><span class="pill">référentiels</span></div>
+          <ul>
+            <li>Parcours stock → chantier</li>
+            <li>Accès mémoire métier</li>
+            <li>Structure Google Sheets</li>
+          </ul>
+          <a class="button" href="pilotage-stock-chantier.html">Ouvrir</a>
+        </article>
+
+        <article class="card primary" data-category="chantier" data-keywords="couverture chantier complet vendable accessoires manquants">
+          <span class="tag">Couverture chantier</span>
+          <strong>Vérifier chantier complet</strong>
+          <p>Vérifie si un chantier type est vendable aujourd'hui pour une surface donnée.</p>
+          <div class="meta"><span class="pill">stock chantier</span><span class="pill">verdict</span></div>
+          <ul>
+            <li>CHANTIER_COMPLET</li>
+            <li>Produits bloquants</li>
+            <li>Message vendeur conseillé</li>
+          </ul>
+          <a class="button" href="couverture-chantier.html">Ouvrir</a>
+        </article>
+
+        <article class="card terrain" data-category="terrain" data-keywords="plan parc magasinier emplacement zone depot cour tfi anomalie">
+          <span class="tag">Terrain</span>
+          <strong>Plan parc magasinier</strong>
+          <p>Interface terrain pour visualiser les zones, retrouver les articles et remonter les anomalies.</p>
+          <div class="meta"><span class="pill">parc</span><span class="pill">magasinier</span></div>
+          <ul>
+            <li>Recherche article / famille / zone</li>
+            <li>Consignes de stockage</li>
+            <li>Anomalies terrain</li>
+          </ul>
+          <a class="button" href="plan-parc-magasinier.html">Ouvrir</a>
+        </article>
+
+        <article class="card prep" data-category="preparation" data-keywords="preparation commande client pointage livraison depot zone remise">
+          <span class="tag">Préparation</span>
+          <strong>Préparation commandes client</strong>
+          <p>Suit les commandes clients à préparer : lignes, quantités, manquants, zone de dépose et validation.</p>
+          <div class="meta"><span class="pill">commande</span><span class="pill">validation</span></div>
+          <ul>
+            <li>Pointage lignes</li>
+            <li>Localisation commande prête</li>
+            <li>Export CSV</li>
+          </ul>
+          <a class="button" href="preparation-commandes-client.html">Ouvrir</a>
+        </article>
+
+        <article class="card audit" data-category="referentiel" data-keywords="memoire stock bonnes pratiques referentiel formation qhse inventaire ecarts dormant">
+          <span class="tag">Référentiel</span>
+          <strong>Mémoire bonnes pratiques stock</strong>
+          <p>Base métier complète : réception, rangement, préparation, inventaires, écarts, dormants, QHSE et amélioration continue.</p>
+          <div class="meta"><span class="pill">markdown</span><span class="pill">formation</span></div>
+          <ul>
+            <li>Procédures standardisées</li>
+            <li>Checklists opérationnelles</li>
+            <li>20 règles d'or</li>
+          </ul>
+          <a class="button secondary" href="../docs/MEMOIRE_BONNES_PRATIQUES_STOCK_NEGOCE_MATERIAUX.md">Ouvrir</a>
+        </article>
+
+        <article class="card audit" data-category="referentiel" data-keywords="google sheets structure base donnees articles emplacements mouvements inventaires ecarts">
+          <span class="tag">Données</span>
+          <strong>Structure Google Sheets stock</strong>
+          <p>Structure des onglets et champs pour créer une base stock exploitable en Sheets, Glide, Make ou GPT.</p>
+          <div class="meta"><span class="pill">sheets</span><span class="pill">schema</span></div>
+          <ul>
+            <li>Articles, Fournisseurs, Emplacements</li>
+            <li>Inventaires, Écarts, Litiges</li>
+            <li>Chantiers types</li>
+          </ul>
+          <a class="button secondary" href="../docs/STRUCTURE_GOOGLE_SHEETS_STOCK_MINI_MAXI.md">Ouvrir</a>
+        </article>
+
+        <article class="card test" data-category="recette" data-keywords="recette test audit validation html controle">
+          <span class="tag">Recette</span>
+          <strong>Recette test HTML</strong>
+          <p>Module de test et recette pour contrôler les applications HTML métier avant diffusion.</p>
+          <div class="meta"><span class="pill">test</span><span class="pill">audit</span></div>
+          <ul>
+            <li>Contrôle usage réel</li>
+            <li>Validation HTML métier</li>
+            <li>Préparation recette</li>
+          </ul>
+          <a class="button secondary" href="recette-test.html">Ouvrir</a>
+        </article>
+      </div>
+      <div class="empty" id="empty-state">Aucun module ne correspond à cette recherche.</div>
+    </section>
+
+    <section aria-labelledby="rules-title">
+      <h2 id="rules-title">Règles d'architecture</h2>
+      <div class="notice">
+        Ce hub ne remplace pas les modules. Il sert de porte d'entrée stable. Chaque HTML doit rester autonome, lisible sur mobile, sans CDN, sans framework, sans secret, sans accès ERP direct et avec validation humaine obligatoire pour toute décision stock, sécurité, commande ou promesse client.
+      </div>
+      <div class="footer-links">
+        <a class="button secondary" href="../data/html-hub-index.json">Index JSON du hub</a>
+        <a class="button secondary" href="../data/memoire-stock-index.json">Index mémoire stock</a>
+        <a class="button secondary" href="../data/google-sheets-stock.schema.json">Schéma Google Sheets</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Hub HTML métier autonome. Aucun appel réseau caché. Aucun mot de passe, token, identifiant AS400, ODBC ou SQL sensible dans le navigateur.</p>
+  </footer>
+
+  <script>
+    const searchInput = document.getElementById('search');
+    const categorySelect = document.getElementById('category');
+    const cards = [...document.querySelectorAll('.card')];
+    const emptyState = document.getElementById('empty-state');
+
+    function normalize(value){ return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+
+    function filterCards(){
+      const query = normalize(searchInput.value);
+      const category = categorySelect.value;
+      let visible = 0;
+      cards.forEach(card => {
+        const text = normalize(card.textContent + ' ' + card.dataset.keywords);
+        const categoryOk = category === 'all' || card.dataset.category === category;
+        const queryOk = !query || text.includes(query);
+        const show = categoryOk && queryOk;
+        card.style.display = show ? 'grid' : 'none';
+        if(show) visible++;
+      });
+      emptyState.style.display = visible ? 'none' : 'block';
+    }
+
+    searchInput.addEventListener('input', filterCards);
+    categorySelect.addEventListener('change', filterCards);
+  </script>
+</body>
+</html>
