@@ -44,13 +44,14 @@
     .kpi{background:#fffdf0;border:1px solid #f2e0a2;border-left:7px solid var(--tf-yellow);border-radius:16px;padding:14px}.kpi strong{display:block;font-size:30px;margin-top:4px}.kpi span{font-size:13px;color:#4b5563;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
     .card{border:1px solid var(--border);border-radius:16px;padding:14px;background:#fff}.card.soft{background:#fafafa}.card.yellow{background:#fff8d9;border-color:#ead375}.card.dark{background:#242424;color:#fff;border-color:#242424}.card.dark .muted{color:#d6d6d6}
     .controls{display:grid;grid-template-columns:1.2fr repeat(3,.7fr);gap:10px;margin-top:12px}label{display:block;font-weight:800;font-size:13px;margin-bottom:5px}input,select,textarea,button{font:inherit;border-radius:12px}input,select,textarea{width:100%;border:1px solid var(--border);padding:10px;background:#fff}textarea{min-height:190px;resize:vertical;font-family:Consolas,Monaco,monospace;font-size:13px}
-    button{border:0;background:var(--tf-yellow);color:var(--tf-black);font-weight:900;padding:11px 14px;cursor:pointer;min-height:42px}button:hover{background:var(--tf-yellow-dark)}button.secondary{background:#e9ecef}button.dark{background:var(--tf-black);color:#fff}button.danger{background:var(--bad);color:#fff}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    button{border:0;background:var(--tf-yellow);color:var(--tf-black);font-weight:900;padding:11px 14px;cursor:pointer;min-height:44px}button:hover{background:var(--tf-yellow-dark)}button.secondary{background:#e9ecef}button.dark{background:var(--tf-black);color:#fff}button.danger{background:var(--bad);color:#fff}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     table{width:100%;border-collapse:collapse}.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}th{background:var(--tf-black);color:#fff;white-space:nowrap}tr:last-child td{border-bottom:0}
     .badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-weight:900;font-size:12px;white-space:nowrap}.ok{background:var(--ok-bg);color:var(--ok)}.warn{background:var(--warn-bg);color:var(--warn)}.bad{background:var(--bad-bg);color:var(--bad)}.info{background:var(--info-bg);color:var(--info)}
     .nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.nav a{color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.25);padding:8px 10px;border-radius:999px}.nav a:hover{background:rgba(255,255,255,.12)}
     .timeline{display:grid;gap:10px}.step{display:grid;grid-template-columns:36px 1fr;gap:10px;align-items:start}.num{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--tf-yellow);font-weight:900;color:var(--tf-black)}
     .notice{border-left:6px solid var(--tf-yellow);background:#fff9d8;padding:12px;border-radius:14px;font-weight:700}.error-box{border-left:6px solid var(--bad);background:var(--bad-bg);padding:12px;border-radius:14px}.success-box{border-left:6px solid var(--ok);background:var(--ok-bg);padding:12px;border-radius:14px}
     code{background:#eef0f3;padding:2px 6px;border-radius:6px}.small{font-size:12px}.mono{font-family:Consolas,Monaco,monospace}.hidden{display:none!important}
+    :focus-visible{outline:3px solid var(--tf-yellow);outline-offset:3px}
     @media(max-width:950px){.hero,.grid,.grid-2,.grid-3,.controls{grid-template-columns:1fr}.wrap,main{padding:12px}.actions button{width:100%}table{min-width:860px}}
     @media print{header,.controls,.actions,textarea,button{display:none!important}body{background:#fff}section{box-shadow:none;break-inside:avoid}.wrap,main{max-width:none}.card{break-inside:avoid}}
   </style>
@@ -73,7 +74,7 @@
       <div class="hero-card">
         <h2>Règle simple</h2>
         <p>Un contrôle vert ne remplace jamais la validation humaine terrain.</p>
-        <p class="muted">Ce cockpit ne se connecte pas à GitHub, ne stocke aucun secret et fonctionne hors ligne.</p>
+        <p class="muted">Ce cockpit ne se connecte pas à GitHub, ne stocke aucune information confidentielle et fonctionne hors ligne.</p>
       </div>
     </div>
   </header>
@@ -152,7 +153,7 @@
   const controls = [
     {domain:'Structure', name:'Structure projet', script:'scripts/check-structure.js', severity:'Bloquant', protects:'Dossiers et organisation minimale du dépôt', status:'Actif'},
     {domain:'JSON', name:'Validité JSON', script:'scripts/check-json.js', severity:'Bloquant', protects:'Fichiers JSON lisibles et exploitables', status:'Actif'},
-    {domain:'Sécurité', name:'Anti-secrets', script:'scripts/check-no-secrets.js', severity:'Bloquant', protects:'Tokens, mots de passe, chaînes sensibles', status:'Actif'},
+    {domain:'Sécurité', name:'Anti-confidentiel', script:'scripts/check-no-secrets.js', severity:'Bloquant', protects:'Informations sensibles et chaînes confidentielles', status:'Actif'},
     {domain:'HTML', name:'Dépendances externes HTML', script:'scripts/check-html-dependencies.js', severity:'Bloquant', protects:'Zéro dépendance externe non maîtrisée', status:'Actif'},
     {domain:'HTML', name:'Qualité HTML minimale', script:'scripts/check-html-quality.js', severity:'Mixte', protects:'Title, H1, alt image, viewport, validation humaine', status:'Actif'},
     {domain:'Fiches projet', name:'Fiches projet obligatoires', script:'scripts/check-fiche-projet.js', severity:'Bloquant', protects:'Traçabilité métier, sécurité, validation humaine', status:'Actif'},
@@ -240,7 +241,7 @@
     const text = $('reportInput').value || '';
     if (!text.trim()) {
       $('reportResult').className = 'card soft';
-      $('reportResult').innerHTML = 'Aucun rapport analysé.';
+      $('reportResult').textContent = 'Aucun rapport analysé.';
       return;
     }
     const lower = text.toLowerCase();
