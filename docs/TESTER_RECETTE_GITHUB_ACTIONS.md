@@ -1,6 +1,6 @@
 # Tester la recette GitHub Actions
 
-Version : V1.1  
+Version : V1.2  
 Projet : Copilote Chef d’Agence
 
 ---
@@ -16,6 +16,9 @@ La recette contrôle :
 - l’absence de secrets évidents ;
 - l’absence de dépendances externes dans les HTML ;
 - les règles métier stock / TFI ;
+- la qualité HTML minimale ;
+- les fiches projet obligatoires ;
+- les liens locaux HTML ;
 - les tests de non-régression des détecteurs.
 
 ---
@@ -30,33 +33,83 @@ La recette contrôle :
 6. Valider.
 7. Ouvrir le run lancé.
 8. Vérifier si l’étape `Lancer la recette complète` est verte.
-9. Télécharger l’artefact `rapport-recette` si disponible.
+9. Vérifier si les étapes de publication des rapports sont vertes.
+10. Télécharger les artefacts utiles.
 
 ---
 
-## 3. Rapport automatique
+## 3. Rapports automatiques
 
-Le workflow génère un rapport Markdown :
+Le workflow génère plusieurs rapports Markdown.
+
+### Rapport global de recette
+
+Fichier généré :
 
 ```text
 rapports/recette/rapport-recette.md
 ```
 
-Dans GitHub Actions, ce rapport est publié comme artefact nommé :
+Artefact GitHub Actions :
 
 ```text
 rapport-recette
 ```
 
-Il contient :
+Contenu :
 
-- la date du contrôle ;
-- la branche ;
-- le commit ;
-- le verdict ;
-- la synthèse des contrôles ;
-- les derniers logs utiles ;
-- l’action recommandée si la recette échoue.
+- date du contrôle ;
+- branche ;
+- commit ;
+- verdict ;
+- synthèse des contrôles ;
+- derniers logs utiles ;
+- action recommandée si la recette échoue.
+
+### Rapport des liens HTML locaux
+
+Fichier généré :
+
+```text
+rapports/liens-html-locaux.md
+```
+
+Artefact GitHub Actions :
+
+```text
+rapport-liens-html-locaux
+```
+
+Contenu :
+
+- fichiers HTML contrôlés ;
+- liens locaux contrôlés ;
+- statut des liens par module ;
+- liens manquants ;
+- avertissements.
+
+### Rapport des fiches projet
+
+Fichier généré :
+
+```text
+rapports/controle-fiche-projet.md
+```
+
+Artefact GitHub Actions :
+
+```text
+rapport-controle-fiche-projet
+```
+
+Contenu :
+
+- applications HTML contrôlées ;
+- présence des fiches `.md` et `.json` ;
+- cohérence des chemins ;
+- règles de sécurité ;
+- validation humaine ;
+- risques bloquants.
 
 ---
 
@@ -65,11 +118,13 @@ Il contient :
 Le workflow doit afficher :
 
 ```text
-Lancer la recette complète      OK
-Publier le rapport de recette   OK
+Lancer la recette complète                         OK
+Publier le rapport de recette                      OK
+Publier le rapport des liens HTML locaux           OK
+Publier le rapport des fiches projet               OK
 ```
 
-Dans le rapport, le verdict attendu est :
+Dans le rapport global, le verdict attendu est :
 
 ```text
 Verdict : OK
@@ -85,7 +140,7 @@ Depuis un terminal, à la racine du dépôt :
 node scripts/run-recette-complete.js
 ```
 
-Cette commande exécute tous les contrôles et génère le rapport localement.
+Cette commande exécute tous les contrôles et génère les rapports localement.
 
 Contrôles unitaires possibles :
 
@@ -94,11 +149,17 @@ node scripts/test-json-check.js
 node scripts/test-no-secrets-check.js
 node scripts/test-html-dependencies-check.js
 node scripts/test-stock-tfi-rules-check.js
+node scripts/test-html-quality-check.js
+node scripts/test-fiche-projet-check.js
+node scripts/test-html-local-links-check.js
 node scripts/check-structure.js
 node scripts/check-json.js
 node scripts/check-no-secrets.js
 node scripts/check-html-dependencies.js
 node scripts/check-stock-tfi-rules.js
+node scripts/check-html-quality.js
+node scripts/check-fiche-projet.js
+node scripts/check-html-local-links.js
 ```
 
 ---
@@ -144,6 +205,41 @@ https://...
 ```
 
 Action : supprimer l’appel externe ou justifier explicitement l’exception.
+
+### Qualité HTML
+
+Messages possibles :
+
+```text
+un seul <title> attendu
+un seul <h1> attendu
+image(s) sans attribut alt
+```
+
+Action : corriger la structure HTML minimale.
+
+### Fiche projet
+
+Messages possibles :
+
+```text
+Fiche Markdown manquante
+Fiche JSON manquante
+Règle sécurité non validée
+Risque bloquant détecté
+```
+
+Action : créer ou corriger la fiche projet associée au module HTML.
+
+### Liens HTML locaux
+
+Message possible :
+
+```text
+lien local introuvable
+```
+
+Action : corriger le chemin du lien ou créer le fichier cible attendu.
 
 ### Règle métier stock / TFI
 
