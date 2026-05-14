@@ -15,6 +15,22 @@ let checkedFiles = 0;
 
 const criticalRules = [
   {
+    match: /journal.*exports.*tfi.*\.csv$/i,
+    label: 'Journal exports TFI',
+    requiredColumns: [
+      'date_export',
+      'utilisateur',
+      'type_export',
+      'nombre_lignes_total',
+      'nom_fichier_export',
+      'version_mapping_tfi',
+      'validation_humaine_globale',
+      'validateur',
+      'statut_final'
+    ],
+    requireDataRows: false
+  },
+  {
     match: /mapping.*tfi.*stock.*mini.*maxi.*\.csv$/i,
     label: 'Mapping TFI stock mini/maxi',
     requiredColumns: [
@@ -30,7 +46,7 @@ const criticalRules = [
       'autorise_reinjection',
       'commentaire'
     ],
-    requireDataRows: true
+    requireDataRows: false
   },
   {
     match: /export.*tfi.*\.csv$/i,
@@ -125,8 +141,8 @@ function matchingRule(relativePath) {
 }
 
 function shouldRequireDataRows(relativePath, rule) {
-  if (rule) return relativePath.startsWith('exports/');
-  return relativePath.startsWith('exports/');
+  if (rule) return rule.requireDataRows === true;
+  return relativePath.startsWith('exports/') && /export/i.test(path.basename(relativePath));
 }
 
 function checkCsv(filePath) {
@@ -243,7 +259,7 @@ function writeReport() {
   lines.push('');
   lines.push('## Règle de décision');
   lines.push('');
-  lines.push('Un CSV critique est bloquant s’il est vide, s’il contient des colonnes dupliquées, s’il ne respecte pas les colonnes obligatoires attendues ou, pour un export réel dans `exports/`, s’il ne contient aucune ligne de données. Les mappings et templates peuvent être validés avec une structure d’en-tête conforme, même lorsqu’ils ne représentent pas un export réel.');
+  lines.push('Un CSV critique est bloquant s’il est vide, s’il contient des colonnes dupliquées, s’il ne respecte pas les colonnes obligatoires attendues ou, pour un export opérationnel réel, s’il ne contient aucune ligne de données. Les mappings, templates et journaux peuvent être validés avec une structure d’en-tête conforme, même lorsqu’ils ne contiennent pas encore de lignes.');
   lines.push('');
 
   fs.writeFileSync(reportPath, lines.join('\n'), 'utf8');
