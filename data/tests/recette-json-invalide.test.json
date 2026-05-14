@@ -1,0 +1,5 @@
+{
+  "test": "recette GitHub Actions",
+  "objectif": "vérifier que le contrôle JSON bloque une erreur volontaire",
+  "statut": "doit échouer",
+}
