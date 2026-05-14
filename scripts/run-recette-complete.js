@@ -40,6 +40,11 @@ const checks = [
     type: 'test'
   },
   {
+    name: 'Tester le contrôle liens locaux HTML',
+    command: 'node scripts/test-html-local-links-check.js',
+    type: 'test'
+  },
+  {
     name: 'Contrôler la structure projet',
     command: 'node scripts/check-structure.js',
     type: 'controle'
@@ -72,6 +77,11 @@ const checks = [
   {
     name: 'Contrôler les fiches projet obligatoires',
     command: 'node scripts/check-fiche-projet.js',
+    type: 'controle'
+  },
+  {
+    name: 'Contrôler les liens locaux HTML',
+    command: 'node scripts/check-html-local-links.js',
     type: 'controle'
   }
 ];
