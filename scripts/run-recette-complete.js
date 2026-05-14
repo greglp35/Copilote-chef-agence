@@ -35,6 +35,11 @@ const checks = [
     type: 'test'
   },
   {
+    name: 'Tester le contrôle fiche projet',
+    command: 'node scripts/test-fiche-projet-check.js',
+    type: 'test'
+  },
+  {
     name: 'Contrôler la structure projet',
     command: 'node scripts/check-structure.js',
     type: 'controle'
@@ -62,6 +67,11 @@ const checks = [
   {
     name: 'Contrôler la qualité HTML minimale',
     command: 'node scripts/check-html-quality.js',
+    type: 'controle'
+  },
+  {
+    name: 'Contrôler les fiches projet obligatoires',
+    command: 'node scripts/check-fiche-projet.js',
     type: 'controle'
   }
 ];

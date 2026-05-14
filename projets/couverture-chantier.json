@@ -2,53 +2,99 @@
   "schema_version": "1.0",
   "project_id": "couverture-chantier",
   "project_name": "Couverture chantier — Vérifier chantier complet",
-  "status": "validated_for_reference",
+  "status": "validated",
   "created_at": "2026-05-12",
-  "updated_at": "2026-05-12",
+  "updated_at": "2026-05-14",
   "owner": "Greg",
   "validator": "Greg",
   "problem_to_solve": "Le stock mini/maxi classique peut indiquer qu'un article principal est disponible alors que le chantier complet n'est pas vendable à cause d'un accessoire, d'une fixation, d'un complément ou d'une localisation manquante.",
   "business_rule": "Ne pas stocker seulement des articles : stocker des solutions chantier complètes.",
-  "target_users": ["chef_agence", "responsable_exploitation", "vendeur_comptoir", "magasinier", "commercial_agence"],
+  "target_users": [
+    "chef_agence",
+    "responsable_exploitation",
+    "vendeur_comptoir",
+    "magasinier",
+    "commercial_agence"
+  ],
   "operational_goal": "Permettre de vérifier rapidement si un chantier type est vendable aujourd'hui pour une surface donnée, et sinon afficher la solution fiable : équivalent, complément, réservation, préparation partielle ou délai annoncé.",
   "source_files": {
+    "main_html": "src/couverture-chantier.html",
+    "project_markdown": "projets/couverture-chantier.md",
+    "project_json": "projets/couverture-chantier.json",
     "business_reference": "docs/REFERENTIEL_COUVERTURE_CHANTIER.md",
     "source_csv": "data/chantiers-types-source.csv",
-    "schema_json": "data/chantiers-types.schema.json",
-    "project_json": "projets/couverture-chantier.json"
+    "schema_json": "data/chantiers-types.schema.json"
   },
   "data_sources": [
-    {"name":"chantiers_types_source","source_type":"manual_or_clean_import","sensitive":false,"path":"data/chantiers-types-source.csv"},
-    {"name":"stock_articles","source_type":"manual_or_clean_import","sensitive":false,"path":"data/stock-mini-maxi.example.json"},
-    {"name":"zones_agence","source_type":"manual_or_clean_import","sensitive":false,"path":"data/zonage-agence.example.json"}
+    {
+      "name": "chantiers_types_source",
+      "source_type": "manual_or_clean_import",
+      "sensitive": false,
+      "path": "data/chantiers-types-source.csv"
+    },
+    {
+      "name": "stock_articles",
+      "source_type": "manual_or_clean_import",
+      "sensitive": false,
+      "path": "data/stock-mini-maxi.example.json"
+    },
+    {
+      "name": "zones_agence",
+      "source_type": "manual_or_clean_import",
+      "sensitive": false,
+      "path": "data/zonage-agence.example.json"
+    }
   ],
-  "expected_features": [
-    {"priority":"high","name":"Vérifier chantier complet","description":"Choisir un chantier type et une surface pour calculer la couverture réelle.","status":"to_build"},
-    {"priority":"high","name":"Verdict chantier","description":"Afficher CHANTIER_COMPLET, CHANTIER_PRESQUE_COMPLET, CHANTIER_POSSIBLE_AVEC_COMPLEMENT ou CHANTIER_NON_COUVERT.","status":"to_build"},
-    {"priority":"high","name":"Produits manquants et bloquants","description":"Lister les produits manquants, distinguer obligatoire, accessoire bloquant, option et produit principal.","status":"to_build"},
-    {"priority":"high","name":"Action recommandée","description":"Proposer préparer, remplacer, compléter, réserver, annoncer délai ou refuser vente immédiate.","status":"to_build"},
-    {"priority":"medium","name":"KPI chantiers vendables aujourd'hui","description":"Afficher le nombre de chantiers standards complets disponibles par famille.","status":"to_build"},
-    {"priority":"medium","name":"Mini métier chantier","description":"Détecter les articles dont le mini ne couvre pas au moins un chantier standard.","status":"to_build"}
-  ],
-  "verdict_levels": ["CHANTIER_COMPLET", "CHANTIER_PRESQUE_COMPLET", "CHANTIER_POSSIBLE_AVEC_COMPLEMENT", "CHANTIER_NON_COUVERT"],
-  "chantier_reflexes_v1": ["cloison_ba13", "isolation_laine", "terrasse_bois", "vrd_courant", "petite_maconnerie", "couverture_accessoire"],
-  "integration_targets": {
-    "stock_mini_maxi": [
-      "Ajouter une lecture nombre de chantiers standards vendables.",
-      "Signaler les articles principaux OK mais chantier incomplet.",
-      "Comparer mini actuel et mini métier chantier."
-    ],
-    "plan_parc_magasinier": [
-      "Afficher les zones des composants d'un chantier type.",
-      "Alerter si un article obligatoire n'a pas de zone fiable.",
-      "Aider à préparer un lot complet."
-    ],
-    "preparation_commandes_client": [
-      "Bloquer ou alerter si une préparation annoncée complète a un manquant obligatoire.",
-      "Afficher les solutions : équivalent, complément, réservation, délai.",
-      "Conserver la validation humaine obligatoire."
-    ]
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true,
+    "no_direct_erp_write": true
   },
+  "expected_features": [
+    {
+      "priority": "high",
+      "name": "Vérifier chantier complet",
+      "description": "Choisir un chantier type et une surface pour calculer la couverture réelle.",
+      "status": "to_build"
+    },
+    {
+      "priority": "high",
+      "name": "Verdict chantier",
+      "description": "Afficher CHANTIER_COMPLET, CHANTIER_PRESQUE_COMPLET, CHANTIER_POSSIBLE_AVEC_COMPLEMENT ou CHANTIER_NON_COUVERT.",
+      "status": "to_build"
+    },
+    {
+      "priority": "high",
+      "name": "Produits manquants et bloquants",
+      "description": "Lister les produits manquants, distinguer obligatoire, accessoire bloquant, option et produit principal.",
+      "status": "to_build"
+    },
+    {
+      "priority": "high",
+      "name": "Action recommandée",
+      "description": "Proposer préparer, remplacer, compléter, réserver, annoncer délai ou refuser vente immédiate.",
+      "status": "to_build"
+    }
+  ],
+  "verdict_levels": [
+    "CHANTIER_COMPLET",
+    "CHANTIER_PRESQUE_COMPLET",
+    "CHANTIER_POSSIBLE_AVEC_COMPLEMENT",
+    "CHANTIER_NON_COUVERT"
+  ],
+  "chantier_reflexes_v1": [
+    "cloison_ba13",
+    "isolation_laine",
+    "terrasse_bois",
+    "vrd_courant",
+    "petite_maconnerie",
+    "couverture_accessoire"
+  ],
   "out_of_scope": [
     "Ne pas chercher à couvrir tous les chantiers possibles en V1.",
     "Ne pas commander automatiquement.",
@@ -65,15 +111,26 @@
     "mobile_compatible": true
   },
   "risks": [
-    {"risk":"Confondre couverture chantier et promesse commerciale ferme.","level":"high","mitigation":"Afficher la mention validation humaine obligatoire avant annonce client."},
-    {"risk":"Quantités chantier type mal calibrées.","level":"high","mitigation":"Faire valider chaque chantier type par un vendeur/magasinier et ajuster après retours terrain."},
-    {"risk":"Produit de remplacement non équivalent techniquement.","level":"medium","mitigation":"Marquer les remplacements comme suggestions à valider, pas comme substitutions automatiques."},
-    {"risk":"Trop de chantiers types en V1.","level":"medium","mitigation":"Limiter aux chantiers réflexes de l'agence."}
+    {
+      "risk": "Confondre couverture chantier et promesse commerciale ferme.",
+      "level": "high",
+      "mitigation": "Afficher la mention validation humaine obligatoire avant annonce client."
+    },
+    {
+      "risk": "Quantités chantier type mal calibrées.",
+      "level": "high",
+      "mitigation": "Faire valider chaque chantier type par un vendeur/magasinier et ajuster après retours terrain."
+    },
+    {
+      "risk": "Produit de remplacement non équivalent techniquement.",
+      "level": "medium",
+      "mitigation": "Marquer les remplacements comme suggestions à valider, pas comme substitutions automatiques."
+    }
   ],
   "human_validation": {
-    "decision": "reference_validated",
+    "decision": "validated",
     "validated_by": "Greg",
-    "validated_at": "2026-05-12",
+    "validated_at": "2026-05-14",
     "comment": "Logique métier validée comme couche de décision au-dessus du stock mini/maxi. Développement applicatif à faire après validation des chantiers types et quantités."
   },
   "next_actions": [
