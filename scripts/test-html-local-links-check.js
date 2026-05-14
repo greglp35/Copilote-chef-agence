@@ -18,6 +18,12 @@ function runCheck(cwd) {
   return spawnSync(process.execPath, [scriptPath], { cwd, encoding: 'utf8' });
 }
 
+function readReport(cwd) {
+  const reportPath = path.join(cwd, 'rapports', 'liens-html-locaux.md');
+  assert(fs.existsSync(reportPath), 'le rapport liens HTML doit être généré');
+  return fs.readFileSync(reportPath, 'utf8');
+}
+
 function assert(condition, message) {
   if (!condition) {
     console.error(`ECHEC TEST : ${message}`);
@@ -36,6 +42,9 @@ fs.writeFileSync(path.join(okWorkspace, 'src', 'index.html'), `<!doctype html>
 fs.writeFileSync(path.join(okWorkspace, 'src', 'module.html'), '<!doctype html><html><body>OK</body></html>');
 const okResult = runCheck(okWorkspace);
 assert(okResult.status === 0, 'les liens locaux existants doivent passer');
+const okReport = readReport(okWorkspace);
+assert(okReport.includes('module.html'), 'le rapport doit citer le lien local OK');
+assert(okReport.includes('Verdict : OK'), 'le rapport OK doit afficher Verdict : OK');
 
 const badWorkspace = makeWorkspace('bad');
 fs.writeFileSync(path.join(badWorkspace, 'src', 'index.html'), `<!doctype html>
@@ -45,7 +54,10 @@ fs.writeFileSync(path.join(badWorkspace, 'src', 'index.html'), `<!doctype html>
 const badResult = runCheck(badWorkspace);
 const badLogs = badResult.stderr + badResult.stdout;
 assert(badResult.status !== 0, 'un lien local cassé doit bloquer');
-assert(badLogs.includes('missing.html'), 'le rapport doit citer le lien cassé');
+assert(badLogs.includes('missing.html'), 'le log doit citer le lien cassé');
+const badReport = readReport(badWorkspace);
+assert(badReport.includes('missing.html'), 'le rapport doit citer le lien cassé');
+assert(badReport.includes('Verdict : ECHEC'), 'le rapport erreur doit afficher Verdict : ECHEC');
 
 const nestedWorkspace = makeWorkspace('nested');
 fs.mkdirSync(path.join(nestedWorkspace, 'src', 'modules'), { recursive: true });
@@ -53,5 +65,8 @@ fs.writeFileSync(path.join(nestedWorkspace, 'src', 'index.html'), '<a href="modu
 fs.writeFileSync(path.join(nestedWorkspace, 'src', 'modules', 'detail.html'), '<a href="../index.html">Accueil</a>');
 const nestedResult = runCheck(nestedWorkspace);
 assert(nestedResult.status === 0, 'les liens relatifs imbriqués doivent passer');
+const nestedReport = readReport(nestedWorkspace);
+assert(nestedReport.includes('modules/detail.html'), 'le rapport doit citer le lien imbriqué');
+assert(nestedReport.includes('../index.html'), 'le rapport doit citer le lien relatif retour');
 
 console.log('Tests contrôle liens locaux HTML OK.');
