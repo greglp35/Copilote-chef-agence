@@ -1,6 +1,6 @@
 # Recette globale — contrôles automatisés
 
-Version : V1.2  
+Version : V1.3  
 Projet : Copilote Chef d’Agence
 
 ---
@@ -9,7 +9,7 @@ Projet : Copilote Chef d’Agence
 
 Ce document recense les contrôles automatisés utilisés dans la recette globale du dépôt.
 
-La recette vise à vérifier la stabilité minimale du projet avant fusion : structure, JSON, sécurité, HTML, liens locaux, CSV critiques, règles métier stock / TFI et fiches projet.
+La recette vise à vérifier la stabilité minimale du projet avant fusion : structure, JSON, sécurité, HTML, liens locaux, CSV critiques, exemples métier JSON, règles métier stock / TFI et fiches projet.
 
 ---
 
@@ -25,6 +25,7 @@ La recette vise à vérifier la stabilité minimale du projet avant fusion : str
 | Fiche projet | `scripts/test-fiche-projet-check.js` | Bloquant |
 | Liens locaux HTML | `scripts/test-html-local-links-check.js` | Bloquant |
 | CSV critiques | `scripts/test-critical-csv-check.js` | Bloquant |
+| Exemples métier JSON | `scripts/test-example-json-business-fields-check.js` | Bloquant |
 
 ---
 
@@ -41,6 +42,7 @@ La recette vise à vérifier la stabilité minimale du projet avant fusion : str
 | Fiches projet obligatoires | `scripts/check-fiche-projet.js` | Bloquant |
 | Liens locaux HTML | `scripts/check-html-local-links.js` | Bloquant |
 | CSV critiques | `scripts/check-critical-csv.js` | Mixte : erreurs bloquantes + avertissements |
+| Exemples métier JSON | `scripts/check-example-json-business-fields.js` | Mixte : erreurs bloquantes + avertissements |
 
 ---
 
@@ -52,6 +54,7 @@ La recette vise à vérifier la stabilité minimale du projet avant fusion : str
 | Liens locaux HTML | `rapports/liens-html-locaux.md` | `rapport-liens-html-locaux` |
 | Fiches projet | `rapports/controle-fiche-projet.md` | `rapport-controle-fiche-projet` |
 | CSV critiques | `rapports/controle-csv-critiques.md` | `rapport-controle-csv-critiques` |
+| Exemples métier JSON | `rapports/controle-exemples-metier-json.md` | `rapport-controle-exemples-metier-json` |
 
 ---
 
@@ -66,7 +69,8 @@ Un contrôle est bloquant lorsqu’il protège :
 - la fiabilité minimale des fichiers ;
 - la validation humaine ;
 - l’absence de boutons ou liens morts dans les applications terrain ;
-- la fiabilité des CSV critiques, templates, mappings, journaux et exports.
+- la fiabilité des CSV critiques, templates, mappings, journaux et exports ;
+- la cohérence des fichiers exemples utilisés par les applications HTML métier.
 
 Un contrôle reste en avertissement lorsqu’il améliore la qualité sans risque immédiat de casse ou de danger opérationnel.
 
@@ -83,6 +87,21 @@ Le contrôle CSV applique une logique progressive :
 - export opérationnel réel sans ligne de données : bloquant ;
 - template, mapping ou journal avec en-tête conforme : accepté avec éventuel avertissement ;
 - source préparatoire sans règle dédiée : avertissement.
+
+---
+
+## Règle exemples métier JSON
+
+Le contrôle des exemples métier JSON applique une logique progressive :
+
+- JSON invalide : bloquant ;
+- fichier reconnu incomplet : bloquant ;
+- tableau métier attendu absent ou vide : bloquant ;
+- champ métier essentiel manquant : bloquant ;
+- valeur numérique incohérente : bloquant ;
+- code zone TFI invalide : bloquant ;
+- fichier `.example.json` non reconnu : avertissement ;
+- tableau vide autorisé lorsqu’il exprime explicitement une règle métier, par exemple une zone sécurité non stockable.
 
 ---
 
