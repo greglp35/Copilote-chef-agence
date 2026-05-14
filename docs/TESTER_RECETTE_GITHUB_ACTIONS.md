@@ -1,6 +1,6 @@
 # Tester la recette GitHub Actions
 
-Version : V1.0  
+Version : V1.1  
 Projet : Copilote Chef d’Agence
 
 ---
@@ -14,7 +14,9 @@ La recette contrôle :
 - la structure minimale du projet ;
 - la validité des fichiers JSON ;
 - l’absence de secrets évidents ;
-- l’absence de dépendances externes dans les HTML.
+- l’absence de dépendances externes dans les HTML ;
+- les règles métier stock / TFI ;
+- les tests de non-régression des détecteurs.
 
 ---
 
@@ -27,37 +29,81 @@ La recette contrôle :
 5. Choisir la branche `main`.
 6. Valider.
 7. Ouvrir le run lancé.
-8. Vérifier si toutes les étapes sont vertes.
+8. Vérifier si l’étape `Lancer la recette complète` est verte.
+9. Télécharger l’artefact `rapport-recette` si disponible.
 
 ---
 
-## 3. Résultat attendu
+## 3. Rapport automatique
+
+Le workflow génère un rapport Markdown :
+
+```text
+rapports/recette/rapport-recette.md
+```
+
+Dans GitHub Actions, ce rapport est publié comme artefact nommé :
+
+```text
+rapport-recette
+```
+
+Il contient :
+
+- la date du contrôle ;
+- la branche ;
+- le commit ;
+- le verdict ;
+- la synthèse des contrôles ;
+- les derniers logs utiles ;
+- l’action recommandée si la recette échoue.
+
+---
+
+## 4. Résultat attendu
 
 Le workflow doit afficher :
 
 ```text
-Contrôler la structure projet      OK
-Contrôler les fichiers JSON        OK
-Contrôler l’absence de secrets     OK
-Contrôler les dépendances HTML     OK
+Lancer la recette complète      OK
+Publier le rapport de recette   OK
+```
+
+Dans le rapport, le verdict attendu est :
+
+```text
+Verdict : OK
 ```
 
 ---
 
-## 4. Tester en local
+## 5. Tester en local
 
 Depuis un terminal, à la racine du dépôt :
 
 ```bash
+node scripts/run-recette-complete.js
+```
+
+Cette commande exécute tous les contrôles et génère le rapport localement.
+
+Contrôles unitaires possibles :
+
+```bash
+node scripts/test-json-check.js
+node scripts/test-no-secrets-check.js
+node scripts/test-html-dependencies-check.js
+node scripts/test-stock-tfi-rules-check.js
 node scripts/check-structure.js
 node scripts/check-json.js
 node scripts/check-no-secrets.js
 node scripts/check-html-dependencies.js
+node scripts/check-stock-tfi-rules.js
 ```
 
 ---
 
-## 5. Si le test échoue
+## 6. Si le test échoue
 
 ### Structure projet
 
@@ -99,9 +145,22 @@ https://...
 
 Action : supprimer l’appel externe ou justifier explicitement l’exception.
 
+### Règle métier stock / TFI
+
+Messages possibles :
+
+```text
+mini supérieur au maxi
+multiple_achat manquant
+code_zone_tfi invalide
+export PRET_TFI sans validation_humaine
+```
+
+Action : corriger la donnée métier, compléter la validation ou bloquer l’export.
+
 ---
 
-## 6. Règle de décision
+## 7. Règle de décision
 
 Un test vert ne prouve pas que l’application est parfaite.
 
