@@ -133,6 +133,12 @@ for (const check of checks) {
   const result = run(check.command);
   results.push({ ...check, ...result });
   console.log(result.status === 'OK' ? 'OK' : 'ECHEC');
+
+  if (result.status !== 'OK') {
+    console.log('\n--- Logs du contrôle en échec ---');
+    console.log(shortLog(`${result.stdout}\n${result.stderr}`));
+    console.log('--- Fin des logs du contrôle en échec ---');
+  }
 }
 
 const hasFailure = results.some(result => result.status !== 'OK');
