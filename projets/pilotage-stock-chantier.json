@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0",
+  "project_id": "pilotage-stock-chantier",
+  "project_name": "Pilotage stock chantier — Hub agence",
+  "status": "validated",
+  "created_at": "2026-05-14",
+  "updated_at": "2026-05-14",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Un article disponible ne garantit pas qu'un chantier complet soit vendable. L'équipe doit pouvoir accéder rapidement aux bons modules pour vérifier le stock, la couverture chantier, la localisation parc et la préparation commande.",
+  "target_users": [
+    "chef_agence",
+    "responsable_exploitation",
+    "vendeur_comptoir",
+    "magasinier",
+    "commercial_agence"
+  ],
+  "operational_goal": "Fournir un hub local simple permettant de passer du pilotage article au pilotage chantier complet, en reliant les modules stock mini/maxi, couverture chantier, plan parc magasinier et préparation commandes client.",
+  "source_files": {
+    "main_html": "src/pilotage-stock-chantier.html",
+    "project_markdown": "projets/pilotage-stock-chantier.md",
+    "project_json": "projets/pilotage-stock-chantier.json"
+  },
+  "data_sources": [
+    {
+      "name": "modules_html_locaux",
+      "source_type": "local_navigation",
+      "sensitive": false,
+      "comment": "Le hub contient uniquement des liens locaux vers des modules HTML du dépôt."
+    }
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true,
+    "no_direct_erp_write": true
+  },
+  "expected_features": [
+    {
+      "priority": "high",
+      "name": "Navigation stock mini/maxi",
+      "description": "Permettre d'ouvrir rapidement le module stock mini/maxi.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Navigation couverture chantier",
+      "description": "Permettre d'ouvrir rapidement le module de vérification chantier complet.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Navigation plan parc",
+      "description": "Permettre d'accéder au plan parc magasinier pour localiser les composants.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Navigation préparation commande",
+      "description": "Permettre d'accéder au module de préparation commandes client.",
+      "status": "done"
+    }
+  ],
+  "out_of_scope": [
+    "Ne pas calculer directement les stocks dans le hub.",
+    "Ne pas modifier TFI ou AS400.",
+    "Ne pas automatiser les commandes.",
+    "Ne pas remplacer les modules métier spécialisés."
+  ],
+  "success_criteria": {
+    "understandable_under_10_seconds": true,
+    "mobile_compatible": true,
+    "zero_external_dependency": true,
+    "local_navigation_only": true,
+    "human_validation_required": true
+  },
+  "risks": [
+    {
+      "risk": "Croire que le hub prend une décision métier à la place des modules spécialisés.",
+      "level": "medium",
+      "mitigation": "Présenter le hub comme une navigation locale et rappeler la validation humaine."
+    },
+    {
+      "risk": "Lien local cassé si un module est renommé.",
+      "level": "medium",
+      "mitigation": "Contrôler les liens locaux lors des recettes futures."
+    }
+  ],
+  "human_validation": {
+    "decision": "validated",
+    "validated_by": "Greg",
+    "validated_at": "2026-05-14",
+    "comment": "Module validé comme hub de navigation local entre les outils stock, chantier, parc et préparation."
+  },
+  "next_actions": [
+    "Ajouter un contrôle automatisé des liens locaux HTML.",
+    "Vérifier les parcours sur mobile.",
+    "Relier visuellement le hub depuis les modules stock et préparation si l'usage terrain est confirmé."
+  ]
+}
