@@ -57,3 +57,11 @@ jobs:
           name: rapport-controle-csv-critiques
           path: rapports/controle-csv-critiques.md
           if-no-files-found: warn
+
+      - name: Publier le rapport des exemples métier JSON
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-controle-exemples-metier-json
+          path: rapports/controle-exemples-metier-json.md
+          if-no-files-found: warn
