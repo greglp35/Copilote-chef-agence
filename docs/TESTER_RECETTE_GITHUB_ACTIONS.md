@@ -1,6 +1,6 @@
 # Tester la recette GitHub Actions
 
-Version : V1.3  
+Version : V1.4  
 Projet : Copilote Chef d’Agence
 
 ---
@@ -20,6 +20,7 @@ La recette contrôle :
 - les fiches projet obligatoires ;
 - les liens locaux HTML ;
 - les CSV critiques ;
+- les exemples métier JSON ;
 - les tests de non-régression des détecteurs.
 
 ---
@@ -135,6 +136,28 @@ Contenu :
 - erreurs bloquantes ;
 - avertissements.
 
+### Rapport des exemples métier JSON
+
+Fichier généré :
+
+```text
+rapports/controle-exemples-metier-json.md
+```
+
+Artefact GitHub Actions :
+
+```text
+rapport-controle-exemples-metier-json
+```
+
+Contenu :
+
+- fichiers `.example.json` contrôlés ;
+- type métier reconnu ;
+- nombre de lignes métier ;
+- erreurs bloquantes ;
+- avertissements.
+
 ---
 
 ## 4. Résultat attendu
@@ -147,6 +170,7 @@ Publier le rapport de recette                      OK
 Publier le rapport des liens HTML locaux           OK
 Publier le rapport des fiches projet               OK
 Publier le rapport des CSV critiques               OK
+Publier le rapport des exemples métier JSON        OK
 ```
 
 Dans le rapport global, le verdict attendu est :
@@ -178,6 +202,7 @@ node scripts/test-html-quality-check.js
 node scripts/test-fiche-projet-check.js
 node scripts/test-html-local-links-check.js
 node scripts/test-critical-csv-check.js
+node scripts/test-example-json-business-fields-check.js
 node scripts/check-structure.js
 node scripts/check-json.js
 node scripts/check-no-secrets.js
@@ -187,6 +212,7 @@ node scripts/check-html-quality.js
 node scripts/check-fiche-projet.js
 node scripts/check-html-local-links.js
 node scripts/check-critical-csv.js
+node scripts/check-example-json-business-fields.js
 ```
 
 ---
@@ -280,6 +306,20 @@ aucune ligne de données après l’en-tête
 ```
 
 Action : vérifier si le CSV est un export réel, un template, un mapping, un journal ou une source préparatoire. Corriger l’en-tête, ajouter les colonnes obligatoires ou reclasser la règle si le fichier n’est pas un export opérationnel réel.
+
+### Exemples métier JSON
+
+Messages possibles :
+
+```text
+champ obligatoire manquant ou vide
+champ numérique invalide
+code_zone_tfi invalide
+mini supérieur au maxi
+stock réservé supérieur au stock physique
+```
+
+Action : vérifier si l’exemple est réellement incohérent ou si la règle doit accepter un cas métier légitime, par exemple une zone sécurité non stockable avec tableau vide.
 
 ### Règle métier stock / TFI
 
