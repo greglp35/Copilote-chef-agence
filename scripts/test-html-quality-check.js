@@ -48,6 +48,26 @@ fs.writeFileSync(path.join(validWorkspace, 'src', 'ok.html'), `<!doctype html>
 const validResult = runCheck(validWorkspace);
 assert(validResult.status === 0, 'un HTML complet doit passer');
 
+const advisoryWorkspace = makeWorkspace('html-quality-advisory');
+fs.writeFileSync(path.join(advisoryWorkspace, 'src', 'advisory.html'), `<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Application stock métier</title>
+</head>
+<body>
+  <main>
+    <h1>Application stock métier</h1>
+    <p>Validation humaine obligatoire avant diffusion.</p>
+  </main>
+</body>
+</html>`);
+const advisoryResult = runCheck(advisoryWorkspace);
+const advisoryLogs = advisoryResult.stderr + advisoryResult.stdout;
+assert(advisoryResult.status === 0, 'une meta description absente doit avertir mais ne pas bloquer');
+assert(advisoryLogs.includes('meta description'), 'le rapport doit citer la meta description en avertissement');
+
 const invalidWorkspace = makeWorkspace('html-quality-invalid');
 fs.writeFileSync(path.join(invalidWorkspace, 'src', 'bad.html'), `<!doctype html>
 <html>
@@ -62,8 +82,7 @@ fs.writeFileSync(path.join(invalidWorkspace, 'src', 'bad.html'), `<!doctype html
 </html>`);
 const invalidResult = runCheck(invalidWorkspace);
 const invalidLogs = invalidResult.stderr + invalidResult.stdout;
-assert(invalidResult.status !== 0, 'un HTML sans meta description, avec deux H1 et image sans alt doit bloquer');
-assert(invalidLogs.includes('meta description'), 'le rapport doit citer la meta description');
+assert(invalidResult.status !== 0, 'un HTML avec deux H1 et image sans alt doit bloquer');
 assert(invalidLogs.includes('un seul <h1>'), 'le rapport doit citer le problème H1');
 assert(invalidLogs.includes('sans attribut alt'), 'le rapport doit citer le problème alt');
 
