@@ -1,6 +1,6 @@
 # Tester la recette GitHub Actions
 
-Version : V1.2  
+Version : V1.3  
 Projet : Copilote Chef d’Agence
 
 ---
@@ -19,6 +19,7 @@ La recette contrôle :
 - la qualité HTML minimale ;
 - les fiches projet obligatoires ;
 - les liens locaux HTML ;
+- les CSV critiques ;
 - les tests de non-régression des détecteurs.
 
 ---
@@ -111,6 +112,29 @@ Contenu :
 - validation humaine ;
 - risques bloquants.
 
+### Rapport des CSV critiques
+
+Fichier généré :
+
+```text
+rapports/controle-csv-critiques.md
+```
+
+Artefact GitHub Actions :
+
+```text
+rapport-controle-csv-critiques
+```
+
+Contenu :
+
+- fichiers CSV contrôlés ;
+- colonnes détectées ;
+- nombre de lignes de données ;
+- criticité du CSV ;
+- erreurs bloquantes ;
+- avertissements.
+
 ---
 
 ## 4. Résultat attendu
@@ -122,6 +146,7 @@ Lancer la recette complète                         OK
 Publier le rapport de recette                      OK
 Publier le rapport des liens HTML locaux           OK
 Publier le rapport des fiches projet               OK
+Publier le rapport des CSV critiques               OK
 ```
 
 Dans le rapport global, le verdict attendu est :
@@ -152,6 +177,7 @@ node scripts/test-stock-tfi-rules-check.js
 node scripts/test-html-quality-check.js
 node scripts/test-fiche-projet-check.js
 node scripts/test-html-local-links-check.js
+node scripts/test-critical-csv-check.js
 node scripts/check-structure.js
 node scripts/check-json.js
 node scripts/check-no-secrets.js
@@ -160,6 +186,7 @@ node scripts/check-stock-tfi-rules.js
 node scripts/check-html-quality.js
 node scripts/check-fiche-projet.js
 node scripts/check-html-local-links.js
+node scripts/check-critical-csv.js
 ```
 
 ---
@@ -240,6 +267,19 @@ lien local introuvable
 ```
 
 Action : corriger le chemin du lien ou créer le fichier cible attendu.
+
+### CSV critiques
+
+Messages possibles :
+
+```text
+fichier CSV vide
+colonnes dupliquées
+colonnes obligatoires manquantes
+aucune ligne de données après l’en-tête
+```
+
+Action : vérifier si le CSV est un export réel, un template, un mapping, un journal ou une source préparatoire. Corriger l’en-tête, ajouter les colonnes obligatoires ou reclasser la règle si le fichier n’est pas un export opérationnel réel.
 
 ### Règle métier stock / TFI
 
