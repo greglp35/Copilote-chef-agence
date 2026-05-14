@@ -45,6 +45,11 @@ const checks = [
     type: 'test'
   },
   {
+    name: 'Tester le contrôle CSV critiques',
+    command: 'node scripts/test-critical-csv-check.js',
+    type: 'test'
+  },
+  {
     name: 'Contrôler la structure projet',
     command: 'node scripts/check-structure.js',
     type: 'controle'
@@ -82,6 +87,11 @@ const checks = [
   {
     name: 'Contrôler les liens locaux HTML',
     command: 'node scripts/check-html-local-links.js',
+    type: 'controle'
+  },
+  {
+    name: 'Contrôler les CSV critiques',
+    command: 'node scripts/check-critical-csv.js',
     type: 'controle'
   }
 ];
@@ -123,6 +133,12 @@ for (const check of checks) {
   const result = run(check.command);
   results.push({ ...check, ...result });
   console.log(result.status === 'OK' ? 'OK' : 'ECHEC');
+
+  if (result.status !== 'OK') {
+    console.log('\n--- Logs du contrôle en échec ---');
+    console.log(shortLog(`${result.stdout}\n${result.stderr}`));
+    console.log('--- Fin des logs du contrôle en échec ---');
+  }
 }
 
 const hasFailure = results.some(result => result.status !== 'OK');
