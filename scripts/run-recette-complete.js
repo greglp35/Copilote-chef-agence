@@ -50,6 +50,11 @@ const checks = [
     type: 'test'
   },
   {
+    name: 'Tester le contrôle exemples métier JSON',
+    command: 'node scripts/test-example-json-business-fields-check.js',
+    type: 'test'
+  },
+  {
     name: 'Contrôler la structure projet',
     command: 'node scripts/check-structure.js',
     type: 'controle'
@@ -92,6 +97,11 @@ const checks = [
   {
     name: 'Contrôler les CSV critiques',
     command: 'node scripts/check-critical-csv.js',
+    type: 'controle'
+  },
+  {
+    name: 'Contrôler les exemples métier JSON',
+    command: 'node scripts/check-example-json-business-fields.js',
     type: 'controle'
   }
 ];
