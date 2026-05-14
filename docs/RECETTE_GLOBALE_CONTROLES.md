@@ -1,6 +1,6 @@
 # Recette globale — contrôles automatisés
 
-Version : V1.0  
+Version : V1.1  
 Projet : Copilote Chef d’Agence
 
 ---
@@ -9,7 +9,7 @@ Projet : Copilote Chef d’Agence
 
 Ce document recense les contrôles automatisés utilisés dans la recette globale du dépôt.
 
-La recette vise à vérifier la stabilité minimale du projet avant fusion : structure, JSON, sécurité, HTML, règles métier stock / TFI et fiches projet.
+La recette vise à vérifier la stabilité minimale du projet avant fusion : structure, JSON, sécurité, HTML, liens locaux, règles métier stock / TFI et fiches projet.
 
 ---
 
@@ -23,6 +23,7 @@ La recette vise à vérifier la stabilité minimale du projet avant fusion : str
 | Règles métier stock / TFI | `scripts/test-stock-tfi-rules-check.js` | Bloquant |
 | Qualité HTML | `scripts/test-html-quality-check.js` | Bloquant |
 | Fiche projet | `scripts/test-fiche-projet-check.js` | Bloquant |
+| Liens locaux HTML | `scripts/test-html-local-links-check.js` | Bloquant |
 
 ---
 
@@ -37,6 +38,7 @@ La recette vise à vérifier la stabilité minimale du projet avant fusion : str
 | Règles métier stock / TFI | `scripts/check-stock-tfi-rules.js` | Bloquant |
 | Qualité HTML minimale | `scripts/check-html-quality.js` | Mixte : erreurs bloquantes + avertissements |
 | Fiches projet obligatoires | `scripts/check-fiche-projet.js` | Bloquant |
+| Liens locaux HTML | `scripts/check-html-local-links.js` | Bloquant |
 
 ---
 
@@ -49,7 +51,8 @@ Un contrôle est bloquant lorsqu’il protège :
 - la traçabilité ;
 - l’absence de secrets ;
 - la fiabilité minimale des fichiers ;
-- la validation humaine.
+- la validation humaine ;
+- l’absence de boutons ou liens morts dans les applications terrain.
 
 Un contrôle reste en avertissement lorsqu’il améliore la qualité sans risque immédiat de casse ou de danger opérationnel.
 
