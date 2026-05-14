@@ -30,6 +30,11 @@ const checks = [
     type: 'test'
   },
   {
+    name: 'Tester le contrôle qualité HTML',
+    command: 'node scripts/test-html-quality-check.js',
+    type: 'test'
+  },
+  {
     name: 'Contrôler la structure projet',
     command: 'node scripts/check-structure.js',
     type: 'controle'
@@ -52,6 +57,11 @@ const checks = [
   {
     name: 'Contrôler les règles métier stock / TFI',
     command: 'node scripts/check-stock-tfi-rules.js',
+    type: 'controle'
+  },
+  {
+    name: 'Contrôler la qualité HTML minimale',
+    command: 'node scripts/check-html-quality.js',
     type: 'controle'
   }
 ];
