@@ -11,7 +11,7 @@ on:
 
 jobs:
   recette:
-    name: Contrôles structure, JSON, sécurité et HTML
+    name: Contrôles structure, JSON, sécurité, HTML et métier
     runs-on: ubuntu-latest
 
     steps:
@@ -32,6 +32,9 @@ jobs:
       - name: Tester le détecteur de dépendances HTML
         run: node scripts/test-html-dependencies-check.js
 
+      - name: Tester le contrôle métier stock / TFI
+        run: node scripts/test-stock-tfi-rules-check.js
+
       - name: Contrôler la structure projet
         run: node scripts/check-structure.js
 
@@ -43,3 +46,6 @@ jobs:
 
       - name: Contrôler les dépendances externes HTML
         run: node scripts/check-html-dependencies.js
+
+      - name: Contrôler les règles métier stock / TFI
+        run: node scripts/check-stock-tfi-rules.js
