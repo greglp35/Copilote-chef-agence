@@ -1,6 +1,6 @@
 # Recette globale — contrôles automatisés
 
-Version : V1.1  
+Version : V1.2  
 Projet : Copilote Chef d’Agence
 
 ---
@@ -9,7 +9,7 @@ Projet : Copilote Chef d’Agence
 
 Ce document recense les contrôles automatisés utilisés dans la recette globale du dépôt.
 
-La recette vise à vérifier la stabilité minimale du projet avant fusion : structure, JSON, sécurité, HTML, liens locaux, règles métier stock / TFI et fiches projet.
+La recette vise à vérifier la stabilité minimale du projet avant fusion : structure, JSON, sécurité, HTML, liens locaux, CSV critiques, règles métier stock / TFI et fiches projet.
 
 ---
 
@@ -24,6 +24,7 @@ La recette vise à vérifier la stabilité minimale du projet avant fusion : str
 | Qualité HTML | `scripts/test-html-quality-check.js` | Bloquant |
 | Fiche projet | `scripts/test-fiche-projet-check.js` | Bloquant |
 | Liens locaux HTML | `scripts/test-html-local-links-check.js` | Bloquant |
+| CSV critiques | `scripts/test-critical-csv-check.js` | Bloquant |
 
 ---
 
@@ -39,6 +40,18 @@ La recette vise à vérifier la stabilité minimale du projet avant fusion : str
 | Qualité HTML minimale | `scripts/check-html-quality.js` | Mixte : erreurs bloquantes + avertissements |
 | Fiches projet obligatoires | `scripts/check-fiche-projet.js` | Bloquant |
 | Liens locaux HTML | `scripts/check-html-local-links.js` | Bloquant |
+| CSV critiques | `scripts/check-critical-csv.js` | Mixte : erreurs bloquantes + avertissements |
+
+---
+
+## Rapports générés
+
+| Rapport | Fichier | Artefact GitHub Actions |
+|---|---|---|
+| Rapport global de recette | `rapports/recette/rapport-recette.md` | `rapport-recette` |
+| Liens locaux HTML | `rapports/liens-html-locaux.md` | `rapport-liens-html-locaux` |
+| Fiches projet | `rapports/controle-fiche-projet.md` | `rapport-controle-fiche-projet` |
+| CSV critiques | `rapports/controle-csv-critiques.md` | `rapport-controle-csv-critiques` |
 
 ---
 
@@ -52,9 +65,24 @@ Un contrôle est bloquant lorsqu’il protège :
 - l’absence de secrets ;
 - la fiabilité minimale des fichiers ;
 - la validation humaine ;
-- l’absence de boutons ou liens morts dans les applications terrain.
+- l’absence de boutons ou liens morts dans les applications terrain ;
+- la fiabilité des CSV critiques, templates, mappings, journaux et exports.
 
 Un contrôle reste en avertissement lorsqu’il améliore la qualité sans risque immédiat de casse ou de danger opérationnel.
+
+---
+
+## Règle CSV critique
+
+Le contrôle CSV applique une logique progressive :
+
+- CSV vide : bloquant ;
+- en-tête inexploitable : bloquant ;
+- colonnes dupliquées : bloquant ;
+- colonnes critiques manquantes : bloquant ;
+- export opérationnel réel sans ligne de données : bloquant ;
+- template, mapping ou journal avec en-tête conforme : accepté avec éventuel avertissement ;
+- source préparatoire sans règle dédiée : avertissement.
 
 ---
 
