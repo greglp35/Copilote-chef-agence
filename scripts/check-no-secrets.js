@@ -8,16 +8,20 @@ const scanDirs = ['docs', 'src', 'templates', 'data', 'projets'];
 const ignoredDirs = new Set(['node_modules', '.git']);
 const allowedExtensions = new Set(['.html', '.js', '.css', '.json', '.md', '.csv', '.txt', '.yml', '.yaml']);
 
-const patterns = [
+const assignmentPatterns = [
   { label: 'Mot de passe potentiel', regex: /\b(password|passwd|pwd)\s*[:=]\s*['\"][^'\"]{4,}/i },
   { label: 'Token potentiel', regex: /\b(token|access_token|refresh_token)\s*[:=]\s*['\"][^'\"]{8,}/i },
   { label: 'Clé API potentielle', regex: /\b(api[_-]?key|apikey)\s*[:=]\s*['\"][^'\"]{8,}/i },
   { label: 'Secret potentiel', regex: /\b(secret|client_secret)\s*[:=]\s*['\"][^'\"]{8,}/i },
-  { label: 'Chaîne ODBC potentielle', regex: /ODBC|Driver=|DSN=/i },
-  { label: 'Risque AS400 / IBM i', regex: /AS400|IBM i|IBMi|iSeries/i },
+  { label: 'Chaîne de connexion potentielle', regex: /\b(connectionString|conn_string)\s*[:=]\s*['\"][^'\"]{8,}/i }
+];
+
+const technicalRiskPatterns = [
+  { label: 'Chaîne ODBC potentielle', regex: /Driver=|DSN=|Uid=|Pwd=/i },
   { label: 'Requête SQL potentielle', regex: /\b(SELECT|INSERT|UPDATE|DELETE)\b[\s\S]{0,80}\b(FROM|INTO|SET)\b/i }
 ];
 
+const executableExtensions = new Set(['.html', '.js', '.json', '.csv', '.yml', '.yaml']);
 let findings = [];
 let checked = 0;
 
@@ -40,6 +44,20 @@ function walk(relativeDir) {
   return files;
 }
 
+function shouldScanTechnicalRisk(file) {
+  const extension = path.extname(file);
+  return executableExtensions.has(extension) && !file.startsWith('docs/');
+}
+
+function addFinding(file, lineNumber, label, line) {
+  findings.push({
+    file,
+    line: lineNumber,
+    label,
+    sample: line.trim().slice(0, 180)
+  });
+}
+
 for (const dir of scanDirs) {
   for (const file of walk(dir)) {
     checked++;
@@ -47,9 +65,17 @@ for (const dir of scanDirs) {
     const lines = content.split(/\r?\n/);
 
     lines.forEach((line, index) => {
-      for (const pattern of patterns) {
+      for (const pattern of assignmentPatterns) {
         if (pattern.regex.test(line)) {
-          findings.push({ file, line: index + 1, label: pattern.label, sample: line.trim().slice(0, 180) });
+          addFinding(file, index + 1, pattern.label, line);
+        }
+      }
+
+      if (shouldScanTechnicalRisk(file)) {
+        for (const pattern of technicalRiskPatterns) {
+          if (pattern.regex.test(line)) {
+            addFinding(file, index + 1, pattern.label, line);
+          }
         }
       }
     });
