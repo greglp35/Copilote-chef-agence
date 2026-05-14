@@ -8,12 +8,17 @@ const scanDirs = ['docs', 'src', 'templates', 'data', 'projets'];
 const ignoredDirs = new Set(['node_modules', '.git']);
 const allowedExtensions = new Set(['.html', '.js', '.css', '.json', '.md', '.csv', '.txt', '.yml', '.yaml']);
 
+const secretKey = '(password|passwd|pwd|token|access_token|refresh_token|api[_-]?key|apikey|secret|client_secret|connectionString|conn_string)';
+
 const assignmentPatterns = [
-  { label: 'Mot de passe potentiel', regex: /\b(password|passwd|pwd)\s*[:=]\s*['\"][^'\"]{4,}/i },
-  { label: 'Token potentiel', regex: /\b(token|access_token|refresh_token)\s*[:=]\s*['\"][^'\"]{8,}/i },
-  { label: 'Clé API potentielle', regex: /\b(api[_-]?key|apikey)\s*[:=]\s*['\"][^'\"]{8,}/i },
-  { label: 'Secret potentiel', regex: /\b(secret|client_secret)\s*[:=]\s*['\"][^'\"]{8,}/i },
-  { label: 'Chaîne de connexion potentielle', regex: /\b(connectionString|conn_string)\s*[:=]\s*['\"][^'\"]{8,}/i }
+  {
+    label: 'Secret potentiel',
+    regex: new RegExp(`(?:["']?\\b${secretKey}\\b["']?)\\s*[:=]\\s*["'][^"']{4,}["']`, 'i')
+  },
+  {
+    label: 'Secret potentiel sans guillemets',
+    regex: new RegExp(`(?:\\b${secretKey}\\b)\\s*[:=]\\s*[^\\s,;]{8,}`, 'i')
+  }
 ];
 
 const technicalRiskPatterns = [
