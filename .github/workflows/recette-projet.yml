@@ -1,0 +1,35 @@
+name: Recette projet
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  recette:
+    name: Contrôles structure, JSON, sécurité et HTML
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Contrôler la structure projet
+        run: node scripts/check-structure.js
+
+      - name: Contrôler les fichiers JSON
+        run: node scripts/check-json.js
+
+      - name: Contrôler l’absence de secrets évidents
+        run: node scripts/check-no-secrets.js
+
+      - name: Contrôler les dépendances externes HTML
+        run: node scripts/check-html-dependencies.js
