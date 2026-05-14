@@ -23,6 +23,15 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Tester le détecteur JSON
+        run: node scripts/test-json-check.js
+
+      - name: Tester le détecteur anti-secrets
+        run: node scripts/test-no-secrets-check.js
+
+      - name: Tester le détecteur de dépendances HTML
+        run: node scripts/test-html-dependencies-check.js
+
       - name: Contrôler la structure projet
         run: node scripts/check-structure.js
 
