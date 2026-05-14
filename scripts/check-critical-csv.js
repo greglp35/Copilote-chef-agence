@@ -29,7 +29,8 @@ const criticalRules = [
       'risque_en_cas_erreur',
       'autorise_reinjection',
       'commentaire'
-    ]
+    ],
+    requireDataRows: true
   },
   {
     match: /export.*tfi.*\.csv$/i,
@@ -42,7 +43,8 @@ const criticalRules = [
       'date_validation',
       'justification_modification',
       'version_mapping_tfi'
-    ]
+    ],
+    requireDataRows: true
   }
 ];
 
@@ -122,6 +124,11 @@ function matchingRule(relativePath) {
   return criticalRules.find(rule => rule.match.test(relativePath));
 }
 
+function shouldRequireDataRows(relativePath, rule) {
+  if (rule) return rule.requireDataRows === true;
+  return relativePath.startsWith('exports/');
+}
+
 function checkCsv(filePath) {
   checkedFiles++;
   const relativePath = rel(filePath);
@@ -161,17 +168,6 @@ function checkCsv(filePath) {
     addError(`${relativePath} — en-tête CSV vide ou colonne sans nom`);
   }
 
-  if (row.dataRows === 0) {
-    row.status = 'ERREUR';
-    addError(`${relativePath} — aucune ligne de données après l’en-tête`);
-  }
-
-  const duplicates = headers.filter((header, index) => headers.indexOf(header) !== index);
-  if (duplicates.length) {
-    row.status = 'ERREUR';
-    addError(`${relativePath} — colonnes dupliquées : ${[...new Set(duplicates)].join(', ')}`);
-  }
-
   const rule = matchingRule(relativePath);
   if (rule) {
     row.critical = rule.label;
@@ -180,6 +176,22 @@ function checkCsv(filePath) {
       row.status = 'ERREUR';
       addError(`${relativePath} — colonnes obligatoires manquantes pour ${rule.label} : ${missing.join(', ')}`);
     }
+  }
+
+  if (row.dataRows === 0) {
+    if (shouldRequireDataRows(relativePath, rule)) {
+      row.status = 'ERREUR';
+      addError(`${relativePath} — aucune ligne de données après l’en-tête`);
+    } else {
+      if (row.status === 'OK') row.status = 'AVERTISSEMENT';
+      addWarning(`${relativePath} — aucune ligne de données après l’en-tête`);
+    }
+  }
+
+  const duplicates = headers.filter((header, index) => headers.indexOf(header) !== index);
+  if (duplicates.length) {
+    row.status = 'ERREUR';
+    addError(`${relativePath} — colonnes dupliquées : ${[...new Set(duplicates)].join(', ')}`);
   }
 
   if (!rule && /tfi|export|mapping|stock|mini|maxi/i.test(relativePath)) {
@@ -231,7 +243,7 @@ function writeReport() {
   lines.push('');
   lines.push('## Règle de décision');
   lines.push('');
-  lines.push('Un CSV critique est bloquant s’il est vide, sans ligne de données, contient des colonnes dupliquées ou ne respecte pas les colonnes obligatoires attendues.');
+  lines.push('Un CSV critique est bloquant s’il est vide, s’il contient des colonnes dupliquées, s’il ne respecte pas les colonnes obligatoires attendues ou, pour un export réel, s’il ne contient aucune ligne de données.');
   lines.push('');
 
   fs.writeFileSync(reportPath, lines.join('\n'), 'utf8');
