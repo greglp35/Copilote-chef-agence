@@ -52,6 +52,18 @@ assert(emptyLogs.includes('fichier CSV vide'), 'le log doit citer le CSV vide');
 const emptyReport = readReport(emptyWorkspace);
 assert(emptyReport.includes('Verdict : ECHEC'), 'le rapport vide doit afficher Verdict : ECHEC');
 
+const headerOnlyWorkspace = makeWorkspace('header-only');
+fs.writeFileSync(path.join(headerOnlyWorkspace, 'templates', 'tfi', 'template_articles.csv'), 'code_article,designation,famille\n');
+const headerOnlyResult = runCheck(headerOnlyWorkspace);
+const headerOnlyLogs = headerOnlyResult.stderr + headerOnlyResult.stdout;
+assert(headerOnlyResult.status === 0, 'un template avec en-tête seul doit avertir mais ne pas bloquer');
+assert(headerOnlyLogs.includes('aucune ligne de données'), 'le log doit citer l’avertissement sur l’absence de lignes');
+
+const exportHeaderOnlyWorkspace = makeWorkspace('export-header-only');
+fs.writeFileSync(path.join(exportHeaderOnlyWorkspace, 'exports', 'export_tfi_test.csv'), 'statut_export,reference_interne_tfi,validation_humaine,validateur,date_validation,justification_modification,version_mapping_tfi\n');
+const exportHeaderOnlyResult = runCheck(exportHeaderOnlyWorkspace);
+assert(exportHeaderOnlyResult.status !== 0, 'un export réel sans ligne de données doit bloquer');
+
 const missingWorkspace = makeWorkspace('missing-column');
 fs.writeFileSync(path.join(missingWorkspace, 'templates', 'tfi', 'mapping_tfi_stock_mini_maxi.csv'), [
   'champ_application,champ_tfi,libelle_tfi,type_donnee,obligatoire,format_attendu',
