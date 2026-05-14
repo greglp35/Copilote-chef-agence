@@ -136,6 +136,7 @@ function walk(dir) {
 }
 
 function isPresent(value) {
+  if (Array.isArray(value)) return true;
   return value !== undefined && value !== null && String(value).trim() !== '';
 }
 
@@ -252,7 +253,7 @@ function writeReport() {
   lines.push('');
   lines.push('## Règle de décision');
   lines.push('');
-  lines.push('Un exemple métier JSON est bloquant si sa structure reconnue est incomplète, vide ou incohérente. Les fichiers `.example.json` non reconnus restent en avertissement tant qu’aucune règle dédiée n’existe.');
+  lines.push('Un exemple métier JSON est bloquant si sa structure reconnue est incomplète, vide ou incohérente. Les tableaux vides peuvent être valides quand ils expriment explicitement une règle métier, par exemple une zone sécurité non stockable. Les fichiers `.example.json` non reconnus restent en avertissement tant qu’aucune règle dédiée n’existe.');
   lines.push('');
   fs.writeFileSync(reportPath, lines.join('\n'), 'utf8');
 }
