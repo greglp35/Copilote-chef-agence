@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cockpit Qualité Projet</title>
+  <meta name="description" content="Cockpit local autonome pour piloter la qualité du dépôt, suivre les contrôles actifs, artefacts et règles de fusion.">
+  <style>
+    :root{
+      --tf-yellow:#f5c400;
+      --tf-yellow-dark:#d4a800;
+      --tf-black:#1a1a1a;
+      --bg:#f4f5f7;
+      --card:#ffffff;
+      --text:#1f2933;
+      --muted:#667085;
+      --border:#d9dde3;
+      --ok:#1f7a3f;
+      --ok-bg:#e6f4ea;
+      --warn:#9a5b00;
+      --warn-bg:#fff3d6;
+      --bad:#9f1d1d;
+      --bad-bg:#fde2e2;
+      --info:#245b91;
+      --info-bg:#e7f0fb;
+      --shadow:0 12px 28px rgba(0,0,0,.08);
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;line-height:1.45}
+    header{background:var(--tf-black);color:#fff;border-bottom:8px solid var(--tf-yellow)}
+    .wrap{max-width:1280px;margin:auto;padding:18px}
+    .hero{display:grid;grid-template-columns:1.4fr .8fr;gap:18px;align-items:stretch}
+    h1{font-size:clamp(28px,4vw,46px);line-height:1.05;margin:10px 0 12px}
+    h2{font-size:24px;margin:0 0 12px}
+    h3{font-size:18px;margin:0 0 8px}
+    p{margin:0 0 10px}.muted{color:var(--muted)}
+    .tag{display:inline-flex;align-items:center;gap:8px;background:var(--tf-yellow);color:var(--tf-black);font-weight:900;padding:7px 12px;border-radius:999px;font-size:13px}
+    .hero-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:var(--radius);padding:16px}
+    main{max-width:1280px;margin:auto;padding:18px;display:grid;gap:18px}
+    section{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .kpi{background:#fffdf0;border:1px solid #f2e0a2;border-left:7px solid var(--tf-yellow);border-radius:16px;padding:14px}.kpi strong{display:block;font-size:30px;margin-top:4px}.kpi span{font-size:13px;color:#4b5563;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+    .card{border:1px solid var(--border);border-radius:16px;padding:14px;background:#fff}.card.soft{background:#fafafa}.card.yellow{background:#fff8d9;border-color:#ead375}.card.dark{background:#242424;color:#fff;border-color:#242424}.card.dark .muted{color:#d6d6d6}
+    .controls{display:grid;grid-template-columns:1.2fr repeat(3,.7fr);gap:10px;margin-top:12px}label{display:block;font-weight:800;font-size:13px;margin-bottom:5px}input,select,textarea,button{font:inherit;border-radius:12px}input,select,textarea{width:100%;border:1px solid var(--border);padding:10px;background:#fff}textarea{min-height:190px;resize:vertical;font-family:Consolas,Monaco,monospace;font-size:13px}
+    button{border:0;background:var(--tf-yellow);color:var(--tf-black);font-weight:900;padding:11px 14px;cursor:pointer;min-height:42px}button:hover{background:var(--tf-yellow-dark)}button.secondary{background:#e9ecef}button.dark{background:var(--tf-black);color:#fff}button.danger{background:var(--bad);color:#fff}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    table{width:100%;border-collapse:collapse}.table-wrap{overflow:auto;border:1px solid var(--border);border-radius:14px}th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}th{background:var(--tf-black);color:#fff;white-space:nowrap}tr:last-child td{border-bottom:0}
+    .badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-weight:900;font-size:12px;white-space:nowrap}.ok{background:var(--ok-bg);color:var(--ok)}.warn{background:var(--warn-bg);color:var(--warn)}.bad{background:var(--bad-bg);color:var(--bad)}.info{background:var(--info-bg);color:var(--info)}
+    .nav{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.nav a{color:#fff;text-decoration:none;border:1px solid rgba(255,255,255,.25);padding:8px 10px;border-radius:999px}.nav a:hover{background:rgba(255,255,255,.12)}
+    .timeline{display:grid;gap:10px}.step{display:grid;grid-template-columns:36px 1fr;gap:10px;align-items:start}.num{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--tf-yellow);font-weight:900;color:var(--tf-black)}
+    .notice{border-left:6px solid var(--tf-yellow);background:#fff9d8;padding:12px;border-radius:14px;font-weight:700}.error-box{border-left:6px solid var(--bad);background:var(--bad-bg);padding:12px;border-radius:14px}.success-box{border-left:6px solid var(--ok);background:var(--ok-bg);padding:12px;border-radius:14px}
+    code{background:#eef0f3;padding:2px 6px;border-radius:6px}.small{font-size:12px}.mono{font-family:Consolas,Monaco,monospace}.hidden{display:none!important}
+    @media(max-width:950px){.hero,.grid,.grid-2,.grid-3,.controls{grid-template-columns:1fr}.wrap,main{padding:12px}.actions button{width:100%}table{min-width:860px}}
+    @media print{header,.controls,.actions,textarea,button{display:none!important}body{background:#fff}section{box-shadow:none;break-inside:avoid}.wrap,main{max-width:none}.card{break-inside:avoid}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap hero">
+      <div>
+        <span class="tag">Qualité dépôt — HTML autonome</span>
+        <h1>Cockpit Qualité Projet</h1>
+        <p>Vue locale pour piloter les contrôles, artefacts, règles de fusion et actions prioritaires du dépôt <strong>Copilote Chef d’Agence</strong>.</p>
+        <div class="nav" aria-label="Navigation rapide">
+          <a href="#synthese">Synthèse</a>
+          <a href="#controles">Contrôles</a>
+          <a href="#artefacts">Artefacts</a>
+          <a href="#rapport">Lecture rapport</a>
+          <a href="#actions">Actions</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <h2>Règle simple</h2>
+        <p>Un contrôle vert ne remplace jamais la validation humaine terrain.</p>
+        <p class="muted">Ce cockpit ne se connecte pas à GitHub, ne stocke aucun secret et fonctionne hors ligne.</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="synthese">
+      <h2>Synthèse qualité</h2>
+      <div class="grid" id="kpis"></div>
+      <div class="notice" style="margin-top:12px">Statut cible : contrôles verts, rapports téléchargeables, aucune fusion sans preuve visible des checks GitHub Actions.</div>
+    </section>
+
+    <section>
+      <h2>Filtres de pilotage</h2>
+      <div class="controls">
+        <p><label for="search">Recherche</label><input id="search" placeholder="CSV, HTML, fiche projet, sécurité…"></p>
+        <p><label for="domainFilter">Domaine</label><select id="domainFilter"><option value="all">Tous</option></select></p>
+        <p><label for="severityFilter">Sévérité</label><select id="severityFilter"><option value="all">Toutes</option><option>Bloquant</option><option>Mixte</option><option>Avertissement</option></select></p>
+        <p><label for="statusFilter">Statut</label><select id="statusFilter"><option value="all">Tous</option><option>Actif</option><option>À surveiller</option></select></p>
+      </div>
+    </section>
+
+    <section id="controles">
+      <h2>Contrôles actifs</h2>
+      <div class="table-wrap"><table><thead><tr><th>Domaine</th><th>Contrôle</th><th>Script</th><th>Sévérité</th><th>Ce que ça protège</th><th>Statut</th></tr></thead><tbody id="controlsBody"></tbody></table></div>
+    </section>
+
+    <section id="artefacts">
+      <h2>Rapports et artefacts GitHub Actions</h2>
+      <div class="grid-2" id="artifactCards"></div>
+    </section>
+
+    <section id="rapport">
+      <h2>Lecture rapide d’un rapport de recette</h2>
+      <div class="grid-2">
+        <div>
+          <p>Colle ici le contenu d’un rapport Markdown téléchargé depuis GitHub Actions. Le cockpit détecte les lignes <code>success</code>, <code>ECHEC</code>, <code>Verdict : OK</code> ou <code>Verdict : ECHEC</code>.</p>
+          <textarea id="reportInput" placeholder="Colle ici rapport-recette.md ou un autre rapport Markdown..."></textarea>
+          <div class="actions">
+            <button id="analyzeReport">Analyser le rapport</button>
+            <button class="secondary" id="loadDemo">Charger exemple OK</button>
+            <button class="danger" id="clearReport">Effacer</button>
+          </div>
+        </div>
+        <div>
+          <h3>Résultat d’analyse</h3>
+          <div id="reportResult" class="card soft">Aucun rapport analysé.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="actions">
+      <h2>Actions recommandées</h2>
+      <div class="timeline" id="actionsList"></div>
+    </section>
+
+    <section>
+      <h2>Règles de fusion</h2>
+      <div class="grid-3" id="mergeRules"></div>
+    </section>
+
+    <section>
+      <h2>Export local</h2>
+      <p>Tu peux exporter l’état affiché en JSON pour le joindre à un suivi, une issue ou une fiche projet.</p>
+      <div class="actions">
+        <button id="exportJson">Exporter l’état qualité JSON</button>
+        <button class="secondary" onclick="window.print()">Imprimer / PDF navigateur</button>
+      </div>
+      <p class="small muted">Aucune donnée n’est envoyée en ligne. L’export est généré dans ton navigateur.</p>
+    </section>
+  </main>
+
+<script>
+(function(){
+  'use strict';
+
+  const controls = [
+    {domain:'Structure', name:'Structure projet', script:'scripts/check-structure.js', severity:'Bloquant', protects:'Dossiers et organisation minimale du dépôt', status:'Actif'},
+    {domain:'JSON', name:'Validité JSON', script:'scripts/check-json.js', severity:'Bloquant', protects:'Fichiers JSON lisibles et exploitables', status:'Actif'},
+    {domain:'Sécurité', name:'Anti-secrets', script:'scripts/check-no-secrets.js', severity:'Bloquant', protects:'Tokens, mots de passe, chaînes sensibles', status:'Actif'},
+    {domain:'HTML', name:'Dépendances externes HTML', script:'scripts/check-html-dependencies.js', severity:'Bloquant', protects:'Zéro dépendance externe non maîtrisée', status:'Actif'},
+    {domain:'HTML', name:'Qualité HTML minimale', script:'scripts/check-html-quality.js', severity:'Mixte', protects:'Title, H1, alt image, viewport, validation humaine', status:'Actif'},
+    {domain:'Fiches projet', name:'Fiches projet obligatoires', script:'scripts/check-fiche-projet.js', severity:'Bloquant', protects:'Traçabilité métier, sécurité, validation humaine', status:'Actif'},
+    {domain:'HTML', name:'Liens locaux HTML', script:'scripts/check-html-local-links.js', severity:'Bloquant', protects:'Boutons et liens morts entre modules locaux', status:'Actif'},
+    {domain:'CSV', name:'CSV critiques', script:'scripts/check-critical-csv.js', severity:'Mixte', protects:'Templates, mappings, journaux et exports', status:'Actif'},
+    {domain:'Données métier', name:'Exemples métier JSON', script:'scripts/check-example-json-business-fields.js', severity:'Mixte', protects:'Exemples stock, zonage et données structurantes', status:'Actif'},
+    {domain:'Stock / TFI', name:'Règles métier stock / TFI', script:'scripts/check-stock-tfi-rules.js', severity:'Bloquant', protects:'Mini/maxi, zones TFI, validation export', status:'Actif'}
+  ];
+
+  const artifacts = [
+    {name:'rapport-recette', file:'rapports/recette/rapport-recette.md', use:'Synthèse complète de la recette GitHub Actions'},
+    {name:'rapport-liens-html-locaux', file:'rapports/liens-html-locaux.md', use:'Diagnostic des liens internes entre modules HTML'},
+    {name:'rapport-controle-fiche-projet', file:'rapports/controle-fiche-projet.md', use:'Diagnostic des fiches projet obligatoires'},
+    {name:'rapport-controle-csv-critiques', file:'rapports/controle-csv-critiques.md', use:'Diagnostic des CSV critiques'},
+    {name:'rapport-controle-exemples-metier-json', file:'rapports/controle-exemples-metier-json.md', use:'Diagnostic des exemples métier JSON'}
+  ];
+
+  const actions = [
+    {title:'Toujours partir du rapport global', detail:'Télécharger rapport-recette pour voir le premier contrôle en échec avant toute correction.'},
+    {title:'Corriger la cause, pas contourner', detail:'Si un contrôle échoue, ne jamais désactiver le test. Corriger la donnée, le code ou la règle si elle produit un faux positif.'},
+    {title:'Limiter les changements', detail:'Une PR doit rester petite, compréhensible, réversible et liée à un objectif clair.'},
+    {title:'Garder la validation humaine', detail:'Avant diffusion terrain, tester mobile, import, export, impression, cas vides et sécurité.'},
+    {title:'Documenter chaque nouvelle règle', detail:'Tout nouveau contrôle doit avoir son script, son test, son rapport et sa documentation courte.'}
+  ];
+
+  const mergeRules = [
+    'Checks GitHub visibles',
+    'Tous les contrôles verts',
+    'Aucun secret exposé',
+    'Aucun test désactivé',
+    'Aucun changement destructif',
+    'Modification limitée et réversible'
+  ];
+
+  const $ = id => document.getElementById(id);
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+
+  function badge(text){
+    const cls = text === 'Bloquant' || text === 'Actif' ? 'ok' : text === 'Mixte' || text === 'À surveiller' ? 'warn' : 'info';
+    return `<span class="badge ${cls}">${esc(text)}</span>`;
+  }
+
+  function renderKpis(){
+    const blocking = controls.filter(c => c.severity === 'Bloquant').length;
+    const mixed = controls.filter(c => c.severity === 'Mixte').length;
+    const html = [
+      ['Contrôles actifs', controls.length],
+      ['Bloquants', blocking],
+      ['Mixtes', mixed],
+      ['Artefacts', artifacts.length]
+    ].map(([label,value]) => `<div class="kpi"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('');
+    $('kpis').innerHTML = html;
+  }
+
+  function fillFilters(){
+    const domains = [...new Set(controls.map(c => c.domain))].sort();
+    $('domainFilter').innerHTML = '<option value="all">Tous</option>' + domains.map(d => `<option>${esc(d)}</option>`).join('');
+  }
+
+  function renderControls(){
+    const search = $('search').value.trim().toLowerCase();
+    const domain = $('domainFilter').value;
+    const severity = $('severityFilter').value;
+    const status = $('statusFilter').value;
+    const list = controls.filter(c => {
+      const haystack = `${c.domain} ${c.name} ${c.script} ${c.severity} ${c.protects} ${c.status}`.toLowerCase();
+      return (!search || haystack.includes(search)) && (domain === 'all' || c.domain === domain) && (severity === 'all' || c.severity === severity) && (status === 'all' || c.status === status);
+    });
+    $('controlsBody').innerHTML = list.map(c => `<tr><td>${esc(c.domain)}</td><td><strong>${esc(c.name)}</strong></td><td><code>${esc(c.script)}</code></td><td>${badge(c.severity)}</td><td>${esc(c.protects)}</td><td>${badge(c.status)}</td></tr>`).join('') || '<tr><td colspan="6">Aucun contrôle trouvé.</td></tr>';
+  }
+
+  function renderArtifacts(){
+    $('artifactCards').innerHTML = artifacts.map(a => `<div class="card"><h3>${esc(a.name)}</h3><p><code>${esc(a.file)}</code></p><p>${esc(a.use)}</p><span class="badge info">Artefact Actions</span></div>`).join('');
+  }
+
+  function renderActions(){
+    $('actionsList').innerHTML = actions.map((a,i) => `<div class="step"><div class="num">${i+1}</div><div class="card soft"><h3>${esc(a.title)}</h3><p>${esc(a.detail)}</p></div></div>`).join('');
+  }
+
+  function renderMergeRules(){
+    $('mergeRules').innerHTML = mergeRules.map(rule => `<div class="card yellow"><h3>${esc(rule)}</h3><p class="muted">Condition obligatoire avant fusion automatique.</p></div>`).join('');
+  }
+
+  function analyzeReport(){
+    const text = $('reportInput').value || '';
+    if (!text.trim()) {
+      $('reportResult').className = 'card soft';
+      $('reportResult').innerHTML = 'Aucun rapport analysé.';
+      return;
+    }
+    const lower = text.toLowerCase();
+    const okCount = (text.match(/success|\bOK\b|Verdict\s*:\s*OK/gi) || []).length;
+    const failCount = (text.match(/echec|échec|failure|failed|Verdict\s*:\s*ECHEC/gi) || []).length;
+    const warningCount = (text.match(/avertissement|warning/gi) || []).length;
+    const verdictOk = /verdict\s*:\s*ok/i.test(text) || (okCount > 0 && failCount === 0 && !lower.includes('erreurs bloquantes : 1'));
+    const verdictFail = /verdict\s*:\s*echec/i.test(text) || failCount > 0;
+    const cls = verdictFail ? 'error-box' : verdictOk ? 'success-box' : 'card soft';
+    const title = verdictFail ? 'Rapport en échec' : verdictOk ? 'Rapport OK' : 'Rapport à lire manuellement';
+    $('reportResult').className = cls;
+    $('reportResult').innerHTML = `<h3>${title}</h3><p><strong>OK détectés :</strong> ${okCount}</p><p><strong>Échecs détectés :</strong> ${failCount}</p><p><strong>Avertissements détectés :</strong> ${warningCount}</p><p class="small">Décision : ${verdictFail ? 'corriger le premier contrôle en échec avant fusion.' : verdictOk ? 'fusion possible si les checks GitHub sont visibles et verts.' : 'ouvrir le rapport complet pour interprétation.'}</p>`;
+  }
+
+  function exportState(){
+    const payload = {
+      exported_at: new Date().toISOString(),
+      project: 'Copilote Chef d’Agence',
+      page: 'cockpit-qualite-projet.html',
+      controls,
+      artifacts,
+      mergeRules,
+      nextActions: actions
+    };
+    const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'etat-qualite-projet.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function init(){
+    renderKpis(); fillFilters(); renderControls(); renderArtifacts(); renderActions(); renderMergeRules();
+    ['search','domainFilter','severityFilter','statusFilter'].forEach(id => $(id).addEventListener('input', renderControls));
+    $('analyzeReport').addEventListener('click', analyzeReport);
+    $('clearReport').addEventListener('click', () => {$('reportInput').value=''; analyzeReport();});
+    $('loadDemo').addEventListener('click', () => {$('reportInput').value = '# Rapport de recette\n\nVerdict : OK\n\n| Type | Contrôle | Résultat |\n|---|---|---|\n| controle | Recette projet | OK |\n| controle | Audit HTML | OK |'; analyzeReport();});
+    $('exportJson').addEventListener('click', exportState);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
