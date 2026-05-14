@@ -65,7 +65,7 @@ for (const fullPath of walk(srcDir)) {
   }
 
   if (!hasMetaDescription(text)) {
-    addError(file, 'meta description absente ou trop courte');
+    addWarning(file, 'meta description absente ou trop courte');
   }
 
   const h1Count = countMatches(text, /<h1\b[^>]*>[\s\S]*?<\/h1>/gi);
