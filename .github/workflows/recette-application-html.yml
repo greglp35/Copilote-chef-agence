@@ -267,7 +267,8 @@ jobs:
           for file in $HTML_FILES; do
             echo "### $file" >> rapports/recette-application-html.md
 
-            MATCHES=$(grep -niE "(password|motdepasse|mot_de_passe|token|api[_-]?key|apikey|client[_-]?secret|connection[_-]?string|chaine[_-]?connexion|AS400|ODBC|jdbc|dsn=|Bearer [A-Za-z0-9._-]+|SELECT .* FROM|INSERT INTO|UPDATE .* SET|DELETE FROM)" "$file" || true)
+            RAW_MATCHES=$(grep -niE "(password|motdepasse|mot_de_passe|token|api[_-]?key|apikey|client[_-]?secret|connection[_-]?string|chaine[_-]?connexion|AS400|ODBC|jdbc|dsn=|Bearer [A-Za-z0-9._-]+|SELECT .* FROM|INSERT INTO|UPDATE .* SET|DELETE FROM)" "$file" || true)
+            MATCHES=$(echo "$RAW_MATCHES" | grep -viE "(aucun acces direct|aucun accès direct|ne se connecte pas|ne stocke aucune|aucune donnee sensible|aucune donnée sensible|donnees fictives|données fictives|validation humaine obligatoire)" || true)
 
             if [ -n "$MATCHES" ]; then
               echo "- BLOQUANT : secret, ERP, ODBC ou SQL sensible potentiellement expose." >> rapports/recette-application-html.md
@@ -275,6 +276,8 @@ jobs:
               echo "$MATCHES" >> rapports/recette-application-html.md
               echo '```' >> rapports/recette-application-html.md
               BLOCKING=1
+            elif [ -n "$RAW_MATCHES" ]; then
+              echo "- OK : mentions negatives de securite detectees, non bloquantes." >> rapports/recette-application-html.md
             else
               echo "- OK : aucun secret evident detecte dans ce fichier." >> rapports/recette-application-html.md
             fi

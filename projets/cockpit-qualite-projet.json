@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "project_id": "cockpit-qualite-projet",
+  "project_name": "Cockpit Qualité Projet",
+  "status": "validated",
+  "created_at": "2026-05-14",
+  "updated_at": "2026-05-14",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Le dépôt contient plusieurs contrôles, rapports et artefacts. Sans vue synthétique, il est difficile de savoir rapidement quoi vérifier, quel rapport télécharger et quelle décision prendre avant fusion ou diffusion terrain.",
+  "target_users": [
+    "chef_agence",
+    "mainteneur_ia",
+    "developpeur_assistant",
+    "responsable_validation_projet"
+  ],
+  "operational_goal": "Fournir une page HTML locale, autonome et exploitable pour visualiser les contrôles actifs, les artefacts, les règles de fusion et analyser rapidement un rapport Markdown collé dans la page.",
+  "source_files": {
+    "main_html": "src/cockpit-qualite-projet.html",
+    "project_markdown": "projets/cockpit-qualite-projet.md",
+    "project_json": "projets/cockpit-qualite-projet.json"
+  },
+  "data_sources": [
+    {
+      "name": "configuration_interne_statique",
+      "source_type": "static_embedded_reference",
+      "sensitive": false,
+      "comment": "Le cockpit utilise une liste statique des contrôles et artefacts connus au moment de sa création."
+    },
+    {
+      "name": "rapport_markdown_colle",
+      "source_type": "manual_paste",
+      "sensitive": false,
+      "comment": "L’utilisateur peut coller localement un rapport Markdown téléchargé depuis GitHub Actions."
+    }
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true,
+    "no_direct_erp_write": true,
+    "no_network_call": true
+  },
+  "expected_features": [
+    {
+      "priority": "high",
+      "name": "Synthèse qualité",
+      "description": "Afficher le nombre de contrôles actifs, contrôles bloquants, contrôles mixtes et artefacts.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Table des contrôles",
+      "description": "Lister les domaines, scripts, sévérités et protections associées.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Artefacts GitHub Actions",
+      "description": "Lister les rapports téléchargeables et leur utilité.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Lecture rapport Markdown",
+      "description": "Permettre de coller un rapport Markdown et détecter rapidement un verdict OK ou ECHEC.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Export état qualité JSON",
+      "description": "Exporter localement la configuration du cockpit en JSON.",
+      "status": "done"
+    }
+  ],
+  "out_of_scope": [
+    "Ne pas se connecter à GitHub.",
+    "Ne pas lancer les workflows.",
+    "Ne pas fusionner de Pull Request.",
+    "Ne pas remplacer GitHub Actions.",
+    "Ne pas remplacer la validation humaine terrain."
+  ],
+  "success_criteria": {
+    "usable_offline": true,
+    "zero_external_dependency": true,
+    "mobile_compatible": true,
+    "understandable_under_10_seconds": true,
+    "human_validation_required": true
+  },
+  "risks": [
+    {
+      "risk": "Croire que le cockpit remplace les contrôles GitHub Actions.",
+      "level": "medium",
+      "mitigation": "Rappeler que le cockpit est une aide de lecture locale et ne remplace pas les checks GitHub."
+    },
+    {
+      "risk": "Liste des contrôles statique devenue obsolète.",
+      "level": "medium",
+      "mitigation": "Mettre à jour le cockpit à chaque ajout majeur de contrôle ou artefact."
+    }
+  ],
+  "human_validation": {
+    "decision": "validated",
+    "validated_by": "Greg",
+    "validated_at": "2026-05-14",
+    "comment": "Module validé comme cockpit local d’aide à la lecture qualité. Il ne prend aucune décision automatique dans GitHub."
+  },
+  "next_actions": [
+    "Vérifier l’affichage mobile.",
+    "Ouvrir le fichier localement dans un navigateur.",
+    "Coller un rapport Markdown réel pour tester l’analyse rapide.",
+    "Mettre à jour la liste des contrôles si un nouveau script est ajouté."
+  ]
+}
