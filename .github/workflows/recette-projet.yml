@@ -23,29 +23,13 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Tester le détecteur JSON
-        run: node scripts/test-json-check.js
+      - name: Lancer la recette complète
+        run: node scripts/run-recette-complete.js
 
-      - name: Tester le détecteur anti-secrets
-        run: node scripts/test-no-secrets-check.js
-
-      - name: Tester le détecteur de dépendances HTML
-        run: node scripts/test-html-dependencies-check.js
-
-      - name: Tester le contrôle métier stock / TFI
-        run: node scripts/test-stock-tfi-rules-check.js
-
-      - name: Contrôler la structure projet
-        run: node scripts/check-structure.js
-
-      - name: Contrôler les fichiers JSON
-        run: node scripts/check-json.js
-
-      - name: Contrôler l’absence de secrets évidents
-        run: node scripts/check-no-secrets.js
-
-      - name: Contrôler les dépendances externes HTML
-        run: node scripts/check-html-dependencies.js
-
-      - name: Contrôler les règles métier stock / TFI
-        run: node scripts/check-stock-tfi-rules.js
+      - name: Publier le rapport de recette
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapport-recette
+          path: rapports/recette/rapport-recette.md
+          if-no-files-found: warn
