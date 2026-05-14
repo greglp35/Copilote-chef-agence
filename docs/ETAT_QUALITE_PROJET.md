@@ -1,6 +1,6 @@
 # État qualité du projet — Copilote Chef d’Agence
 
-Version : V1.1  
+Version : V1.2  
 Date : 2026-05-14  
 Statut : synthèse opérationnelle
 
@@ -55,6 +55,7 @@ Elle exécute les contrôles suivants :
 | Fiches projet | `scripts/check-fiche-projet.js` | Vérifier fiches `.md` et `.json` par application HTML | Bloquant |
 | Liens HTML | `scripts/check-html-local-links.js` | Vérifier les liens locaux entre modules HTML | Bloquant |
 | CSV critiques | `scripts/check-critical-csv.js` | Vérifier templates, mappings, journaux et exports CSV | Mixte |
+| Exemples métier JSON | `scripts/check-example-json-business-fields.js` | Vérifier les fichiers `data/*.example.json` reconnus | Mixte |
 | Structure | `scripts/check-structure.js` | Vérifier la structure minimale du dépôt | Bloquant |
 
 ---
@@ -73,6 +74,7 @@ Avant de contrôler le dépôt réel, la recette teste ses propres détecteurs :
 | Fiche projet | `scripts/test-fiche-projet-check.js` |
 | Liens HTML locaux | `scripts/test-html-local-links-check.js` |
 | CSV critiques | `scripts/test-critical-csv-check.js` |
+| Exemples métier JSON | `scripts/test-example-json-business-fields-check.js` |
 
 Objectif : éviter qu’un détecteur semble fonctionner alors qu’il ne bloque plus les cas dangereux.
 
@@ -100,6 +102,7 @@ Le workflow `Recette projet` publie :
 | `rapport-liens-html-locaux` | `rapports/liens-html-locaux.md` | Diagnostic des liens locaux HTML |
 | `rapport-controle-fiche-projet` | `rapports/controle-fiche-projet.md` | Diagnostic des fiches projet obligatoires |
 | `rapport-controle-csv-critiques` | `rapports/controle-csv-critiques.md` | Diagnostic des CSV critiques |
+| `rapport-controle-exemples-metier-json` | `rapports/controle-exemples-metier-json.md` | Diagnostic des exemples métier JSON |
 
 ---
 
@@ -134,6 +137,7 @@ Le dépôt est maintenant bien couvert sur :
 - liens locaux HTML ;
 - règles métier stock / TFI ;
 - CSV critiques, templates, mappings, journaux et exports ;
+- exemples métier JSON reconnus ;
 - rapports téléchargeables ;
 - tests de non-régression des contrôles.
 
@@ -143,11 +147,11 @@ Le dépôt est maintenant bien couvert sur :
 
 Prochaines améliorations recommandées :
 
-1. Ajouter un contrôle des champs obligatoires dans les fichiers exemples métier.
-2. Ajouter un contrôle des liens déclarés dans les fiches projet JSON.
-3. Ajouter une synthèse automatique des applications HTML disponibles.
-4. Ajouter une matrice simple : application → fiche projet → rapports → statut qualité.
-5. Ajouter une documentation courte expliquant la différence entre template CSV, mapping CSV, journal CSV et export CSV réel.
+1. Ajouter un contrôle des liens déclarés dans les fiches projet JSON.
+2. Ajouter une synthèse automatique des applications HTML disponibles.
+3. Ajouter une matrice simple : application → fiche projet → rapports → statut qualité.
+4. Ajouter une documentation courte expliquant la différence entre template CSV, mapping CSV, journal CSV et export CSV réel.
+5. Étendre progressivement les règles d’exemples métier JSON à d’autres fichiers dès qu’ils deviennent structurants.
 
 ---
 
