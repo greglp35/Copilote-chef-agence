@@ -45,6 +45,11 @@ const checks = [
     type: 'test'
   },
   {
+    name: 'Tester le contrôle CSV critiques',
+    command: 'node scripts/test-critical-csv-check.js',
+    type: 'test'
+  },
+  {
     name: 'Contrôler la structure projet',
     command: 'node scripts/check-structure.js',
     type: 'controle'
@@ -82,6 +87,11 @@ const checks = [
   {
     name: 'Contrôler les liens locaux HTML',
     command: 'node scripts/check-html-local-links.js',
+    type: 'controle'
+  },
+  {
+    name: 'Contrôler les CSV critiques',
+    command: 'node scripts/check-critical-csv.js',
     type: 'controle'
   }
 ];
