@@ -60,7 +60,7 @@ const criticalRules = [
       'justification_modification',
       'version_mapping_tfi'
     ],
-    requireDataRows: true
+    requireDataRows: null
   }
 ];
 
@@ -141,7 +141,8 @@ function matchingRule(relativePath) {
 }
 
 function shouldRequireDataRows(relativePath, rule) {
-  if (rule) return rule.requireDataRows === true;
+  if (relativePath.startsWith('templates/')) return false;
+  if (rule && typeof rule.requireDataRows === 'boolean') return rule.requireDataRows;
   return relativePath.startsWith('exports/') && /export/i.test(path.basename(relativePath));
 }
 
@@ -259,7 +260,7 @@ function writeReport() {
   lines.push('');
   lines.push('## Règle de décision');
   lines.push('');
-  lines.push('Un CSV critique est bloquant s’il est vide, s’il contient des colonnes dupliquées, s’il ne respecte pas les colonnes obligatoires attendues ou, pour un export opérationnel réel, s’il ne contient aucune ligne de données. Les mappings, templates et journaux peuvent être validés avec une structure d’en-tête conforme, même lorsqu’ils ne contiennent pas encore de lignes.');
+  lines.push('Un CSV critique est bloquant s’il est vide, s’il contient des colonnes dupliquées, s’il ne respecte pas les colonnes obligatoires attendues ou, pour un export opérationnel réel dans `exports/`, s’il ne contient aucune ligne de données. Les mappings, templates et journaux peuvent être validés avec une structure d’en-tête conforme, même lorsqu’ils ne contiennent pas encore de lignes.');
   lines.push('');
 
   fs.writeFileSync(reportPath, lines.join('\n'), 'utf8');
