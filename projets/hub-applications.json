@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0",
+  "project_id": "hub-applications",
+  "project_name": "Hub Applications Métier",
+  "status": "validated",
+  "created_at": "2026-05-15",
+  "updated_at": "2026-05-15",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Le dépôt contient plusieurs applications HTML. Sans hub, il devient difficile de savoir quelle application ouvrir selon le métier, le rôle ou le besoin du moment.",
+  "target_users": [
+    "chef_agence",
+    "comptoir",
+    "depot",
+    "magasinier",
+    "responsable_exploitation",
+    "mainteneur_projet"
+  ],
+  "operational_goal": "Fournir un point d’entrée unique pour ouvrir, filtrer et organiser les applications HTML métier du dépôt.",
+  "source_files": {
+    "main_html": "src/hub-applications.html",
+    "project_markdown": "projets/hub-applications.md",
+    "project_json": "projets/hub-applications.json"
+  },
+  "data_sources": [
+    {
+      "name": "catalogue_embarque",
+      "source_type": "static_embedded_reference",
+      "sensitive": false
+    },
+    {
+      "name": "stockage_local_navigateur",
+      "source_type": "local_storage",
+      "sensitive": false
+    },
+    {
+      "name": "import_configuration_json",
+      "source_type": "manual_import",
+      "sensitive": false
+    }
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true,
+    "no_direct_erp_write": true,
+    "no_network_call": true
+  },
+  "expected_features": [
+    {
+      "priority": "high",
+      "name": "Catalogue applications",
+      "description": "Lister les applications HTML métier disponibles dans le dépôt.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Recherche et filtres",
+      "description": "Filtrer par recherche, catégorie, rôle, statut et favoris.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Ouverture rapide",
+      "description": "Ouvrir une application en nouvel onglet ou en aperçu intégré.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Favoris locaux",
+      "description": "Marquer des applications comme favorites dans le navigateur.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Import export configuration",
+      "description": "Exporter ou importer la configuration locale du hub.",
+      "status": "done"
+    }
+  ],
+  "out_of_scope": [
+    "Ne pas remplacer une authentification.",
+    "Ne pas protéger réellement les applications par profil.",
+    "Ne pas modifier les fichiers du dépôt depuis l’interface.",
+    "Ne pas lancer de workflow."
+  ],
+  "success_criteria": {
+    "usable_offline": true,
+    "zero_external_dependency": true,
+    "mobile_compatible": true,
+    "understandable_under_10_seconds": true,
+    "human_validation_required": true
+  },
+  "risks": [
+    {
+      "risk": "Confondre filtre par rôle et sécurité réelle.",
+      "level": "medium",
+      "mitigation": "Afficher clairement que les rôles sont des filtres visuels uniquement."
+    },
+    {
+      "risk": "Catalogue embarqué obsolète si une nouvelle application est ajoutée.",
+      "level": "medium",
+      "mitigation": "Mettre à jour le hub à chaque ajout d’application structurante."
+    }
+  ],
+  "human_validation": {
+    "decision": "validated",
+    "validated_by": "Greg",
+    "validated_at": "2026-05-15",
+    "comment": "Module validé comme hub local d’accès aux applications HTML métier."
+  },
+  "next_actions": [
+    "Tester l’ouverture de chaque application.",
+    "Tester les favoris.",
+    "Tester l’aperçu intégré.",
+    "Tester l’export et l’import de configuration.",
+    "Maintenir le catalogue à jour."
+  ]
+}
