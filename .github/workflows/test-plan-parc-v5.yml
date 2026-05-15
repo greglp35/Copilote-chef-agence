@@ -48,14 +48,14 @@ jobs:
             await page.goto(filePath);
 
             await expect(page.locator('#map')).toBeVisible();
-            await expect(page.locator('text=Longueur 50 m')).toBeVisible();
-            await expect(page.locator('text=Largeur 32 m')).toBeVisible();
+            await expect(page.locator('#coteLayer').getByText('Longueur 50 m', { exact: true })).toBeVisible();
+            await expect(page.locator('#coteLayer').getByText('Largeur 32 m', { exact: true })).toBeVisible();
 
             await page.click('#visualTest');
-            await expect(page.locator('text=Z-BOIS')).toBeVisible();
-            await expect(page.locator('text=A-PRINC')).toBeVisible();
-            await expect(page.locator('text=T-A1')).toBeVisible();
-            await expect(page.locator('text=visible').first()).toBeVisible();
+            await expect(page.locator('#zoneLayer').getByText('Z-BOIS', { exact: true })).toBeVisible();
+            await expect(page.locator('#aisleLayer').getByText('A-PRINC', { exact: true })).toBeVisible();
+            await expect(page.locator('#rackLayer').getByText('T-A1', { exact: true })).toBeVisible();
+            await expect(page.locator('#objectTable').getByText('visible').first()).toBeVisible();
 
             await page.click('#addZone');
             await expect(page.locator('#zoneLayer rect.zone')).toHaveCount(3);
