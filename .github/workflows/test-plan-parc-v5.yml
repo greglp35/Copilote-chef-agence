@@ -1,4 +1,4 @@
-name: Test Plan Parc V5
+name: Test Plan Parc V6 74x114
 
 on:
   pull_request:
@@ -19,8 +19,8 @@ permissions:
   contents: read
 
 jobs:
-  test-plan-parc-v5:
-    name: Test navigateur plan parc V5
+  test-plan-parc-v6:
+    name: Test navigateur plan parc V6 74x114
     runs-on: ubuntu-latest
     steps:
       - name: Récupérer le dépôt
@@ -37,34 +37,36 @@ jobs:
           npm install --save-dev @playwright/test
           npx playwright install chromium --with-deps
 
-      - name: Tester le scénario réel du plan parc
+      - name: Tester le scénario réel du plan parc 74x114
         run: |
-          cat > plan-parc-v5.spec.js <<'EOF'
+          cat > plan-parc-v6.spec.js <<'EOF'
           const { test, expect } = require('@playwright/test');
           const path = require('path');
 
-          test('le plan parc V5 matérialise le parc, les cotes, zones, allées et travées', async ({ page }) => {
+          test('le plan parc V6 affiche le modèle 114x74 avec zones, allées et travées', async ({ page }) => {
             const filePath = 'file://' + path.resolve('src/plan-parc-magasinier.html');
             await page.goto(filePath);
 
             await expect(page.locator('#map')).toBeVisible();
-            await expect(page.locator('#coteLayer').getByText('Longueur 50 m', { exact: true })).toBeVisible();
-            await expect(page.locator('#coteLayer').getByText('Largeur 32 m', { exact: true })).toBeVisible();
-
-            await page.click('#visualTest');
+            await expect(page.locator('#coteLayer').getByText('Longueur 114 m', { exact: true })).toBeVisible();
+            await expect(page.locator('#coteLayer').getByText('Largeur 74 m', { exact: true })).toBeVisible();
             await expect(page.locator('#zoneLayer').getByText('Z-BOIS', { exact: true })).toBeVisible();
             await expect(page.locator('#aisleLayer').getByText('A-PRINC', { exact: true })).toBeVisible();
-            await expect(page.locator('#rackLayer').getByText('T-A1', { exact: true })).toBeVisible();
-            await expect(page.locator('#objectTable').getByText('visible').first()).toBeVisible();
+            await expect(page.locator('#rackLayer').getByText('T-BOIS-1', { exact: true })).toBeVisible();
+            await expect(page.locator('#objectTable').getByText('Réception fournisseurs', { exact: true })).toBeVisible();
 
             await page.click('#addZone');
-            await expect(page.locator('#zoneLayer rect.zone')).toHaveCount(3);
+            await expect(page.locator('#zoneLayer rect.zone')).toHaveCount(11);
 
             await page.click('#addAisle');
-            await expect(page.locator('#aisleLayer rect.aisle')).toHaveCount(2);
+            await expect(page.locator('#aisleLayer rect.aisle')).toHaveCount(4);
 
             await page.click('#addRack');
-            await expect(page.locator('#rackLayer rect.rack')).toHaveCount(3);
+            await expect(page.locator('#rackLayer rect.rack')).toHaveCount(6);
+
+            await page.click('#swapPark');
+            await expect(page.locator('#coteLayer').getByText('Longueur 74 m', { exact: true })).toBeVisible();
+            await expect(page.locator('#coteLayer').getByText('Largeur 114 m', { exact: true })).toBeVisible();
           });
           EOF
-          npx playwright test plan-parc-v5.spec.js --browser=chromium
+          npx playwright test plan-parc-v6.spec.js --browser=chromium
