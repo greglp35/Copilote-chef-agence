@@ -1,0 +1,2 @@
+id_produit;nom_produit;famille;sous_famille;reference;designation_longue;conditionnement;unite_vente;prix_ttc;prix_avant_ttc;statut_validation;usage_public;pack_associe;produits_complementaires;accroche_a3;argument_vendeur;stock_agence;delai_appro;image_produit;commentaire_controle
+prod_001;Exemple produit;Famille;Sous famille;REF001;Designation longue;conditionnement a completer;m2;0.00;;a_verifier;non;Pack exemple;accessoire 1|accessoire 2;Accroche a valider;Argument vendeur;stock a verifier;delai a verifier;;controle a faire
