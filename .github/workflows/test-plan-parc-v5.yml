@@ -1,0 +1,70 @@
+name: Test Plan Parc V5
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/plan-parc-magasinier.html'
+      - '.github/workflows/test-plan-parc-v5.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/plan-parc-magasinier.html'
+      - '.github/workflows/test-plan-parc-v5.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-plan-parc-v5:
+    name: Test navigateur plan parc V5
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Installer Playwright
+        run: |
+          npm init -y
+          npm install --save-dev @playwright/test
+          npx playwright install chromium --with-deps
+
+      - name: Tester le scénario réel du plan parc
+        run: |
+          cat > plan-parc-v5.spec.js <<'EOF'
+          const { test, expect } = require('@playwright/test');
+          const path = require('path');
+
+          test('le plan parc V5 matérialise le parc, les cotes, zones, allées et travées', async ({ page }) => {
+            const filePath = 'file://' + path.resolve('src/plan-parc-magasinier.html');
+            await page.goto(filePath);
+
+            await expect(page.locator('#map')).toBeVisible();
+            await expect(page.locator('#coteLayer').getByText('Longueur 50 m', { exact: true })).toBeVisible();
+            await expect(page.locator('#coteLayer').getByText('Largeur 32 m', { exact: true })).toBeVisible();
+
+            await page.click('#visualTest');
+            await expect(page.locator('#zoneLayer').getByText('Z-BOIS', { exact: true })).toBeVisible();
+            await expect(page.locator('#aisleLayer').getByText('A-PRINC', { exact: true })).toBeVisible();
+            await expect(page.locator('#rackLayer').getByText('T-A1', { exact: true })).toBeVisible();
+            await expect(page.locator('#objectTable').getByText('visible').first()).toBeVisible();
+
+            await page.click('#addZone');
+            await expect(page.locator('#zoneLayer rect.zone')).toHaveCount(3);
+
+            await page.click('#addAisle');
+            await expect(page.locator('#aisleLayer rect.aisle')).toHaveCount(2);
+
+            await page.click('#addRack');
+            await expect(page.locator('#rackLayer rect.rack')).toHaveCount(3);
+          });
+          EOF
+          npx playwright test plan-parc-v5.spec.js --browser=chromium
