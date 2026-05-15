@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0",
+  "project_id": "cockpit-agence-materiaux-v2",
+  "project_name": "Cockpit Agence Matériaux V2",
+  "status": "validated",
+  "created_at": "2026-05-15",
+  "updated_at": "2026-05-15",
+  "owner": "Greg",
+  "validator": "Greg",
+  "problem_to_solve": "Le chef d’agence doit identifier rapidement les sujets qui méritent son attention : devis à relancer, ruptures potentielles, livraisons sensibles, points sécurité et actions exploitation.",
+  "target_users": [
+    "chef_agence",
+    "vendeur_comptoir",
+    "responsable_exploitation",
+    "magasinier",
+    "commercial_agence"
+  ],
+  "operational_goal": "Fournir une application HTML locale et autonome pour piloter les priorités quotidiennes d’une agence de négoce de matériaux avec scoring, filtres, édition, stockage local, import, export et journalisation.",
+  "source_files": {
+    "main_html": "src/cockpit-agence-materiaux-v2.html",
+    "project_markdown": "projets/cockpit-agence-materiaux-v2.md",
+    "project_json": "projets/cockpit-agence-materiaux-v2.json"
+  },
+  "data_sources": [
+    {
+      "name": "donnees_demo_embarquees",
+      "source_type": "static_demo_data",
+      "sensitive": false
+    },
+    {
+      "name": "stockage_local_navigateur",
+      "source_type": "local_storage",
+      "sensitive": false
+    },
+    {
+      "name": "import_json_manuel",
+      "source_type": "manual_import",
+      "sensitive": false
+    }
+  ],
+  "security_rules": {
+    "no_password_in_html": true,
+    "no_token_in_html": true,
+    "no_as400_credentials_in_html": true,
+    "no_odbc_string_in_html": true,
+    "no_sensitive_sql_in_html": true,
+    "test_data_only": true,
+    "human_validation_required": true,
+    "no_direct_erp_write": true,
+    "no_network_call": true
+  },
+  "expected_features": [
+    {
+      "priority": "high",
+      "name": "Tableau de bord",
+      "description": "Afficher les KPI prioritaires, alertes immédiates et brief matin.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Priorités filtrables",
+      "description": "Rechercher, filtrer et trier les actions par score, catégorie, statut et responsable.",
+      "status": "done"
+    },
+    {
+      "priority": "high",
+      "name": "Scoring métier",
+      "description": "Calculer un score de priorité selon urgence, catégorie, montant, marge et échéance.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Édition locale",
+      "description": "Créer, modifier, clôturer ou passer une action en urgence.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Import export",
+      "description": "Exporter JSON/CSV et importer un JSON compatible.",
+      "status": "done"
+    },
+    {
+      "priority": "medium",
+      "name": "Journal local",
+      "description": "Tracer les créations, modifications, clôtures et imports.",
+      "status": "done"
+    }
+  ],
+  "out_of_scope": [
+    "Ne pas remplacer l’ERP.",
+    "Ne pas modifier de donnée source externe.",
+    "Ne pas lancer de commande fournisseur automatiquement.",
+    "Ne pas remplacer la validation humaine."
+  ],
+  "success_criteria": {
+    "usable_offline": true,
+    "zero_external_dependency": true,
+    "mobile_compatible": true,
+    "understandable_under_10_seconds": true,
+    "human_validation_required": true
+  },
+  "risks": [
+    {
+      "risk": "Croire que les données locales remplacent les données métier source.",
+      "level": "medium",
+      "mitigation": "Présenter l’outil comme cockpit local d’aide à la décision et conserver validation humaine."
+    },
+    {
+      "risk": "Scoring trop simplifié pour un usage décisionnel complet.",
+      "level": "medium",
+      "mitigation": "Documenter les critères et prévoir une future configuration des pondérations."
+    }
+  ],
+  "human_validation": {
+    "decision": "validated",
+    "validated_by": "Greg",
+    "validated_at": "2026-05-15",
+    "comment": "Module validé comme V2 locale exploitable pour test terrain."
+  },
+  "next_actions": [
+    "Tester sur mobile.",
+    "Tester export CSV.",
+    "Tester import JSON.",
+    "Valider les critères de scoring avec l’usage terrain."
+  ]
+}
