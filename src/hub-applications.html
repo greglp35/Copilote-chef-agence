@@ -14,18 +14,188 @@
   </style>
 </head>
 <body>
-  <div class="mobile-tabs" aria-label="Navigation mobile"><button class="tab active" data-view="catalogue">Applications</button><button class="tab" data-view="preview">Aperçu</button><button class="tab" data-view="admin">Admin</button></div>
+  <div class="mobile-tabs" aria-label="Navigation mobile">
+    <button class="tab active" data-view="catalogue">Applications</button>
+    <button class="tab" data-view="preview">Aperçu</button>
+    <button class="tab" data-view="admin">Admin</button>
+  </div>
+
   <div class="app">
-    <aside class="side"><div class="brand"><span class="tag">Hub local</span><h1>Hub Applications Métier</h1><p>Point d’entrée unique pour ouvrir et organiser les applications HTML du dépôt.</p></div><nav class="nav" aria-label="Navigation principale"><button class="tab active" data-view="catalogue">Catalogue</button><button class="tab" data-view="preview">Aperçu intégré</button><button class="tab" data-view="admin">Administration locale</button></nav></aside>
+    <aside class="side">
+      <div class="brand">
+        <span class="tag">Hub local</span>
+        <h1>Hub Applications Métier</h1>
+        <p>Point d’entrée unique pour ouvrir et organiser les applications HTML du dépôt.</p>
+      </div>
+
+      <nav class="nav" aria-label="Navigation principale">
+        <button class="tab active" data-view="catalogue">Catalogue</button>
+        <button class="tab" data-view="preview">Aperçu intégré</button>
+        <button class="tab" data-view="admin">Administration locale</button>
+      </nav>
+    </aside>
+
     <main>
-      <section class="hero"><div><h2>Toutes les applications au même endroit</h2><p>Recherche, filtres métier, favoris locaux, ouverture en nouvel onglet ou aperçu intégré.</p></div><div class="actions"><button class="btn primary" id="addApp">Ajouter une app</button><button class="btn secondary" id="exportConfig">Export config</button><button class="btn secondary" id="importConfig">Import config</button></div></section>
-      <section id="catalogueView"><div class="kpis" id="kpis"></div><div class="panel" style="margin-top:14px"><div class="panel-head"><div><h3>Catalogue applications</h3><p class="hint">Les rôles sont des filtres d’affichage, pas une sécurité d’accès.</p></div><button class="btn secondary" id="resetConfig">Réinitialiser</button></div><div class="filters"><p><label for="search">Recherche</label><input id="search" placeholder="stock, chantier, qualité, dépôt..."></p><p><label for="category">Catégorie</label><select id="category"><option value="all">Toutes</option></select></p><p><label for="role">Rôle</label><select id="role"><option value="all">Tous</option></select></p><p><label for="status">Statut</label><select id="status"><option value="all">Tous</option></select></p><p><label for="favorite">Favoris</label><select id="favorite"><option value="all">Tous</option><option value="yes">Favoris</option></select></p></div><div class="grid" id="appsGrid"></div></div></section>
-      <section id="previewView" class="panel hidden"><div class="panel-head"><div><h3>Aperçu intégré</h3><p class="hint">Sélectionne une application dans le catalogue. Certaines protections navigateur peuvent limiter l’aperçu, dans ce cas ouvre en nouvel onglet.</p></div><div class="actions"><button id="openCurrent" class="btn primary">Ouvrir</button></div></div><div id="previewEmpty" class="notice">Aucune application sélectionnée.</div><iframe id="frame" class="preview hidden" title="Aperçu application sélectionnée"></iframe></section>
-      <section id="adminView" class="panel hidden"><div class="panel-head"><div><h3>Administration locale</h3><p class="hint">Ajouts et favoris sont stockés dans le navigateur. Aucun fichier du dépôt n’est modifié depuis ce hub.</p></div></div><div class="two"><div class="notice">Utilise l’export configuration pour sauvegarder tes favoris ou tes applications ajoutées manuellement.</div><div class="notice">Pour une vraie sécurité par profil, il faudra une authentification côté serveur. Ici, les rôles ne sont que des filtres visuels.</div></div><div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Nom</th><th>Chemin</th><th>Catégorie</th><th>Rôles</th><th>Statut</th></tr></thead><tbody id="adminRows"></tbody></table></div></section>
+      <section class="hero">
+        <div>
+          <h2>Toutes les applications au même endroit</h2>
+          <p>Recherche, filtres métier, favoris locaux, ouverture en nouvel onglet ou aperçu intégré.</p>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="addApp">Ajouter une app</button>
+          <button class="btn secondary" id="exportConfig">Export config</button>
+          <button class="btn secondary" id="importConfig">Import config</button>
+        </div>
+      </section>
+
+      <section id="catalogueView">
+        <div class="kpis" id="kpis"></div>
+        <div class="panel" style="margin-top:14px">
+          <div class="panel-head">
+            <div>
+              <h3>Catalogue applications</h3>
+              <p class="hint">Les rôles sont des filtres d’affichage, pas une sécurité d’accès.</p>
+            </div>
+            <button class="btn secondary" id="resetConfig">Réinitialiser</button>
+          </div>
+
+          <div class="filters">
+            <p>
+              <label for="search">Recherche</label>
+              <input id="search" placeholder="stock, chantier, qualité, dépôt...">
+            </p>
+            <p>
+              <label for="category">Catégorie</label>
+              <select id="category">
+                <option value="all">Toutes</option>
+              </select>
+            </p>
+            <p>
+              <label for="role">Rôle</label>
+              <select id="role">
+                <option value="all">Tous</option>
+              </select>
+            </p>
+            <p>
+              <label for="status">Statut</label>
+              <select id="status">
+                <option value="all">Tous</option>
+              </select>
+            </p>
+            <p>
+              <label for="favorite">Favoris</label>
+              <select id="favorite">
+                <option value="all">Tous</option>
+                <option value="yes">Favoris</option>
+              </select>
+            </p>
+          </div>
+
+          <div class="grid" id="appsGrid"></div>
+        </div>
+      </section>
+
+      <section id="previewView" class="panel hidden">
+        <div class="panel-head">
+          <div>
+            <h3>Aperçu intégré</h3>
+            <p class="hint">Sélectionne une application dans le catalogue. Certaines protections navigateur peuvent limiter l’aperçu, dans ce cas ouvre en nouvel onglet.</p>
+          </div>
+          <div class="actions">
+            <button id="openCurrent" class="btn primary">Ouvrir</button>
+          </div>
+        </div>
+        <div id="previewEmpty" class="notice">Aucune application sélectionnée.</div>
+        <iframe id="frame" class="preview hidden" title="Aperçu application sélectionnée"></iframe>
+      </section>
+
+      <section id="adminView" class="panel hidden">
+        <div class="panel-head">
+          <div>
+            <h3>Administration locale</h3>
+            <p class="hint">Ajouts et favoris sont stockés dans le navigateur. Aucun fichier du dépôt n’est modifié depuis ce hub.</p>
+          </div>
+        </div>
+        <div class="two">
+          <div class="notice">Utilise l’export configuration pour sauvegarder tes favoris ou tes applications ajoutées manuellement.</div>
+          <div class="notice">Pour une vraie sécurité par profil, il faudra une authentification côté serveur. Ici, les rôles ne sont que des filtres visuels.</div>
+        </div>
+        <div class="table-wrap" style="margin-top:14px">
+          <table>
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Chemin</th>
+                <th>Catégorie</th>
+                <th>Rôles</th>
+                <th>Statut</th>
+              </tr>
+            </thead>
+            <tbody id="adminRows"></tbody>
+          </table>
+        </div>
+      </section>
     </main>
   </div>
+
   <div class="shade" id="shade"></div>
-  <aside class="drawer" id="drawer"><div class="drawer-head"><div><h3 id="drawerTitle">Ajouter une application</h3><p class="hint">Ajout local dans ce navigateur.</p></div><button class="btn secondary" id="closeDrawer">Fermer</button></div><form id="appForm"><input type="hidden" id="appId"><div class="form-grid"><p class="full"><label for="appName">Nom</label><input id="appName" required></p><p class="full"><label for="appPath">Chemin relatif</label><input id="appPath" required placeholder="./mon-application.html"></p><p><label for="appCategory">Catégorie</label><input id="appCategory" required placeholder="Stock"></p><p><label for="appStatus">Statut</label><select id="appStatus"><option>Actif</option><option>Test</option><option>Technique</option><option>À surveiller</option></select></p><p class="full"><label for="appRoles">Rôles séparés par virgule</label><input id="appRoles" placeholder="Chef agence, Comptoir, Dépôt"></p><p class="full"><label for="appDescription">Description</label><textarea id="appDescription"></textarea></p></div><div class="actions" style="justify-content:flex-end;margin-top:12px"><button class="btn primary" type="submit">Enregistrer</button></div></form><div id="importBox" class="hidden"><p class="hint">Colle une configuration JSON exportée par ce hub.</p><textarea id="importText"></textarea><div class="actions"><button class="btn primary" id="runImport">Importer</button></div></div></aside>
+
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div>
+        <h3 id="drawerTitle">Ajouter une application</h3>
+        <p class="hint">Ajout local dans ce navigateur.</p>
+      </div>
+      <button class="btn secondary" id="closeDrawer">Fermer</button>
+    </div>
+
+    <form id="appForm">
+      <input type="hidden" id="appId">
+      <div class="form-grid">
+        <p class="full">
+          <label for="appName">Nom</label>
+          <input id="appName" required>
+        </p>
+        <p class="full">
+          <label for="appPath">Chemin relatif</label>
+          <input id="appPath" required placeholder="./mon-application.html">
+        </p>
+        <p>
+          <label for="appCategory">Catégorie</label>
+          <input id="appCategory" required placeholder="Stock">
+        </p>
+        <p>
+          <label for="appStatus">Statut</label>
+          <select id="appStatus">
+            <option>Actif</option>
+            <option>Test</option>
+            <option>Technique</option>
+            <option>À surveiller</option>
+          </select>
+        </p>
+        <p class="full">
+          <label for="appRoles">Rôles séparés par virgule</label>
+          <input id="appRoles" placeholder="Chef agence, Comptoir, Dépôt">
+        </p>
+        <p class="full">
+          <label for="appDescription">Description</label>
+          <textarea id="appDescription"></textarea>
+        </p>
+      </div>
+      <div class="actions" style="justify-content:flex-end;margin-top:12px">
+        <button class="btn primary" type="submit">Enregistrer</button>
+      </div>
+    </form>
+
+    <div id="importBox" class="hidden">
+      <p class="hint">Colle une configuration JSON exportée par ce hub.</p>
+      <textarea id="importText"></textarea>
+      <div class="actions">
+        <button class="btn primary" id="runImport">Importer</button>
+      </div>
+    </div>
+  </aside>
+
   <script>
     (function(){
       'use strict';
