@@ -1,0 +1,51 @@
+{
+  "schema": "aji_studio_import_produits_v1",
+  "objectif": "Schema minimal et terrain pour importer une base produits dans AJI Studio.",
+  "champs_obligatoires": [
+    "id_produit",
+    "nom_produit",
+    "famille",
+    "reference",
+    "prix_ttc",
+    "unite_vente",
+    "statut_validation",
+    "usage_public"
+  ],
+  "champs_recommandes": [
+    "sous_famille",
+    "designation_longue",
+    "conditionnement",
+    "page_pdf",
+    "pack_associe",
+    "produits_complementaires",
+    "accroche_a3",
+    "argument_vendeur",
+    "stock_agence",
+    "delai_appro",
+    "image_produit"
+  ],
+  "statuts_validation": [
+    "brouillon",
+    "a_verifier",
+    "valide_interne",
+    "valide_public",
+    "bloque"
+  ],
+  "regle_publication": {
+    "usage_public_oui_autorise_si": [
+      "prix_ttc valide",
+      "unite_vente validee",
+      "conditionnement complete",
+      "stock ou delai valide",
+      "visuel valide",
+      "mentions presentes"
+    ],
+    "usage_public_non_si": [
+      "donnee prix incertaine",
+      "stock inconnu",
+      "unite non comparable",
+      "concurrence sans preuve",
+      "note interne visible"
+    ]
+  }
+}
