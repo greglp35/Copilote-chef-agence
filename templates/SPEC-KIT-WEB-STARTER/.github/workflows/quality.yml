@@ -1,0 +1,49 @@
+name: Quality baseline
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Reject tracked secret-like files
+        shell: bash
+        run: |
+          set -e
+          bad="$(git ls-files | grep -E '(^|/)(\.env|\.env\.local|.*\.pem|.*\.p12|.*\.key)$' || true)"
+          if [ -n "$bad" ]; then
+            echo "$bad"
+            exit 1
+          fi
+
+      - name: Whitespace check on PR diff
+        if: github.event_name == 'pull_request'
+        run: git diff --check "${{ github.event.pull_request.base.sha }}...HEAD"
+
+      - name: Setup Node when package.json exists
+        if: ${{ hashFiles('package.json') != '' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install locked dependencies
+        if: ${{ hashFiles('package-lock.json') != '' }}
+        run: npm ci
+
+      - name: Run optional npm quality scripts
+        if: ${{ hashFiles('package.json') != '' }}
+        run: |
+          npm run lint --if-present
+          npm run check --if-present
+          npm run test --if-present

@@ -1,0 +1,6 @@
+info:
+  name: API Project
+  type: collection
+
+auth:
+  mode: none
