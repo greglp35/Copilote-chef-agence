@@ -1,0 +1,21 @@
+project:
+  name: CHANGE_ME
+  type: html-local
+  maturity: L1
+
+capabilities:
+  offline: false
+  api: false
+  authentication: false
+  sensitive_data: false
+  mobile_field_use: false
+
+quality:
+  playwright: false
+  bruno: false
+  lighthouse: false
+  axe: false
+
+deployment:
+  required: false
+  provider: none
