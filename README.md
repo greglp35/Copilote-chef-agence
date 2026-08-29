@@ -126,3 +126,114 @@ Objectif :
 - Aider [ton nom / ton équipe] à auditer et corriger le HTML de [nom du site] (site e‑commerce, corporatif, blog, etc.).  
 - Produire des recommandations claires, traçables et exécutables pour Claude.  
 - Fournir un format structuré (liste, CSV, rapports) utilisable directement dans Screaming Frog, Excel ou le CMS.
+## Migration FleetOS → Supabase (étape auth + contexte utilisateur)
+
+Cette étape introduit une couche d'authentification/contexte Supabase compatible avec une migration incrémentale.
+
+### Fichiers ajoutés
+- `docs/migration-fleetos-supabase-complete.html` : référence d'architecture cible (bootstrap).
+- `src/integrations/supabase/supabaseClient.js` : initialisation client Supabase (avec fallback sûr).
+- `src/auth/sessionService.js` : récupération session + écoute changements de session.
+- `src/auth/userContextService.js` : chargement `profile` + `memberships`.
+- `src/auth/activeAgencyService.js` : résolution/persistance de l'agence active.
+- `src/auth/permissions.js` : helpers d'autorisation UI basés rôle.
+- `src/ui/bootstrapAuthContext.js` : pont d'intégration UI existante (`window.FleetOSAuth`).
+- `.env.example` : variables d'environnement front.
+
+### Notes provisoires
+- Fallback legacy local conservé pour éviter de casser les écrans non migrés.
+- Les vues encore mockées peuvent continuer à fonctionner ; elles doivent migrer ensuite vers une couche CRUD Supabase agence-scopée.
+- Le dépôt actuel étant orienté documentation, l'intégration runtime (import modules, bundler, hooks UI) doit être branchée dans le projet FleetOS applicatif.
+
+## Migration FleetOS → Supabase (étape modules métier)
+
+Branchement initial des modules métier sur Supabase, en respectant `memberships + current_agency_id` et les contraintes inter-agences.
+
+### Modules branchés
+1. `missions` (CRUD agence active)
+2. `tournees` (CRUD agence active)
+3. `tournee_missions` (CRUD agence active)
+4. `shared_tournee_feed` (visibilité inter-agences limitée, publication/révocation)
+5. `interagency_slot_requests` (requêtes inter-agences visibles uniquement pour agence requester/target)
+
+### Garanties sécurité
+- Validation systématique du scope agence active contre les memberships actifs.
+- Filtrage agence obligatoire sur tous les accès CRUD standards.
+- Normalisation des erreurs RLS (`RLS_FORBIDDEN`) pour affichage UI propre.
+- Colonnes sélectionnées minimales sur les vues inter-agences (pas d'exposition des champs internes non nécessaires).
+
+### Temps réel (préparation)
+Chaque repository expose `realtimeChannelName(activeAgencyId)` pour brancher Supabase Realtime ensuite.
+
+## Migration FleetOS → Supabase (stabilisation Auth)
+
+Cette étape retire le faux login local comme source de vérité:
+- session = Supabase Auth uniquement ;
+- fallback local limité au contexte UI (optionnel) pour compatibilité temporaire.
+
+### Priorité current_agency_id
+1. `profiles.current_agency_id`
+2. préférence locale temporaire (`fleetos_current_agency_id`)
+3. premier membership actif
+
+### Fallback temporaire documenté
+- `window.__FLEETOS_ENABLE_LEGACY_CONTEXT_FALLBACK__ !== false` autorise la lecture de `fleetos_user_context` uniquement si Supabase n'est pas joignable.
+- Ce fallback est transitoire, à supprimer après migration complète des écrans.
+
+## Migration FleetOS → Supabase (étape modules métier v2)
+
+Entités migrées en priorité Supabase:
+1. `missions`
+2. `tournees`
+3. `tournee_missions`
+4. `drivers`
+5. `vehicles`
+
+### Couche d'accès
+- Repositories agence-scopés par entité (`src/data/modules/*Repository.js`).
+- `fleetDataGateway` pour lecture unifiée et fallback local temporaire contrôlé.
+- Filtrage local systématique par `activeAgencyId` en mode dégradé.
+
+### Erreurs d'accès
+- Les erreurs RLS restent explicites (`RLS_FORBIDDEN`) et ne basculent pas en local.
+- Les autres erreurs passent en fallback local temporaire pour stabilité UI.
+
+## Migration FleetOS → Supabase (visibilité inter-agences)
+
+### Règles de partage appliquées
+- Niveau par défaut : `availability_only`.
+- `schedule_summary` et `dispatch_collaboration` ne sont exposés que si le niveau partagé l'autorise.
+- Interdiction de lecture directe des missions internes d'une autre agence.
+
+### Implémentation
+- `sharedTourneeFeedRepository.listVisible()` applique une sanitization selon niveau demandé.
+- `interagencySlotRequestsRepository.askForSupport()` permet de demander un créneau ou une aide inter-agences.
+- `networkAvailabilityPanel` fournit un panneau UI minimal “Disponibilités réseau”.
+
+## Migration FleetOS → Supabase (temps réel)
+
+### Abonnements retenus (minimum utile)
+- `planning` agence active: `missions`, `tournees`, `tournee_missions` filtrés par `agency_id`.
+- `shared_tournee_feed`: rafraîchissement seulement si `producer_agency_id` ou `consumer_agency_id` concerne l'agence active.
+- `interagency_slot_requests`: rafraîchissement seulement si `requester_agency_id` ou `target_agency_id` concerne l'agence active.
+
+### Choix techniques
+- Coalescence des événements via debounce (300ms) pour éviter les rechargements complets inutiles.
+- 3 canaux realtime au total (pas de sur-abonnement table par table côté écran).
+- API simple: `createFleetRealtimeManager(...)` + `bootstrapRealtime(...)`.
+
+### Limites connues
+- Pas de merge granulaire des lignes: on déclenche des refresh ciblés (planning/feed/requests).
+- En cas de perte réseau, la reconnexion est laissée au client Supabase JS.
+
+## Migration FleetOS → Supabase (étape 1 audit + découplage storage)
+
+### Audit rapide confirmé
+- `localStorage` encore utilisé pour les fallbacks (`fleetos_user_context`, `fleetos_current_agency_id`, et entités métier fallback).
+- Rôles UI calculés localement mais issus des `memberships` Supabase.
+- Source session/auth = Supabase (plus de faux login source de vérité).
+
+### Première étape implémentée
+- Centralisation des accès `localStorage` via `src/platform/browserStorage.js`.
+- Migration des modules critiques (`activeAgencyService`, `userContextService`, `localFleetStore`) vers cet adaptateur.
+- Objectif: réduire le couplage au navigateur et préparer la suppression progressive du mode local métier.

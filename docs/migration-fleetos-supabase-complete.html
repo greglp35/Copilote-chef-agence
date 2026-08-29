@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>FleetOS — Migration Supabase (Architecture cible)</title>
+  <meta name="description" content="Référence d'architecture cible pour la migration FleetOS vers Supabase multi-agences." />
+</head>
+<body>
+  <main>
+    <h1>FleetOS — Migration Supabase complète</h1>
+    <p>Document de référence architecture cible.</p>
+
+    <section>
+      <h2>Périmètre Auth / Contexte utilisateur</h2>
+      <ul>
+        <li>Authentification via Supabase Auth (session navigateur) — source de vérité principale.</li>
+        <li>Chargement du <code>profile</code> utilisateur (incluant <code>current_agency_id</code>).</li>
+        <li>Chargement des <code>memberships</code> actifs.</li>
+        <li>Résolution de l'agence active avec priorité: profile.current_agency_id → préférence locale temporaire → premier membership actif.</li>
+        <li>Fallback legacy temporaire autorisé uniquement pour éviter de casser les écrans non migrés.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Contraintes sécurité</h2>
+      <ul>
+        <li>RLS obligatoire sur toutes les tables métier exposées au front.</li>
+        <li>Aucun accès cross-agence hors politiques explicites.</li>
+        <li><code>shared_tournee_feed</code> et <code>interagency_slot_requests</code> gérés par politiques dédiées.</li>
+        <li>Le front ne doit jamais faire confiance à des rôles/permissions purement locaux.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Modèle de contexte front</h2>
+      <pre>
+{
+  session,
+  profile: { id, email, current_agency_id, ... },
+  memberships: [{ agency_id, role, status }],
+  activeAgencyId,
+  permissions
+}
+      </pre>
+    </section>
+  </main>
+</body>
+</html>
