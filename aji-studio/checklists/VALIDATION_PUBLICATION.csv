@@ -1,0 +1,11 @@
+controle;obligatoire;statut;responsable;commentaire
+prix_ttc_valide;oui;a_faire;;
+unite_vente_validee;oui;a_faire;;
+conditionnement_complete;oui;a_faire;;
+stock_ou_delai_valide;oui;a_faire;;
+photo_ou_visuel_valide;oui;a_faire;;
+mention_legale_presente;oui;a_faire;;
+usage_public_oui_apres_validation;oui;a_faire;;
+aucune_donnee_interne_visible;oui;a_faire;;
+preuve_concurrence_datee_si_comparaison;oui;a_faire;;
+export_pdf_test_controle;oui;a_faire;;
